@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} &middot; {{ site_name }}{% endblock %}
+{% block hero %}
+  <h1 class="hero-title">{{ message }}</h1>
+  <p class="hero-sub">Error {{ code }}. Every page of this site is listed in the footer.</p>
+{% endblock %}
+
+{% block main %}
+  <p><a href="{{ url_for('landing.index') }}">Back to the landing page</a></p>
+{% endblock %}

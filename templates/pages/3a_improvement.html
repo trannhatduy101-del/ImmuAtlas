@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Biggest improvement &middot; {{ site_name }}{% endblock %}
+
+{% block hero %}
+  <h1 class="hero-title">Biggest improvement in coverage</h1>
+  <p class="hero-sub">Which countries gained the most coverage over a chosen period, and whether their disease burden actually fell.</p>
+{% endblock %}
+
+{% block main %}
+  {% set planned = [
+    "Filters for antigen, start year, end year and the number of countries to
+     rank, with the number validated in Python before it reaches the database.",
+    "A visible 'sort by' control, resolved against a column whitelist.",
+    "The calculation printed permanently under the results heading, with its
+     denominator named.",
+    "Countries missing at either endpoint excluded, and that rule stated on the
+     page, so a country appearing from nowhere cannot show infinite improvement.",
+    "Coverage gain joined against change in case rate, so the page compares two
+     genuinely different datasets and answers whether disease burden actually
+     fell.",
+  ] %}
+  {% include "_components/unbuilt.html" with context %}
+{% endblock %}
