@@ -1,0 +1,18 @@
+# Line endings.
+#
+# Without this, a clone on Windows rewrites LF to CRLF on checkout, and
+# rebuild_db.sh then fails on any Unix machine with "bad interpreter". Forcing
+# LF in the repository keeps the script runnable for both of us regardless of
+# whose machine it was committed from.
+* text=auto eol=lf
+
+*.sh   text eol=lf
+*.sql  text eol=lf
+*.py   text eol=lf
+*.html text eol=lf
+*.css  text eol=lf
+
+# Never apply line-ending conversion to a database file. CRLF conversion on
+# immunisation2.db would corrupt the supplied data, which is the one file in
+# this repository that cannot be regenerated.
+*.db binary

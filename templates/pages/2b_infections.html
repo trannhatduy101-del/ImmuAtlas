@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Infections &middot; {{ site_name }}{% endblock %}
+
+{% block hero %}
+  <h1 class="hero-title">Infections by economic status</h1>
+  <p class="hero-sub">Reported cases and rates, grouped by the economic classification of each country.</p>
+{% endblock %}
+
+{% block main %}
+  {% set planned = [
+    "Infection data grouped by economic status, joined with LEFT JOIN so that
+     Ethiopia and Venezuela, whose economy field is blank, appear as
+     'Not classified' rather than vanishing from the analysis.",
+  ] %}
+  {% set blocked_on = "Owned by the teammate on Sub-Task B." %}
+  {% include "_components/unbuilt.html" with context %}
+{% endblock %}

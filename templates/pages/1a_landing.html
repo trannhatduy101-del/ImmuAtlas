@@ -1,0 +1,199 @@
+{% extends "base.html" %}
+{% block title %}{{ site_name }} &middot; {{ site_tagline }}{% endblock %}
+
+{% block hero %}
+  {% if db_missing %}
+    <h1 class="hero-title">No data loaded</h1>
+    <p class="hero-sub">{{ db_missing }}</p>
+  {% else %}
+    {# The wireframe puts a statement at quote scale here. It is built from the
+       two facts the brief pairs deliberately: effort read alone overstates
+       success, disease burden read alone overstates failure. Both halves are
+       queried, so this line changes when the data changes. #}
+    <p class="hero-quote">
+      {{ fmt_pct(facts.coverage_last) }} of the target cohort reached.
+      {{ fmt_big(facts.total_cases) }} cases still reported.
+    </p>
+    <p class="hero-sub">
+      Immunisation coverage and preventable disease across
+      {{ fmt_int(facts.n_countries) }} countries, {{ facts.year_min }} to
+      {{ facts.year_max }}. Every rate on this site names the denominator it
+      was calculated against.
+    </p>
+  {% endif %}
+{% endblock %}
+
+{% block main %}
+{% if db_missing %}
+  <div class="empty-state">
+    <h2>Nothing to show</h2>
+    <p>{{ db_missing }}</p>
+    <p>This page shows nothing rather than a figure it cannot stand behind.</p>
+  </div>
+{% else %}
+
+  {# ---- Four facts, 2 x 2. The count is fixed at four by the brief. ---- #}
+  <section class="band">
+    <h2 class="section-head">Four figures from this data</h2>
+    <ul class="facts">
+      <li class="fact">
+        <span class="fact-figure">{{ fmt_int(facts.n_countries) }}</span>
+        <span class="fact-label">countries reporting</span>
+        <p>Across {{ facts.year_max - facts.year_min + 1 }} years,
+           {{ facts.year_min }} to {{ facts.year_max }}. The full extent of the
+           data, not a selection.</p>
+      </li>
+      <li class="fact">
+        <span class="fact-figure">{{ fmt_big(facts.total_doses) }}</span>
+        <span class="fact-label">doses recorded</span>
+        <p>Effort, not outcome. A dose delivered is not the same as a child
+           protected, which is why this sits beside the case count.</p>
+      </li>
+      <li class="fact">
+        <span class="fact-figure">{{ fmt_pct(facts.coverage_first) }} &rarr; {{ fmt_pct(facts.coverage_last) }}</span>
+        <span class="fact-label">average reported coverage</span>
+        <p>Mean of national figures in {{ facts.year_min }} against
+           {{ facts.year_max }}. Denominator: the birth cohort each country
+           targeted, which is what WHO reports as coverage.</p>
+      </li>
+      <li class="fact">
+        <span class="fact-figure">{{ fmt_big(facts.total_cases) }}</span>
+        <span class="fact-label">reported cases</span>
+        <p>Outcome, not effort. Read alone it overstates failure, just as the
+           dose count read alone overstates success.</p>
+      </li>
+    </ul>
+  </section>
+
+  {# ---- Vaccine info: the diseases covered and the coverage each needs ---- #}
+  <section class="band">
+    <h2 class="section-head">Vaccine information</h2>
+    <p class="section-intro">
+      Three preventable diseases, each with the coverage WHO says is needed to
+      stop transmission. The thresholds are stored with their sources, not
+      written into this page.
+    </p>
+    <ul class="disease-list">
+      {% for d in diseases %}
+        <li class="disease">
+          <h3>{{ d.disease_name }}</h3>
+          {% if d.threshold_pct is not none %}
+            <p class="threshold"><strong>{{ fmt_pct(d.threshold_pct, 0) }}</strong> coverage needed</p>
+            <p class="threshold-note">{{ d.threshold_note }}</p>
+            <p class="citation">
+              Source: {{ d.threshold_source }}
+              {% if d.threshold_url %}<a href="{{ d.threshold_url }}" rel="noopener">Read it</a>{% endif %}
+            </p>
+          {% else %}
+            <p class="threshold">No threshold set for this disease.</p>
+          {% endif %}
+          <p class="disease-count">
+            {{ fmt_int(d.n_countries_reporting) }} countries reported at least
+            one case in at least one year.
+          </p>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  {# ---- Data: the trend, and what the data cannot tell you ---- #}
+  <section class="band">
+    <h2 class="section-head">The data</h2>
+
+    {% if chart %}
+      <figure class="chart">
+        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" class="trend" role="img"
+             aria-label="Line chart of average reported coverage from
+                         {{ chart.first.year }} at {{ fmt_pct(chart.first.avg_coverage) }}
+                         to {{ chart.last.year }} at {{ fmt_pct(chart.last.avg_coverage) }}.
+                         The figures are in the table below the chart.">
+          <polyline points="{{ chart.polyline }}" class="trend-line" />
+          {% for x, y, row in chart.coords %}
+            <circle cx="{{ x }}" cy="{{ y }}" r="2.5" class="trend-dot" />
+          {% endfor %}
+        </svg>
+        <figcaption>
+          <p class="chart-axis">
+            Vertical axis runs {{ chart.y_min }}% to {{ chart.y_max }}%, not from
+            zero. A change of a few points would be invisible on a full axis;
+            the zoom is stated here so the shape is not read as larger than it is.
+          </p>
+          <p>
+            Two things move this line and the data cannot separate them. A rise
+            can mean more children were vaccinated, or more countries reported:
+            {{ fmt_int(chart.first.n_reporting) }} national figures in
+            {{ chart.first.year }} against {{ fmt_int(chart.last.n_reporting) }}
+            in {{ chart.last.year }}. Any dip around 2020 and 2021 likewise
+            reflects disrupted surveillance as well as disrupted vaccination.
+          </p>
+        </figcaption>
+      </figure>
+
+      <details class="data-details">
+        <summary>Show the figures behind this chart</summary>
+        <div class="table-scroll">
+          <table>
+            <caption>Average reported coverage and total reported cases, by year</caption>
+            <thead>
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col" class="num">Average coverage</th>
+                <th scope="col" class="num">National figures reported</th>
+                <th scope="col" class="num">Reported cases</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for row in trend %}
+                <tr>
+                  <th scope="row">{{ row.year }}</th>
+                  <td class="num">{{ fmt_pct(row.avg_coverage) }}</td>
+                  <td class="num">{{ fmt_int(row.n_reporting) }}</td>
+                  <td class="num">{{ fmt_int(row.total_cases) }}</td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </details>
+    {% endif %}
+
+    <h3 class="sub-head">What this data can and cannot tell you</h3>
+    <div class="caveats">
+      <ul>
+        <li><strong>{{ fmt_int(caveats.rows_no_coverage) }} of
+            {{ fmt_int(caveats.rows_coverage_total) }}</strong> vaccination
+            records carry no coverage figure. They are stored as blanks, not
+            nulls, so a naive average counts them as zero. This site excludes
+            them instead.</li>
+        <li><strong>{{ fmt_int(caveats.rows_above_100) }}</strong> records report
+            coverage above 100%. Kept, not capped: doses given outside the
+            target cohort are real.</li>
+        <li><strong>{{ fmt_int(caveats.rows_suspicious_zero) }} of
+            {{ fmt_int(caveats.rows_infection_total) }}</strong> case records are
+            zero in every year for that country and disease. A genuine zero and
+            an unreported year look identical here. Those records are flagged
+            rather than counted as success, and the flag is an inference, not a
+            fact.</li>
+        <li><strong>{{ fmt_int(caveats.rows_unmatched_territory) }}</strong>
+            vaccination records come from territories with no matching country
+            entry. Shown as unmatched, never dropped.</li>
+        <li><strong>{{ fmt_int(caveats.countries_no_economy) }}</strong> countries
+            have no economic classification. They appear as "Not classified" in
+            every economic breakdown rather than disappearing from it.</li>
+      </ul>
+    </div>
+
+    <div class="entry-cards">
+      <a class="entry-card" href="{{ url_for('coverage.index') }}">
+        <span class="entry-q">How well is a country or region covered right now?</span>
+        <span class="entry-go">Explore vaccination rates</span>
+      </a>
+      <a class="entry-card" href="{{ url_for('improvement.index') }}">
+        <span class="entry-q">Which countries improved most, and did cases actually fall?</span>
+        <span class="entry-go">Compare biggest improvement</span>
+      </a>
+    </div>
+  </section>
+
+{% endif %}
+{% endblock %}

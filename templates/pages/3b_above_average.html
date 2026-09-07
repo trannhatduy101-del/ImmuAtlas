@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}Above the global rate &middot; {{ site_name }}{% endblock %}
+
+{% block hero %}
+  <h1 class="hero-title">Countries above the global rate</h1>
+  <p class="hero-sub">Which countries report infection rates above the global rate, and by how much.</p>
+{% endblock %}
+
+{% block main %}
+  {% set planned = [
+    "Countries above the global rate, with the global rate computed as a
+     population-weighted SUM/SUM rather than a mean of country rates.",
+  ] %}
+  {% set blocked_on = "Owned by the teammate on Sub-Task B. Also depends on open
+     question Q1: whether a reported zero means no cases or no report." %}
+  {% include "_components/unbuilt.html" with context %}
+{% endblock %}
