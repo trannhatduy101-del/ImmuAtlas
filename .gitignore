@@ -1,0 +1,17 @@
+# Working database (binary, rebuilt from sql/)
+immuatlas.db
+*.db-journal
+*.db-wal
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+
+# OS and editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

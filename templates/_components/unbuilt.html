@@ -1,0 +1,23 @@
+{# Honest placeholder for a page that is routed but not finished.
+   CLAUDE.md section 8: all six pages reachable, never a 404, never a dead link.
+   Caller sets: task, page_title, owner, planned (list), blocked_on (optional). #}
+<div class="unbuilt">
+  <p class="unbuilt-flag">Not finished yet</p>
+  <p class="unbuilt-owner">{{ task }} &middot; {{ owner }}</p>
+
+  <p>This page is routed and reachable, but it does not display data yet.
+     Nothing here is a placeholder number: it shows no figures at all rather
+     than figures that have not been verified.</p>
+
+  {% if planned %}
+    <h2>What it will show</h2>
+    <ul class="unbuilt-list">
+      {% for item in planned %}<li>{{ item }}</li>{% endfor %}
+    </ul>
+  {% endif %}
+
+  {% if blocked_on %}
+    <h2>Blocked on</h2>
+    <p class="unbuilt-blocked">{{ blocked_on }}</p>
+  {% endif %}
+</div>

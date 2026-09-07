@@ -1,0 +1,666 @@
+/* ImmuAtlas stylesheet.
+   Hand-written on purpose (CLAUDE.md section 3): the Working Application
+   criterion asks for annotations linking design decisions to usability
+   principles, and a framework makes those decisions someone else's.
+
+   Structure follows the wireframes: a fixed header of four links, a hero band,
+   the page body, and a four-column footer carrying all six page links. Header
+   and footer are identical on all six pages.
+
+   Contrast targets WCAG AA, 4.5:1 for body text. Measured against #ffffff:
+     --ink        #16191d   ~16.9:1
+     --ink-muted  #4a5158   ~7.9:1
+     --accent     #0b5d5d   ~6.4:1
+   No meaning is ever carried by colour alone; status is spelled out in words. */
+
+:root {
+  --bg:          #ffffff;
+  --bg-sunk:     #f4f6f6;
+  --bg-flag:     #fff6e5;
+  --bg-deep:     #0c3b3b;
+
+  --ink:         #16191d;
+  --ink-muted:   #4a5158;
+  --ink-invert:  #eef4f3;
+  --ink-invert-muted: #a8c3c1;
+
+  --accent:      #0b5d5d;
+  --accent-ink:  #ffffff;
+  --accent-lift: #14807d;
+  --flag-rule:   #a9701a;
+
+  --rule:        #d9dedf;
+  --rule-deep:   #1d5555;
+  --focus:       #0b5d5d;
+
+  --wrap:        68rem;
+  --step:        1.25rem;
+  --radius:      3px;
+
+  --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+          Arial, sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font: 16px/1.6 var(--font);
+}
+
+.wrap {
+  max-width: var(--wrap);
+  margin: 0 auto;
+  padding: 0 var(--step);
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  padding: .6rem 1rem;
+  z-index: 10;
+}
+.skip-link:focus { left: var(--step); top: var(--step); }
+
+/* Header ------------------------------------------------------------------
+   Four links, each going straight to a page. Grace's anti-goals rule out a
+   funnel, so Compare reaches Level 3 in one click rather than opening a menu. */
+
+.site-header { border-bottom: 1px solid var(--rule); }
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  padding-top: .9rem;
+  padding-bottom: .9rem;
+}
+
+.logo { display: flex; align-items: center; gap: .55rem;
+        text-decoration: none; color: inherit; }
+.logo-mark {
+  display: grid;
+  place-items: center;
+  width: 2rem; height: 2rem;
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-radius: var(--radius);
+  font-size: .82rem;
+  font-weight: 700;
+  letter-spacing: .02em;
+}
+.logo-word { font-size: 1.22rem; font-weight: 700; letter-spacing: -.015em; }
+
+.primary-nav > ul {
+  display: flex; flex-wrap: wrap; gap: .3rem;
+  list-style: none; margin: 0; padding: 0;
+}
+/* Block by default so a no-script submenu stacks under its parent;
+   script switches it to a row. */
+.nav-item { position: relative; }
+
+.primary-nav > ul > li > a {
+  display: block;
+  padding: .45rem .85rem;
+  text-decoration: none;
+  color: var(--ink);
+  border-radius: var(--radius);
+  border-bottom: 2px solid transparent;
+}
+.primary-nav a:hover { background: var(--bg-sunk); }
+/* aria-current carries the meaning; this only makes it visible. */
+.primary-nav a.current {
+  border-bottom-color: var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+}
+.has-sub > a { padding-right: .35rem; }
+
+/* The expander is a separate control from the link, so the label can go
+   straight to its page while the button opens the pair. */
+.nav-toggle {
+  display: grid;
+  place-items: center;
+  width: 1.9rem;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  color: var(--ink-muted);
+  cursor: pointer;
+  font: inherit;
+}
+.nav-toggle:hover { background: var(--bg-sunk); color: var(--ink); }
+.chev { width: .72rem; height: .5rem; transition: transform .15s ease; }
+.nav-toggle[aria-expanded="true"] { color: var(--accent); }
+.nav-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
+@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
+
+/* NO SCRIPT is the base state: the expander is hidden, and the submenu sits in
+   the normal flow under its parent, visible. Every one of the six pages is
+   reachable from the header whether or not script runs. */
+.nav-toggle { display: none; }
+.subnav {
+  list-style: none;
+  margin: .15rem 0 0;
+  padding: 0;
+}
+.subnav a {
+  display: flex;
+  gap: .5rem;
+  padding: .3rem .55rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink-muted);
+  font-size: .84rem;
+}
+.subnav a.current { color: var(--accent); font-weight: 600; }
+.sub-code { font-weight: 700; color: var(--accent); min-width: 1.6rem; }
+
+/* WITH SCRIPT the item becomes a real dropdown: expander visible, submenu
+   lifted out of the flow and collapsed until asked for. */
+.js .nav-item { align-items: center; }
+.js .nav-toggle { display: grid; }
+.js .subnav {
+  position: absolute;
+  top: calc(100% + .4rem);
+  left: 0;
+  z-index: 20;
+  min-width: 15.5rem;
+  margin: 0;
+  padding: .3rem;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 2px rgba(22,25,29,.08), 0 8px 22px rgba(22,25,29,.12);
+}
+.js .subnav a { padding: .42rem .55rem; font-size: .9rem; color: var(--ink); }
+.js .subnav a:hover { background: var(--bg-sunk); }
+.js .subnav a.current { background: var(--bg-sunk); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Hero band --------------------------------------------------------------- */
+
+.hero {
+  background: var(--bg-sunk);
+  border-bottom: 1px solid var(--rule);
+  padding: 2.4rem 0 2.2rem;
+}
+.hero-title {
+  margin: 0 0 .5rem;
+  font-size: 2rem;
+  line-height: 1.18;
+  letter-spacing: -.02em;
+  max-width: 30ch;
+}
+.hero-sub {
+  margin: 0;
+  font-size: 1.05rem;
+  color: var(--ink-muted);
+  max-width: 62ch;
+}
+.hero-quote {
+  margin: 0 0 .7rem;
+  font-size: 1.75rem;
+  line-height: 1.3;
+  font-weight: 600;
+  letter-spacing: -.02em;
+  max-width: 26ch;
+}
+
+main { padding: 2.2rem var(--step) 3.5rem; }
+
+h2 { font-size: 1.15rem; margin: 0 0 .4rem; }
+h3 { font-size: 1.02rem; margin: 0 0 .3rem; }
+
+/* Footer ------------------------------------------------------------------ */
+
+.site-footer {
+  background: var(--bg-deep);
+  color: var(--ink-invert);
+  margin-top: 3rem;
+}
+.footer-grid {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: 1.2fr 1fr 1fr 1fr;
+  padding-top: 2.4rem;
+  padding-bottom: 2rem;
+}
+@media (max-width: 58rem) { .footer-grid { grid-template-columns: 1fr 1fr; } }
+@media (max-width: 34rem) { .footer-grid { grid-template-columns: 1fr; } }
+
+.footer-brand .logo-mark { background: var(--accent-lift); margin-bottom: .6rem; }
+.footer-word { margin: 0; font-size: 1.15rem; font-weight: 700; }
+.footer-tagline { margin: .2rem 0 0; font-size: .88rem; color: var(--ink-invert-muted); }
+
+.footer-col h2 {
+  font-size: .74rem;
+  text-transform: uppercase;
+  letter-spacing: .09em;
+  color: var(--ink-invert-muted);
+  margin: 0 0 .7rem;
+  font-weight: 600;
+}
+.footer-links, .footer-team { list-style: none; margin: 0; padding: 0; }
+.footer-links li, .footer-team li { margin-bottom: .45rem; font-size: .89rem; }
+.site-footer a { color: var(--ink-invert); text-decoration: none; }
+.site-footer a:hover { text-decoration: underline; }
+.footer-task {
+  display: inline-block;
+  min-width: 1.7rem;
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--ink-invert-muted);
+}
+.wip, .todo {
+  display: inline-block;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-invert-muted);
+  border: 1px solid var(--rule-deep);
+  border-radius: 2px;
+  padding: 0 .28rem;
+}
+.todo { color: #f0c987; border-color: #7a5c22; text-transform: none;
+        letter-spacing: 0; font-size: .8rem; padding: .1rem .35rem; }
+.team-name { display: block; font-weight: 600; }
+.team-id, .team-role { font-size: .8rem; color: var(--ink-invert-muted); }
+.team-id::after { content: " \00b7 "; }
+
+.footer-legal {
+  border-top: 1px solid var(--rule-deep);
+  padding-top: 1.1rem;
+  padding-bottom: 2.2rem;
+  font-size: .82rem;
+  color: var(--ink-invert-muted);
+}
+.footer-legal p { margin: 0 0 .4rem; }
+.footer-legal cite { font-style: italic; }
+
+/* ---------------------------------------------------------------------------
+   1A landing page
+   --------------------------------------------------------------------------- */
+
+.lede {
+  font-size: 1.08rem;
+  color: var(--ink-muted);
+  max-width: 46rem;
+  margin-bottom: 2rem;
+}
+
+.section-head {
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule);
+  padding-top: .8rem;
+  margin-top: 2.4rem;
+}
+
+/* Facts ------------------------------------------------------------------- */
+
+/* The wireframe fixes this at two across, two down. Held at exactly two
+   columns rather than auto-fit, so the pairing reads as intended: effort beside
+   outcome on the same row. */
+.facts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1.6rem 2rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 40rem) { .facts { grid-template-columns: 1fr; } }
+.fact {
+  border-left: 3px solid var(--accent);
+  padding-left: .9rem;
+}
+.fact-figure {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+}
+.fact-label {
+  display: block;
+  font-size: .84rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+  margin-bottom: .5rem;
+}
+.fact p { margin: 0; font-size: .92rem; }
+
+/* Trend chart ------------------------------------------------------------- */
+
+.chart { margin: 1rem 0 0; }
+.trend {
+  width: 100%;
+  height: auto;
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.trend-line {
+  fill: none;
+  stroke: var(--accent);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+.trend-dot { fill: var(--accent); }
+
+.chart figcaption { font-size: .9rem; color: var(--ink-muted); max-width: 46rem; }
+.chart-axis { font-style: italic; }
+
+.data-details { margin: 1rem 0 0; }
+.data-details summary {
+  cursor: pointer;
+  padding: .4rem 0;
+  font-size: .92rem;
+  color: var(--accent);
+}
+
+/* Tables ------------------------------------------------------------------ */
+
+/* Wide tables scroll inside their own box; the page itself never scrolls
+   sideways, which is what breaks a table layout on a phone. */
+.table-scroll { overflow-x: auto; }
+
+table { border-collapse: collapse; width: 100%; font-size: .92rem; }
+caption {
+  text-align: left;
+  padding: .5rem 0;
+  color: var(--ink-muted);
+  font-size: .88rem;
+}
+th, td { padding: .4rem .7rem; border-bottom: 1px solid var(--rule); text-align: left; }
+thead th { border-bottom: 2px solid var(--rule); }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* Diseases ---------------------------------------------------------------- */
+
+.disease-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1.4rem;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+}
+.disease {
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.disease h3 { margin: 0 0 .3rem; font-size: 1.05rem; }
+.threshold { margin: 0 0 .5rem; font-size: 1.1rem; }
+.threshold-note, .disease-count { font-size: .86rem; color: var(--ink-muted); }
+.citation {
+  font-size: .8rem;
+  color: var(--ink-muted);
+  border-top: 1px solid var(--rule);
+  padding-top: .5rem;
+}
+.citation a { color: var(--accent); }
+
+/* Caveats ----------------------------------------------------------------- */
+
+.caveats {
+  background: var(--bg-flag);
+  border-left: 3px solid var(--flag-rule);
+  padding: 1rem 1rem 1rem 1.2rem;
+  margin-top: 1rem;
+  max-width: 48rem;
+}
+.caveats ul { margin: 0; padding-left: 1.1rem; }
+.caveats li { margin-bottom: .6rem; font-size: .93rem; }
+.caveats li:last-child { margin-bottom: 0; }
+
+/* Entry cards ------------------------------------------------------------- */
+
+.entry-cards {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+  margin-top: 1rem;
+}
+.entry-card {
+  display: block;
+  padding: 1.1rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+}
+.entry-card:hover { border-color: var(--accent); background: var(--bg-sunk); }
+.entry-q { display: block; font-size: 1.05rem; font-weight: 600; margin-bottom: .4rem; }
+.entry-go { display: block; font-size: .87rem; color: var(--accent); }
+
+/* Empty states ------------------------------------------------------------ */
+
+.empty-state {
+  background: var(--bg-sunk);
+  border-left: 3px solid var(--flag-rule);
+  padding: 1.2rem;
+  max-width: 44rem;
+}
+.empty-inline { color: var(--ink-muted); font-style: italic; }
+
+/* ---------------------------------------------------------------------------
+   2A vaccination rates
+   --------------------------------------------------------------------------- */
+
+.section-intro { color: var(--ink-muted); max-width: 46rem; font-size: .95rem; }
+
+/* Filters ----------------------------------------------------------------- */
+
+.filters {
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1.2rem 0 1.6rem;
+}
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .9rem;
+  align-items: flex-end;
+}
+.field { display: flex; flex-direction: column; gap: .25rem; }
+.field label {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  color: var(--ink-muted);
+  font-weight: 600;
+}
+.field select {
+  font: inherit;
+  font-size: .92rem;
+  padding: .38rem .5rem;
+  border: 1px solid #9aa4a4;
+  border-radius: var(--radius);
+  background: var(--bg);
+  color: var(--ink);
+  max-width: 15rem;
+}
+.field-actions { flex-direction: row; align-items: center; gap: .8rem; }
+.filters button {
+  font: inherit;
+  font-weight: 600;
+  padding: .42rem 1.1rem;
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  background: var(--accent);
+  color: var(--accent-ink);
+  cursor: pointer;
+}
+.filters button:hover { background: #094a4a; }
+.reset { color: var(--accent); font-size: .9rem; }
+.filter-note {
+  margin: .8rem 0 0;
+  font-size: .85rem;
+  color: var(--ink-muted);
+}
+
+.selection-line {
+  border-left: 3px solid var(--accent);
+  padding-left: .9rem;
+  max-width: 46rem;
+  font-size: .95rem;
+}
+
+/* Region bars ------------------------------------------------------------- */
+
+.region-bars { list-style: none; margin: 1rem 0 0; padding: 0; }
+.region-bar { margin-bottom: 1.1rem; }
+.region-bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+  margin-bottom: .25rem;
+}
+.region-bar-name { font-weight: 600; }
+.region-bar-value { font-variant-numeric: tabular-nums; font-weight: 700; }
+
+.bar-track {
+  position: relative;
+  height: 1.35rem;
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.bar-fill { height: 100%; background: var(--accent); }
+
+/* The threshold marker is an addition to a bar that is already labelled with
+   its own figure, so the comparison never depends on seeing the line. */
+.bar-threshold {
+  position: absolute;
+  top: -2px;
+  bottom: -2px;
+  width: 3px;
+  background: var(--flag-rule);
+}
+.region-bar-note { margin: .25rem 0 0; font-size: .83rem; color: var(--ink-muted); }
+.threshold-key {
+  font-size: .87rem;
+  color: var(--ink-muted);
+  max-width: 46rem;
+  border-top: 1px solid var(--rule);
+  padding-top: .7rem;
+}
+
+.tag {
+  display: inline-block;
+  font-size: .68rem;
+  text-transform: uppercase;
+  letter-spacing: .05em;
+  background: var(--bg-flag);
+  border: 1px solid var(--flag-rule);
+  border-radius: 2px;
+  padding: 0 .3rem;
+  margin-left: .3rem;
+  font-weight: 600;
+  vertical-align: middle;
+}
+
+/* Method note ------------------------------------------------------------- */
+
+.method-note {
+  margin-top: 2rem;
+  border: 1px solid var(--rule);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  max-width: 48rem;
+  background: var(--bg-sunk);
+}
+.method-note h2 {
+  margin-top: 0;
+  font-size: .82rem;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--ink-muted);
+  border: 0;
+  padding: 0;
+}
+.method-note dl { margin: 0; }
+.method-note dt { font-weight: 700; margin-top: .8rem; font-size: .92rem; }
+.method-note dd { margin: .15rem 0 0; font-size: .92rem; }
+.method-note .citation { display: block; margin-top: .35rem; border: 0; padding: 0; }
+
+.rejected-note {
+  background: var(--bg-flag);
+  border-left: 3px solid var(--flag-rule);
+  padding: .8rem 1rem;
+  margin: 0 0 1.2rem;
+  max-width: 48rem;
+  font-size: .93rem;
+}
+
+.footer-lead {
+  font-size: .78rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  font-weight: 600;
+  margin-bottom: .3rem;
+}
+.footer-sources { margin: 0 0 .9rem; padding-left: 1.1rem; }
+.footer-sources li { margin-bottom: .4rem; }
+.footer-sources cite { font-style: italic; }
+.footer-sources a { word-break: break-word; }
+.unverified {
+  display: inline-block;
+  font-size: .72rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-weight: 600;
+  color: var(--warn-ink, #8a5a00);
+  background: var(--bg-flag);
+  border: 1px solid var(--flag-rule);
+  border-radius: 2px;
+  padding: 0 .3rem;
+}
+
+/* Section bands ------------------------------------------------------------
+   The wireframe stacks the landing page as full-width bands. A rule above each
+   heading does the separating, so the page does not become a wall of cards. */
+
+.band + .band { margin-top: 2.8rem; }
+
+.sub-head {
+  font-size: 1.02rem;
+  margin: 1.8rem 0 .5rem;
+}

@@ -1,0 +1,297 @@
+{% extends "base.html" %}
+{% block title %}Vaccination rates &middot; {{ site_name }}{% endblock %}
+
+{% block hero %}
+  <h1 class="hero-title">Vaccination rates by country and region</h1>
+  <p class="hero-sub">
+    Reported coverage for one antigen and year, summarised by region and listed
+    by country, against the coverage WHO says is needed to stop transmission.
+  </p>
+{% endblock %}
+
+{% block main %}
+{% if db_missing %}
+  <div class="empty-state">
+    <h2>No data loaded</h2>
+    <p>{{ db_missing }}</p>
+  </div>
+{% else %}
+
+{# ---- Filters. GET, so the selection lives in the URL and can be shared. ---- #}
+<h2 class="section-head">Filter</h2>
+<form class="filters" method="get" action="{{ url_for('coverage.index') }}">
+  <div class="filter-row">
+    <div class="field">
+      <label for="f-antigen">Antigen</label>
+      <select id="f-antigen" name="antigen">
+        <option value="">All antigens</option>
+        {% for a in antigens %}
+          <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
+            {{ a.antigen }} &middot; {{ a.disease_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="f-year">Year</label>
+      <select id="f-year" name="year">
+        <option value="">All years</option>
+        {% for y in years %}
+          <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>{{ y.year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="f-region">Region</label>
+      <select id="f-region" name="region">
+        <option value="">All regions</option>
+        {% for r in regions %}
+          <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>
+            {{ fix_region(r.region_name) }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="f-country">Country</label>
+      <select id="f-country" name="country">
+        <option value="">All countries</option>
+        {% for c in countries %}
+          <option value="{{ c.country_id }}" {% if c.country_id == country %}selected{% endif %}>
+            {{ c.country_name }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field">
+      <label for="f-sort">Sort the country table by</label>
+      <select id="f-sort" name="sort">
+        {% for key, label in sort_labels %}
+          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="field field-actions">
+      <button type="submit">Apply</button>
+      <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
+    </div>
+  </div>
+  <p class="filter-note">
+    Region and country apply together. Selecting both narrows to that country
+    within that region, which is empty when the country sits elsewhere.
+  </p>
+</form>
+
+{% if rejected %}
+  <div class="rejected-note" role="status">
+    <strong>Filter ignored.</strong>
+    The value supplied for
+    {% for r in rejected %}{{ r }}{% if not loop.last %}{% if loop.revindex0 == 1 %} and {% else %}, {% endif %}{% endif %}{% endfor %}
+    is not one this page offers, so it was dropped. That makes the selection
+    below <em>wider</em> than the one requested. The filters now in force are
+    the ones shown selected above.
+  </div>
+{% endif %}
+
+{# ---- Conflict: country not in the selected region ---- #}
+{% if conflict %}
+  <div class="empty-state">
+    <h2>Nothing matches this combination</h2>
+    <p>
+      {{ conflict.country }} is in {{ conflict.country_region }}, not
+      {{ conflict.region }}. Both filters are applied together, so this selection
+      contains no countries.
+    </p>
+    <p>Clear one of the two filters to see results.</p>
+  </div>
+{% elif summary.n_rows == 0 %}
+  <div class="empty-state">
+    <h2>No records for this selection</h2>
+    <p>Nothing in the data matches this combination of antigen, year, region and
+       country. Widen one of the filters.</p>
+  </div>
+{% else %}
+
+  {# ---- What the selection contains ---- #}
+  <p class="selection-line">
+    {{ fmt_int(summary.n_countries) }} countries in this selection.
+    <strong>{{ fmt_int(summary.n_countries_reporting) }}</strong> reported a
+    coverage figure;
+    {% set silent = summary.n_countries - summary.n_countries_reporting %}
+    {% if silent > 0 %}
+      <strong>{{ fmt_int(silent) }}</strong> reported nothing and are shown as
+      "no data" rather than as zero.
+    {% else %}
+      every one of them reported.
+    {% endif %}
+    {% if summary.n_above_100 %}
+      {{ fmt_int(summary.n_above_100) }} records report coverage above 100% and
+      are kept, not capped.
+    {% endif %}
+  </p>
+
+  {# ---- Regional summary, above the country table ---- #}
+  <h2 class="section-head">Result &middot; regional summary</h2>
+  <p class="section-intro">
+    A national figure can sit above a threshold while districts inside it sit far
+    below. These regional figures are weighted by the birth cohort each national
+    rate applies to, so one large country does not get the same weight as one
+    small one.
+  </p>
+
+  <ul class="region-bars">
+    {% for item in region_view %}
+      <li class="region-bar">
+        <div class="region-bar-head">
+          <span class="region-bar-name">{{ item.name }}</span>
+          <span class="region-bar-value">
+            {% if item.row.avg_weighted is not none %}
+              {{ fmt_pct(item.row.avg_weighted) }}
+            {% else %}
+              no data
+            {% endif %}
+          </span>
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" style="width: {{ item.bar_pct }}%"></div>
+          {% if threshold and threshold.threshold_pct is not none %}
+            <div class="bar-threshold" style="left: {{ threshold.threshold_pct }}%"
+                 title="Threshold {{ fmt_pct(threshold.threshold_pct, 0) }}"></div>
+          {% endif %}
+        </div>
+        <p class="region-bar-note">
+          {{ fmt_int(item.row.n_countries) }} countries,
+          {{ fmt_int(item.row.n_reporting) }} reporting.
+          {% if item.row.avg_unweighted is not none %}
+            Unweighted mean {{ fmt_pct(item.row.avg_unweighted) }}.
+          {% endif %}
+          {% if item.row.n_reporting == 0 %}No figures for this selection.{% endif %}
+        </p>
+      </li>
+    {% endfor %}
+  </ul>
+
+  {% if threshold and threshold.threshold_pct is not none %}
+    <p class="threshold-key">
+      The vertical mark on each bar is the
+      {{ fmt_pct(threshold.threshold_pct, 0) }} coverage threshold for
+      {{ threshold.disease_name }}. Bars are also labelled with their figure, so
+      the comparison does not depend on seeing the mark.
+    </p>
+  {% elif not antigen %}
+    <p class="threshold-key">
+      No threshold mark is drawn: thresholds differ by disease, so one is only
+      meaningful when a single antigen is selected.
+    </p>
+  {% endif %}
+
+  {# ---- Country table ---- #}
+  <h2 class="section-head">Country table</h2>
+  <div class="table-scroll">
+    <table>
+      <caption>
+        {{ fmt_int(rows|length) }} records.
+        Sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">Country</th>
+          <th scope="col">Region</th>
+          <th scope="col" class="num">Coverage</th>
+          <th scope="col" class="num">Against threshold</th>
+          <th scope="col" class="num">Birth cohort</th>
+          <th scope="col" class="num">Doses per 100 people</th>
+          <th scope="col">Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for r in rows %}
+          <tr>
+            <th scope="row">
+              {{ r.country_name }}
+              {% if r.unmatched_territory %}
+                <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
+              {% endif %}
+            </th>
+            <td>{{ fix_region(r.region_name) }}</td>
+            <td class="num">{{ fmt_pct(r.coverage_reported) }}</td>
+            <td class="num">
+              {% if r.gap_to_threshold is not none %}
+                {{ '%+.1f'|format(r.gap_to_threshold) }} pp
+              {% else %}
+                &mdash;
+              {% endif %}
+            </td>
+            <td class="num">{{ fmt_int(r.target_cohort) }}</td>
+            <td class="num">{{ fmt_pct(r.doses_per_100_population, 2) }}</td>
+            <td>{{ r.herd_immunity_status }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {# ---- Method note ---- #}
+  <div class="method-note">
+    <h2>How these figures were calculated</h2>
+    <dl>
+      <dt>Coverage</dt>
+      <dd>
+        The figure each country reported to WHO. Its denominator is the
+        <strong>birth cohort</strong> that country targeted, not its total
+        population: coverage = doses &divide; target cohort &times; 100.
+      </dd>
+
+      <dt>Doses per 100 people</dt>
+      <dd>
+        Doses &divide; national population &times; 100. This is
+        <strong>not</strong> a coverage rate. It is shown so a population-based
+        reading is available, labelled for what it is.
+      </dd>
+
+      <dt>Regional average</dt>
+      <dd>
+        Each national figure weighted by the birth cohort it applies to, summed
+        across the region. The unweighted mean is printed beside it so the
+        difference is visible.
+      </dd>
+
+      <dt>Threshold</dt>
+      <dd>
+        {% if threshold and threshold.threshold_pct is not none %}
+          {{ fmt_pct(threshold.threshold_pct, 0) }} for
+          {{ threshold.disease_name }}.
+          {{ threshold.threshold_note }}
+          <span class="citation">Source: {{ threshold.threshold_source }}
+            {% if threshold.threshold_url %}
+              <a href="{{ threshold.threshold_url }}" rel="noopener">Read it</a>
+            {% endif %}
+          </span>
+        {% else %}
+          Select a single antigen to see the threshold that applies to it.
+        {% endif %}
+      </dd>
+
+      <dt>Exclusions</dt>
+      <dd>
+        Records with no coverage figure are excluded from every average rather
+        than counted as zero. They are stored as blanks, not as nulls, so an
+        ordinary average would silently treat them as zero and pull every
+        regional figure down.
+        Coverage above 100% is kept, not capped: doses given outside the target
+        cohort are real.
+        Countries with no economic classification and territories with no
+        country entry are shown as "Not classified" and "unmatched" rather than
+        dropped.
+      </dd>
+    </dl>
+  </div>
+
+{% endif %}
+{% endif %}
+{% endblock %}

@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {# Marks the document as scripted BEFORE first paint, so the nav is styled as
+     a dropdown from the start instead of flashing open and then collapsing.
+     With script disabled this never runs, the class is absent, and the CSS
+     falls back to submenus laid out in the flow. #}
+  <script>document.documentElement.className += " js";</script>
+</head>
+<body>
+
+  {# Keyboard users must be able to jump the nav. WCAG AA. #}
+  <a class="skip-link" href="#main">Skip to main content</a>
+
+  {# ---- Header. Identical on all six pages. ---- #}
+  <header class="site-header">
+    <div class="wrap header-inner">
+      <a class="logo" href="{{ url_for('landing.index') }}">
+        <span class="logo-mark" aria-hidden="true">IA</span>
+        <span class="logo-word">{{ site_name }}</span>
+      </a>
+
+      <nav class="primary-nav" aria-label="Main">
+        <ul>
+          {% for label, endpoint, covers, children in primary_nav %}
+            {% set current = request.endpoint in covers %}
+            <li class="nav-item{{ ' has-sub' if children }}">
+
+              {# The label is a real link, never a menu opener. #}
+              <a href="{{ url_for(endpoint) }}"{% if current %} class="current" aria-current="page"{% endif %}>{{ label }}</a>
+
+              {% if children %}
+                {# aria-expanded starts true so the submenu is OPEN in the HTML.
+                   Script collapses it on load. Without script the links are all
+                   still there and reachable, which is the point of doing it in
+                   this order rather than the other way round. #}
+                <button type="button" class="nav-toggle"
+                        aria-expanded="true"
+                        aria-controls="sub-{{ label|lower }}">
+                  <span class="visually-hidden">{{ label }} pages</span>
+                  <svg class="chev" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
+                    <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
+                          stroke="currentColor" stroke-width="1.8"
+                          stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                </button>
+
+                <ul class="subnav" id="sub-{{ label|lower }}">
+                  {% for code, sub_label, sub_endpoint in children %}
+                    <li>
+                      <a href="{{ url_for(sub_endpoint) }}"
+                         {% if request.endpoint == sub_endpoint %}aria-current="page" class="current"{% endif %}>
+                        <span class="sub-code">{{ code }}</span>
+                        <span class="sub-label">{{ sub_label }}</span>
+                      </a>
+                    </li>
+                  {% endfor %}
+                </ul>
+              {% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  {# ---- Hero band. Same shape on all six pages, different words. ---- #}
+  <div class="hero">
+    <div class="wrap">
+      {% block hero %}
+        <h1 class="hero-title">{{ page_title }}</h1>
+        <p class="hero-sub">{% block hero_sub %}{% endblock %}</p>
+      {% endblock %}
+    </div>
+  </div>
+
+  <main id="main" class="wrap">
+    {% block main %}{% endblock %}
+  </main>
+
+  {# ---- Footer. Identical on all six pages. ---- #}
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+
+      <div class="footer-brand">
+        <span class="logo-mark" aria-hidden="true">IA</span>
+        <p class="footer-word">{{ site_name }}</p>
+        <p class="footer-tagline">{{ site_tagline }}</p>
+      </div>
+
+      <nav class="footer-col" aria-label="All pages">
+        <h2>All pages</h2>
+        <ul class="footer-links">
+          {% for endpoint, label, task, owner, done in all_pages %}
+            <li>
+              <a href="{{ url_for(endpoint) }}">
+                <span class="footer-task">{{ task }}</span> {{ label }}
+              </a>
+              {% if not done %}<span class="wip">in progress</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </nav>
+
+      <div class="footer-col">
+        <h2>Team</h2>
+        <ul class="footer-team">
+          {% for m in team %}
+            {% set placeholder = 'HERE' in m.full_name|upper %}
+            <li>
+              {% if placeholder %}
+                {# Never print a fake student number as though it were real. #}
+                <span class="todo">Sub-Task {{ m.sub_task }}: name and student
+                number not filled in yet</span>
+              {% else %}
+                <span class="team-name">{{ m.full_name }}</span>
+                <span class="team-id">{{ m.student_number }}</span>
+                <span class="team-role">Sub-Task {{ m.sub_task }}</span>
+              {% endif %}
+            </li>
+          {% else %}
+            <li><span class="todo">Team not loaded</span></li>
+          {% endfor %}
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h2>Links</h2>
+        <ul class="footer-links">
+          {% for label, href in social_links %}
+            <li><a href="{{ href }}" rel="noopener">{{ label }}</a></li>
+          {% endfor %}
+          {% for s in sources %}
+            <li>
+              <a href="{{ s.url }}" rel="noopener">{{ s.publication }}</a>
+              {% if not s.verified %}<span class="wip">unverified</span>{% endif %}
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+
+    </div>
+
+    <div class="wrap footer-legal">
+      {% if sources %}
+        <p>
+          Data:
+          {% for s in sources %}
+            {{ s.publisher }}, <cite>{{ s.title }}</cite>{% if not loop.last %}; {% endif %}
+          {% endfor %}.
+        </p>
+      {% else %}
+        <p>Data: {{ source_name }}.</p>
+      {% endif %}
+      <p>
+        Coverage figures are reported national estimates. Every rate on this
+        site states the denominator it was calculated against.
+      </p>
+    </div>
+  </footer>
+
+  <script>
+  // Nav submenus. The markup ships EXPANDED so that with no script every link
+  // is present and reachable; this collapses them and makes them interactive.
+  // Opening is on click and on keyboard, never on hover: a hover menu cannot be
+  // opened on a touch screen and is hard work for anyone with a motor
+  // impairment, and this nav is the only route to two of the six pages.
+  (function () {
+    var toggles = [].slice.call(document.querySelectorAll('.nav-toggle'));
+    if (!toggles.length) { return; }
+
+    function setOpen(btn, open) {
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      var menu = document.getElementById(btn.getAttribute('aria-controls'));
+      if (menu) { menu.hidden = !open; }
+    }
+
+    function closeAll(except) {
+      toggles.forEach(function (b) { if (b !== except) { setOpen(b, false); } });
+    }
+
+    toggles.forEach(function (btn) {
+      setOpen(btn, false);                       // collapse once script is running
+      btn.addEventListener('click', function () {
+        var open = btn.getAttribute('aria-expanded') === 'true';
+        closeAll(btn);
+        setOpen(btn, !open);
+      });
+    });
+
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') {
+        var open = document.querySelector('.nav-toggle[aria-expanded="true"]');
+        closeAll();
+        if (open) { open.focus(); }              // focus must not be left adrift
+      }
+    });
+
+    // A click outside closes, but a click inside an open submenu must not.
+    document.addEventListener('click', function (e) {
+      if (!e.target.closest('.nav-item.has-sub')) { closeAll(); }
+    });
+
+    // Tabbing out of the whole item closes it, so the menu cannot be left
+    // hanging open behind the page.
+    document.querySelectorAll('.nav-item.has-sub').forEach(function (item) {
+      item.addEventListener('focusout', function (e) {
+        if (!item.contains(e.relatedTarget)) {
+          setOpen(item.querySelector('.nav-toggle'), false);
+        }
+      });
+    });
+  })();
+  </script>
+
+</body>
+</html>
