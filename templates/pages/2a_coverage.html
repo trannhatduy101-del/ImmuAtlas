@@ -125,7 +125,7 @@
     {% set silent = summary.n_countries - summary.n_countries_reporting %}
     {% if silent > 0 %}
       <strong>{{ fmt_int(silent) }}</strong> reported nothing and are shown as
-      "no data" rather than as zero.
+      &ldquo;no data&rdquo; rather than as zero.
     {% else %}
       every one of them reported.
     {% endif %}
@@ -286,8 +286,8 @@
         Coverage above 100% is kept, not capped: doses given outside the target
         cohort are real.
         Countries with no economic classification and territories with no
-        country entry are shown as "Not classified" and "unmatched" rather than
-        dropped.
+        country entry are shown as &ldquo;Not classified&rdquo; and
+        &ldquo;unmatched&rdquo; rather than dropped.
       </dd>
     </dl>
   </div>

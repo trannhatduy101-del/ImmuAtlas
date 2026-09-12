@@ -6,20 +6,34 @@
     <h1 class="hero-title">No data loaded</h1>
     <p class="hero-sub">{{ db_missing }}</p>
   {% else %}
-    {# The wireframe puts a statement at quote scale here. It is built from the
-       two facts the brief pairs deliberately: effort read alone overstates
-       success, disease burden read alone overstates failure. Both halves are
-       queried, so this line changes when the data changes. #}
-    <p class="hero-quote">
-      {{ fmt_pct(facts.coverage_last) }} of the target cohort reached.
-      {{ fmt_big(facts.total_cases) }} cases still reported.
+    {# The hero states the tension the whole site is built around: effort read
+       alone overstates success, disease burden read alone overstates failure.
+       Both halves are queried, so the headline stays true when the data does. #}
+    <h1 class="lp-hero-head">Coverage is high. The cases haven&rsquo;t stopped.</h1>
+    <p class="lp-hero-lead">
+      Across {{ fmt_int(facts.n_countries) }} countries, {{ facts.year_min }}&ndash;{{ facts.year_max }},
+      reported immunisation coverage sits high &mdash; yet preventable infections are still
+      counted in the millions. This site holds both figures next to each other, and always
+      names the denominator behind each one.
     </p>
-    <p class="hero-sub">
-      Immunisation coverage and preventable disease across
-      {{ fmt_int(facts.n_countries) }} countries, {{ facts.year_min }} to
-      {{ facts.year_max }}. Every rate on this site names the denominator it
-      was calculated against.
-    </p>
+
+    {# Two live figures, in tension. They count up on load where motion is
+       allowed; without script (or with reduced motion) they are simply the
+       server-rendered numbers. Colour is decorative only -- each figure is
+       labelled in words. #}
+    <div class="lp-tension">
+      <div class="lp-tension-item lp-tension-effort">
+        <p class="lp-tension-label">Average reported coverage, {{ facts.year_max }}</p>
+        <p class="lp-fig lp-count" data-to="{{ facts.coverage_last }}" data-kind="pct">{{ fmt_pct(facts.coverage_last) }}</p>
+        <p class="lp-tension-note">The effort &mdash; doses reaching the target birth cohort.</p>
+      </div>
+      <div class="lp-tension-sep" aria-hidden="true">vs</div>
+      <div class="lp-tension-item lp-tension-outcome">
+        <p class="lp-tension-label">Reported cases, {{ facts.year_min }}&ndash;{{ facts.year_max }}</p>
+        <p class="lp-fig lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</p>
+        <p class="lp-tension-note">The outcome &mdash; measles, pertussis and rubella still reported.</p>
+      </div>
+    </div>
   {% endif %}
 {% endblock %}
 
@@ -33,18 +47,18 @@
 {% else %}
 
   {# ---- Four facts, 2 x 2. The count is fixed at four by the brief. ---- #}
-  <section class="band">
+  <section class="band lp-reveal">
     <h2 class="section-head">Four figures from this data</h2>
     <ul class="facts">
       <li class="fact">
-        <span class="fact-figure">{{ fmt_int(facts.n_countries) }}</span>
+        <span class="fact-figure lp-count" data-to="{{ facts.n_countries }}" data-kind="int">{{ fmt_int(facts.n_countries) }}</span>
         <span class="fact-label">countries reporting</span>
         <p>Across {{ facts.year_max - facts.year_min + 1 }} years,
            {{ facts.year_min }} to {{ facts.year_max }}. The full extent of the
            data, not a selection.</p>
       </li>
       <li class="fact">
-        <span class="fact-figure">{{ fmt_big(facts.total_doses) }}</span>
+        <span class="fact-figure lp-count" data-to="{{ facts.total_doses }}" data-kind="big">{{ fmt_big(facts.total_doses) }}</span>
         <span class="fact-label">doses recorded</span>
         <p>Effort, not outcome. A dose delivered is not the same as a child
            protected, which is why this sits beside the case count.</p>
@@ -57,7 +71,7 @@
            targeted, which is what WHO reports as coverage.</p>
       </li>
       <li class="fact">
-        <span class="fact-figure">{{ fmt_big(facts.total_cases) }}</span>
+        <span class="fact-figure lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</span>
         <span class="fact-label">reported cases</span>
         <p>Outcome, not effort. Read alone it overstates failure, just as the
            dose count read alone overstates success.</p>
@@ -66,7 +80,7 @@
   </section>
 
   {# ---- Vaccine info: the diseases covered and the coverage each needs ---- #}
-  <section class="band">
+  <section class="band lp-reveal">
     <h2 class="section-head">Vaccine information</h2>
     <p class="section-intro">
       Three preventable diseases, each with the coverage WHO says is needed to
@@ -97,21 +111,36 @@
   </section>
 
   {# ---- Data: the trend, and what the data cannot tell you ---- #}
-  <section class="band">
+  <section class="band lp-reveal">
     <h2 class="section-head">The data</h2>
 
     {% if chart %}
-      <figure class="chart">
-        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" class="trend" role="img"
+      <figure class="chart lp-chart">
+        {# The line draws itself when it scrolls into view, and each year's
+           point is hover- AND keyboard-focusable, revealing the exact figures.
+           Without script the SVG is a normal static chart with the same
+           aria-label, and the full table below is the non-visual equivalent. #}
+        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" class="trend lp-trend" role="img"
              aria-label="Line chart of average reported coverage from
                          {{ chart.first.year }} at {{ fmt_pct(chart.first.avg_coverage) }}
                          to {{ chart.last.year }} at {{ fmt_pct(chart.last.avg_coverage) }}.
                          The figures are in the table below the chart.">
-          <polyline points="{{ chart.polyline }}" class="trend-line" />
+          <polyline points="{{ chart.polyline }}" class="trend-line" pathLength="1" />
           {% for x, y, row in chart.coords %}
-            <circle cx="{{ x }}" cy="{{ y }}" r="2.5" class="trend-dot" />
+            <g class="lp-pt" tabindex="0" role="img"
+               data-year="{{ row.year }}"
+               data-cov="{{ fmt_pct(row.avg_coverage) }}"
+               data-report="{{ fmt_int(row.n_reporting) }}"
+               data-cases="{{ fmt_int(row.total_cases) }}"
+               aria-label="{{ row.year }}: {{ fmt_pct(row.avg_coverage) }} average coverage,
+                           {{ fmt_int(row.n_reporting) }} national figures reporting,
+                           {{ fmt_int(row.total_cases) }} reported cases.">
+              <circle cx="{{ x }}" cy="{{ y }}" r="2.5" class="trend-dot" />
+              <circle cx="{{ x }}" cy="{{ y }}" r="9" class="lp-hit" />
+            </g>
           {% endfor %}
         </svg>
+        <div class="lp-tip" hidden aria-hidden="true"></div>
         <figcaption>
           <p class="chart-axis">
             Vertical axis runs {{ chart.y_min }}% to {{ chart.y_max }}%, not from
@@ -178,8 +207,9 @@
             vaccination records come from territories with no matching country
             entry. Shown as unmatched, never dropped.</li>
         <li><strong>{{ fmt_int(caveats.countries_no_economy) }}</strong> countries
-            have no economic classification. They appear as "Not classified" in
-            every economic breakdown rather than disappearing from it.</li>
+            have no economic classification. They appear as &ldquo;Not
+            classified&rdquo; in every economic breakdown rather than
+            disappearing from it.</li>
       </ul>
     </div>
 
@@ -194,6 +224,121 @@
       </a>
     </div>
   </section>
+
+  {# ---------------------------------------------------------------------------
+     Landing-page enhancement. Everything above works with this script removed:
+     numbers are already correct, the chart is a static SVG, and every section
+     is visible. This only adds motion and interactivity where they are safe.
+     --------------------------------------------------------------------------- #}
+  <script>
+  (function () {
+    var reduce = window.matchMedia
+      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    var hasIO = 'IntersectionObserver' in window;
+
+    // --- number formatters, mirroring db.py so the count-up reads the same ---
+    function fmtInt(n){ return Math.round(n).toLocaleString('en-US'); }
+    function fmtBig(n){
+      n = Math.abs(n);
+      var units = [[1e12,'trillion'],[1e9,'billion'],[1e6,'million']];
+      for (var i = 0; i < units.length; i++) {
+        if (n >= units[i][0]) { return (n/units[i][0]).toFixed(2) + ' ' + units[i][1]; }
+      }
+      return fmtInt(n);
+    }
+    function fmtPct(n){ return n.toFixed(1) + '%'; }
+    function render(kind, n){
+      return kind === 'big' ? fmtBig(n) : kind === 'pct' ? fmtPct(n) : fmtInt(n);
+    }
+
+    // --- count a figure up from 0 to its target, then snap to the exact,
+    //     server-rendered text so the final value is always authoritative ---
+    function countUp(el){
+      var target = parseFloat(el.getAttribute('data-to'));
+      var kind = el.getAttribute('data-kind') || 'int';
+      var finalText = el.textContent;
+      if (isNaN(target)) { return; }
+      var dur = 900, start = null;
+      el.textContent = render(kind, 0);
+      function step(ts){
+        if (!start) { start = ts; }
+        var p = Math.min(1, (ts - start) / dur);
+        var eased = 1 - Math.pow(1 - p, 3);
+        el.textContent = render(kind, target * eased);
+        if (p < 1) { requestAnimationFrame(step); }
+        else { el.textContent = finalText; }
+      }
+      requestAnimationFrame(step);
+    }
+
+    function initCounts(){
+      var figs = [].slice.call(document.querySelectorAll('.lp-count'));
+      if (reduce || !hasIO) { return; }               // leave the server value
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { countUp(e.target); io.unobserve(e.target); }
+        });
+      }, { threshold: 0.4 });
+      figs.forEach(function (f) { io.observe(f); });
+    }
+
+    // --- trend chart: self-draw on view + a tooltip on hover/focus ---
+    function initChart(){
+      var svg = document.querySelector('.lp-trend');
+      if (!svg) { return; }
+      var fig = svg.closest('.lp-chart');
+      var tip = fig && fig.querySelector('.lp-tip');
+      var pts = [].slice.call(svg.querySelectorAll('.lp-pt'));
+
+      function show(pt){
+        if (!tip) { return; }
+        tip.innerHTML = '<strong>' + pt.getAttribute('data-year') + '</strong> &middot; '
+          + pt.getAttribute('data-cov') + ' coverage &middot; '
+          + pt.getAttribute('data-report') + ' reporting &middot; '
+          + pt.getAttribute('data-cases') + ' cases';
+        tip.hidden = false;
+        var r = pt.getBoundingClientRect(), f = fig.getBoundingClientRect();
+        tip.style.left = (r.left - f.left + r.width / 2) + 'px';
+        tip.style.top = (r.top - f.top) + 'px';
+      }
+      function hide(){ if (tip) { tip.hidden = true; } }
+
+      pts.forEach(function (pt) {
+        pt.addEventListener('mouseenter', function () { show(pt); });
+        pt.addEventListener('mouseleave', hide);
+        pt.addEventListener('focus', function () { show(pt); });
+        pt.addEventListener('blur', hide);
+      });
+
+      if (!reduce && hasIO) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (e) {
+            if (e.isIntersecting) { svg.classList.add('is-draw'); io.unobserve(e.target); }
+          });
+        }, { threshold: 0.3 });
+        io.observe(svg);
+      }
+    }
+
+    // --- one orchestrated entrance. Default is visible; only pre-hide when
+    //     motion is allowed, so a script/observer failure never hides content ---
+    function initReveal(){
+      var els = [].slice.call(document.querySelectorAll('.lp-reveal'));
+      if (reduce || !hasIO) { return; }
+      els.forEach(function (el) { el.classList.add('lp-anim'); });
+      var io = new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) {
+          if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+        });
+      }, { rootMargin: '0px 0px -10% 0px' });
+      els.forEach(function (el) { io.observe(el); });
+    }
+
+    function boot(){ initCounts(); initChart(); initReveal(); }
+    if (document.readyState !== 'loading') { boot(); }
+    else { document.addEventListener('DOMContentLoaded', boot); }
+  })();
+  </script>
 
 {% endif %}
 {% endblock %}
