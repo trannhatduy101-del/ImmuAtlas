@@ -174,6 +174,20 @@ CREATE TABLE IF NOT EXISTS herd_immunity_threshold (
 );
 
 
+-- Per-disease reference for the landing "Vaccine information" cards: the
+-- antigen(s) that protect against it, a short factual blurb, and the WHO
+-- page for it. Kept in the database (not hardcoded in the template) so the
+-- text and links are data-driven and verifiable, the same rule the rest of
+-- the site follows. Seeded from WHO fact sheets / health-topic pages.
+CREATE TABLE IF NOT EXISTS disease_info (
+    inf_type      TEXT PRIMARY KEY,
+    vaccine_label TEXT,          -- the antigen(s) that protect against it
+    blurb         TEXT,          -- one short, factual paragraph
+    who_url       TEXT,          -- WHO fact sheet / health-topic page
+    FOREIGN KEY (inf_type) REFERENCES Infection_Type(id)
+);
+
+
 -- =====================================================================
 -- PART 5  VIEW LAYER
 --

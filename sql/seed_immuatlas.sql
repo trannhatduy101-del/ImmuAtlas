@@ -300,3 +300,24 @@ INSERT INTO herd_immunity_threshold (inf_type, threshold_pct, source, source_url
   'WHO. Rubella vaccines: WHO position paper, July 2020. Weekly Epidemiological Record 95(27):306-324.',
   'https://www.who.int/teams/immunization-vaccines-and-biologicals/policies/position-papers/rubella',
   'This is the MINIMUM sustainable coverage for introducing and maintaining rubella vaccine, NOT an elimination threshold. Below 80 percent sustained, infection shifts to older ages where the risk of Congenital Rubella Syndrome is highest, so partial coverage can be worse than none. Say this on any page that shows it.');
+
+
+-- =====================================================================
+-- DISEASE INFORMATION  (landing "Vaccine information" cards)
+-- Short factual blurbs and the WHO page for each disease. Verify the text
+-- against the linked source before relying on it; these are summaries.
+-- =====================================================================
+
+DELETE FROM disease_info;
+INSERT INTO disease_info (inf_type, vaccine_label, blurb, who_url) VALUES
+ ('MEA', 'Measles-containing vaccine (MCV1, MCV2)',
+  'Measles is a highly contagious airborne virus that can cause severe complications and death. Two doses of a measles-containing vaccine give lasting protection; WHO sets the elimination target at 95% coverage of both doses, reached equitably in every district.',
+  'https://www.who.int/news-room/fact-sheets/detail/measles'),
+
+ ('PER', 'DTP-containing vaccine (DTPCV1, DTPCV3)',
+  'Pertussis, or whooping cough, is a respiratory infection caused by the bacterium Bordetella pertussis and is most dangerous to infants. Protection comes from the DTP-containing vaccine, but immunity wanes over time, so reported coverage alone understates how susceptible a population still is.',
+  'https://www.who.int/health-topics/pertussis'),
+
+ ('RUB', 'Rubella-containing vaccine (RCV1)',
+  'Rubella is usually mild, but infection in early pregnancy can cause Congenital Rubella Syndrome in the baby. A rubella-containing vaccine prevents it. WHO warns that sustained coverage below 80% can shift infection to older ages and raise CRS risk, so partial coverage can be worse than none.',
+  'https://www.who.int/news-room/fact-sheets/detail/rubella');

@@ -11,8 +11,12 @@ SELECT
     h.source            AS threshold_source,
     h.source_url        AS threshold_url,
     h.note              AS threshold_note,
+    di.vaccine_label    AS vaccine_label,
+    di.blurb            AS blurb,
+    di.who_url          AS who_url,
     (SELECT COUNT(DISTINCT country_id) FROM v_infection vi
       WHERE vi.inf_type = t.id AND vi.value_status = 'reported') AS n_countries_reporting
 FROM Infection_Type t
 LEFT JOIN herd_immunity_threshold h ON h.inf_type = t.id
+LEFT JOIN disease_info          di ON di.inf_type = t.id
 ORDER BY t.description;
