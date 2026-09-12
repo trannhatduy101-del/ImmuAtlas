@@ -816,3 +816,111 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .lp-trend.is-draw .trend-line { animation: none; stroke-dashoffset: 0; }
   .lp-trend .trend-dot { transition: none; }
 }
+
+/* Four figures — small summary cards ---------------------------------------
+   The brief fixes this at four; kept 2 x 2 so effort sits beside outcome. */
+.lp-figure-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, 1fr);
+}
+@media (max-width: 40rem) { .lp-figure-cards { grid-template-columns: 1fr; } }
+.lp-figure-card {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  padding: 1rem 1.1rem;
+  background: var(--bg);
+  transition: border-color .15s var(--ease-out),
+              box-shadow .15s var(--ease-out),
+              transform .15s var(--ease-out);
+}
+.lp-figure-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(22, 25, 29, .08);
+  transform: translateY(-2px);
+}
+.lp-figure-card p { margin: 0; font-size: .92rem; color: var(--ink-muted); }
+
+/* Vaccine information — interactive picture cards --------------------------- */
+.lp-vax-list {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+}
+.lp-vax {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--bg);
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.lp-vax:hover,
+.lp-vax[open] { border-color: var(--accent); box-shadow: 0 4px 16px rgba(22, 25, 29, .10); }
+
+/* The whole face is the click/keyboard target; kill the default marker. */
+.lp-vax-face {
+  list-style: none;
+  cursor: pointer;
+  display: grid;
+  grid-template-columns: 3.4rem 1fr auto;
+  align-items: center;
+  gap: .9rem;
+  padding: .85rem 1rem;
+}
+.lp-vax-face::-webkit-details-marker { display: none; }
+.lp-vax-face:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
+.lp-vax-pic { width: 3.4rem; height: 3.4rem; }
+.lp-vax-svg { width: 100%; height: 100%; display: block; }
+.lp-vax-name { display: block; font-weight: 700; font-size: 1.05rem; line-height: 1.15; }
+.lp-vax-antigen { display: block; font-size: .77rem; color: var(--ink-muted); margin-top: .1rem; }
+.lp-vax-thr { display: block; font-size: .85rem; margin-top: .2rem; }
+.lp-vax-thr strong { color: var(--accent); }
+.lp-vax-chev { color: var(--ink-muted); display: grid; place-items: center;
+               transition: transform .18s var(--ease-out); }
+.lp-vax[open] .lp-vax-chev { transform: rotate(180deg); }
+
+.lp-vax-body { padding: 0 1rem 1rem; }
+.lp-vax[open] .lp-vax-body { animation: lp-vax-open .24s var(--ease-out); }
+@keyframes lp-vax-open {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+.lp-vax-blurb { margin: .1rem 0 .6rem; font-size: .93rem; }
+.lp-vax-note { margin: 0 0 .6rem; font-size: .85rem; color: var(--ink-muted); }
+.lp-vax .disease-count { margin: 0 0 .6rem; font-size: .86rem; color: var(--ink-muted); }
+.lp-vax .citation { border-top: 1px solid var(--rule); padding-top: .5rem; }
+.lp-vax-who {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  margin-top: .5rem;
+  font-weight: 600;
+  font-size: .9rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  padding: .42rem .85rem;
+  border-radius: var(--radius);
+  text-decoration: none;
+}
+.lp-vax-who:hover { background: #094a4a; }
+.lp-ext { font-size: .95em; line-height: 1; }
+
+/* The vial illustration. Colours come from tokens so the art stays on-palette. */
+.v-cap, .v-neck { fill: var(--ink-muted); }
+.v-body { fill: var(--bg); stroke: var(--accent); stroke-width: 2; }
+.v-liquid { fill: var(--accent); opacity: .88; }
+.v-label { fill: var(--bg); stroke: var(--accent); stroke-width: 1; }
+.v-glyph { fill: var(--flag-rule); }
+.v-glyph-ring { fill: none; stroke: var(--flag-rule); stroke-width: 2; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lp-figure-card { transition: none; }
+  .lp-figure-card:hover { transform: none; }
+  .lp-vax, .lp-vax-chev { transition: none; }
+  .lp-vax[open] .lp-vax-body { animation: none; }
+}
