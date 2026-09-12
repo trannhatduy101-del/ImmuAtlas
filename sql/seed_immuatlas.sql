@@ -33,9 +33,9 @@ DELETE FROM herd_immunity_threshold;
 -- =====================================================================
 
 INSERT INTO team_member (student_number, full_name, sub_task, responsibility, display_order) VALUES
-  ('sXXXXXXX', 'YOUR NAME HERE',     'A',
+  ('s4160446', 'TRAN NHAT DUY', 'A',
    'Landing page, vaccination rates by country and region, biggest improvement analysis', 1),
-  ('sYYYYYYY', 'TEAMMATE NAME HERE', 'B',
+  ('s4138996', 'TRAN MINH HUY', 'B',
    'Mission statement, infection data by economic status, above-average infection analysis', 2);
 
 
