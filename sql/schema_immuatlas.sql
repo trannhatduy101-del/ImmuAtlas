@@ -366,4 +366,28 @@ CREATE INDEX IF NOT EXISTS idx_vacc_antigen_year  ON Vaccination(antigen, year);
 CREATE INDEX IF NOT EXISTS idx_vacc_inf_year      ON Vaccination(inf_type, year);
 CREATE INDEX IF NOT EXISTS idx_inf_type_year      ON InfectionData(inf_type, year);
 CREATE INDEX IF NOT EXISTS idx_inf_country_year   ON InfectionData(country, year);
-CREATE INDEX IF NOT EXISTS idx_pop_country_year   ON CountryPopulation(country, year);
+
+
+-- =====================================================================
+-- PART 7  UNIQUENESS GUARANTEES  (brief L2: "duplicate data ... handled")
+--
+-- The supplied data is already duplicate-free on each fact table's
+-- natural key -- verified: row count == distinct-key count
+-- (Vaccination 24,211; InfectionData 15,525; CountryPopulation 5,425).
+--
+-- These UNIQUE indexes turn that observation into a rule the database
+-- ENFORCES: a duplicate row can never be inserted, so an AVG or SUM can
+-- never silently double-count one. Creating the index is itself the
+-- duplicate check the brief asks for -- it fails loudly if a duplicate
+-- key already exists, rather than letting it pass unnoticed.
+--
+-- ux_population_key also serves the (country, year) lookup, so it
+-- replaces the plain idx_pop_country_year that used to live above.
+-- =====================================================================
+
+CREATE UNIQUE INDEX IF NOT EXISTS ux_vaccination_key
+    ON Vaccination(inf_type, antigen, country, year);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_infection_key
+    ON InfectionData(inf_type, country, year);
+CREATE UNIQUE INDEX IF NOT EXISTS ux_population_key
+    ON CountryPopulation(country, year);
