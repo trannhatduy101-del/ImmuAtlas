@@ -42,7 +42,7 @@ ALL_PAGES = [
     ("mission.index",       "Mission statement",       "1B", "Sub-Task B", False),
     ("coverage.index",      "Vaccination rates",       "2A", "Sub-Task A", True),
     ("infections.index",    "Infections by economy",   "2B", "Sub-Task B", False),
-    ("improvement.index",   "Biggest improvement",     "3A", "Sub-Task A", False),
+    ("improvement.index",   "Biggest improvement",     "3A", "Sub-Task A", True),
     ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", False),
 ]
 

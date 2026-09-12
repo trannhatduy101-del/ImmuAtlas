@@ -10,7 +10,10 @@ whitelists the sort column, and formats the output for reading. Nothing is
 sorted or aggregated in Python.
 """
 
-from flask import Blueprint, render_template, request
+import csv
+import io
+
+from flask import Blueprint, render_template, request, Response
 
 import db
 
@@ -161,6 +164,11 @@ def index():
             "bar_pct": min(100.0, float(weighted)) if weighted is not None else 0.0,
         })
 
+    # CSV export of the country table exactly as filtered and sorted, so a
+    # reader can take the numbers away and check them.
+    if request.args.get("format") == "csv":
+        return _csv_coverage(rows, antigen, year)
+
     return render_template(
         "pages/2a_coverage.html",
         db_missing=None,
@@ -172,3 +180,22 @@ def index():
         fix_region=fix_region,
         fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,
     )
+
+
+def _csv_coverage(rows, antigen, year):
+    """Stream the country table as CSV, matching what is shown on the page."""
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(["country", "region", "coverage_reported",
+                "gap_to_threshold_pp", "target_cohort",
+                "doses_per_100_population", "herd_immunity_status",
+                "unmatched_territory"])
+    for r in rows:
+        w.writerow([r["country_name"], fix_region(r["region_name"]),
+                    r["coverage_reported"], r["gap_to_threshold"],
+                    r["target_cohort"], r["doses_per_100_population"],
+                    r["herd_immunity_status"],
+                    1 if r["unmatched_territory"] else 0])
+    fname = "coverage_%s_%s.csv" % (antigen or "all", year or "all")
+    return Response(buf.getvalue(), mimetype="text/csv",
+                    headers={"Content-Disposition": "attachment; filename=%s" % fname})

@@ -1,0 +1,46 @@
+-- 3A: biggest improvement in reported coverage for one antigen between a start
+-- and an end year, with the matching change in reported case rate so the page
+-- can ask whether disease burden ACTUALLY fell -- the Level-3 "use one result
+-- to find another sub-dataset" step.
+--
+-- Every figure comes from the cleaned views (v_coverage / v_infection), so the
+-- empty-string trap is already handled. A country is included only if it has a
+-- real coverage figure at BOTH endpoints: the inner self-join on v_coverage
+-- plus the two NOT NULL tests drop anyone missing either year, so no country
+-- can appear from nowhere and show infinite improvement (stated on the page).
+--
+-- The case-rate columns are LEFT JOINed on the antigen's own disease
+-- (cs.inf_type), so a country with coverage but no usable case rate still
+-- ranks -- its case change simply reads "no data" rather than removing it.
+--
+-- Bound params: :antigen, :start_year, :end_year (and :limit, appended with the
+-- whitelisted ORDER BY in the route -- a column name cannot be a bound value).
+SELECT
+    cs.country_id,
+    cs.country_name,
+    cs.region_name,
+    cs.coverage_reported                                    AS coverage_start,
+    ce.coverage_reported                                    AS coverage_end,
+    ROUND(ce.coverage_reported - cs.coverage_reported, 2)   AS coverage_change,
+    cs.national_population                                  AS population_start,
+    ce.national_population                                  AS population_end,
+    isf.cases_per_100k                                      AS cases_start,
+    ief.cases_per_100k                                      AS cases_end,
+    ROUND(ief.cases_per_100k - isf.cases_per_100k, 2)       AS case_change
+FROM v_coverage cs
+JOIN v_coverage ce
+      ON ce.country_id = cs.country_id
+     AND ce.antigen    = cs.antigen
+     AND ce.year       = :end_year
+LEFT JOIN v_infection isf
+      ON isf.country_id = cs.country_id
+     AND isf.inf_type   = cs.inf_type
+     AND isf.year       = :start_year
+LEFT JOIN v_infection ief
+      ON ief.country_id = cs.country_id
+     AND ief.inf_type   = cs.inf_type
+     AND ief.year       = :end_year
+WHERE cs.antigen = :antigen
+  AND cs.year    = :start_year
+  AND cs.coverage_reported IS NOT NULL
+  AND ce.coverage_reported IS NOT NULL
