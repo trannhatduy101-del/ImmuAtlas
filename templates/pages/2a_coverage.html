@@ -236,6 +236,13 @@
     </table>
   </div>
 
+  <p class="imp-export">
+    <a href="{{ url_for('coverage.index', antigen=antigen, year=year, region=region,
+                        country=country, sort=sort_active, format='csv') }}">
+      Download this table as CSV
+    </a>
+  </p>
+
   {# ---- Method note ---- #}
   <div class="method-note">
     <h2>How these figures were calculated</h2>
