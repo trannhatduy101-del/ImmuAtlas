@@ -33,6 +33,14 @@
   --accent-lift: #14807d;
   --flag-rule:   #a9701a;
 
+  /* Status colours for result badges (e.g. "cases fell" / "cases rose").
+     Always paired with a word, never the only signal. The green harmonises
+     with the teal accent rather than shouting a generic "success" green. */
+  --ok:          #1c6b4a;
+  --ok-bg:       #e6f1ec;
+  --warn-ink:    #8a5a00;
+  --none-ink:    #5f676d;
+
   --rule:        #d9dedf;
   --rule-deep:   #1d5555;
   --focus:       #0b5d5d;
@@ -924,3 +932,83 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   .lp-vax, .lp-vax-chev { transition: none; }
   .lp-vax[open] .lp-vax-body { animation: none; }
 }
+
+/* ===========================================================================
+   3A biggest improvement — dumbbell ranking + status badges
+   The dumbbell shows each country's coverage at the two years and the jump
+   between them; every figure is also printed beside the bar and in the table,
+   so the chart is a reading aid, never the only way to get a number.
+   =========================================================================== */
+.imp-chart { margin: 1rem 0 1.6rem; }
+.imp-legend {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 1rem;
+  margin: 0 0 .8rem; font-size: .8rem; color: var(--ink-muted);
+}
+.imp-key { display: inline-flex; align-items: center; gap: .4rem; }
+.imp-key::before { content: ""; width: .7rem; height: .7rem; border-radius: 50%; }
+.imp-key-start::before { background: var(--ink-muted); }
+.imp-key-end::before   { background: var(--accent); }
+.imp-axismax { margin-left: auto; }
+
+.imp-rows { list-style: none; margin: 0; padding: 0; }
+.imp-row {
+  display: grid;
+  grid-template-columns: 12rem 1fr 11rem;
+  gap: .9rem;
+  align-items: center;
+  padding: .45rem 0;
+  border-top: 1px solid var(--rule);
+}
+.imp-row:first-child { border-top: 0; }
+.imp-country { min-width: 0; }
+.imp-name { display: block; font-weight: 600; font-size: .92rem; }
+.imp-region { display: block; font-size: .76rem; color: var(--ink-muted); }
+
+/* The track: a baseline rail, a connector for the jump, and two dots. */
+.imp-track { position: relative; height: 1.4rem; }
+.imp-track::before {
+  content: ""; position: absolute; left: 0; right: 0; top: 50%;
+  height: 1px; background: var(--rule);
+}
+.imp-connect {
+  position: absolute; top: 50%; height: 3px; transform: translateY(-50%);
+  border-radius: 2px;
+}
+.imp-connect.is-up   { background: var(--accent); }
+.imp-connect.is-down { background: var(--flag-rule); }
+.imp-dot {
+  position: absolute; top: 50%; width: .72rem; height: .72rem;
+  margin-left: -.36rem; transform: translateY(-50%);
+  border-radius: 50%; border: 2px solid var(--bg);
+}
+.imp-dot-start { background: var(--ink-muted); }
+.imp-dot-end   { background: var(--accent); }
+
+.imp-delta { font-size: .82rem; text-align: right; font-variant-numeric: tabular-nums; }
+.imp-delta strong { margin-left: .25rem; }
+.imp-delta strong.up   { color: var(--accent); }
+.imp-delta strong.down { color: var(--flag-rule); }
+
+@media (max-width: 44rem) {
+  .imp-row { grid-template-columns: 1fr; gap: .25rem; padding: .7rem 0; }
+  .imp-track { order: 3; margin-top: .1rem; }
+  .imp-delta { text-align: left; }
+}
+
+/* Status badges — always carry the word, so colour is never the only signal. */
+.imp-tag {
+  display: inline-block;
+  font-size: .72rem;
+  font-weight: 600;
+  padding: .05rem .4rem;
+  border-radius: 2px;
+  border: 1px solid;
+  white-space: nowrap;
+}
+.imp-tag.fell { color: var(--ok);        border-color: var(--ok);        background: var(--ok-bg); }
+.imp-tag.rose { color: var(--warn-ink);  border-color: var(--flag-rule); background: var(--bg-flag); }
+.imp-tag.none,
+.imp-tag.flat { color: var(--none-ink);  border-color: var(--rule);      background: var(--bg-sunk); }
+
+.imp-export { margin: .9rem 0 0; }
+.imp-export a { color: var(--accent); font-weight: 600; }
