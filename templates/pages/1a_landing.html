@@ -44,22 +44,11 @@
       names the denominator behind each one.
     </p>
 
-    {# Two live figures, in tension. They count up on load where motion is
-       allowed; without script (or with reduced motion) they are simply the
-       server-rendered numbers. Colour is decorative only -- each figure is
-       labelled in words. #}
-    <div class="lp-tension">
-      <div class="lp-tension-item lp-tension-effort">
-        <p class="lp-tension-label">Average reported coverage, {{ facts.year_max }}</p>
-        <p class="lp-fig lp-count" data-to="{{ facts.coverage_last }}" data-kind="pct">{{ fmt_pct(facts.coverage_last) }}</p>
-        <p class="lp-tension-note">The effort &mdash; doses reaching the target birth cohort.</p>
-      </div>
-      <div class="lp-tension-sep" aria-hidden="true">vs</div>
-      <div class="lp-tension-item lp-tension-outcome">
-        <p class="lp-tension-label">Reported cases, {{ facts.year_min }}&ndash;{{ facts.year_max }}</p>
-        <p class="lp-fig lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</p>
-        <p class="lp-tension-note">The outcome &mdash; measles, pertussis and rubella still reported.</p>
-      </div>
+    {# Primary calls to action: the hero drives straight into the two built
+       dashboards rather than ending on a statistic. #}
+    <div class="lp-hero-cta">
+      <a class="btn btn-primary" href="{{ url_for('coverage.index') }}">Explore vaccination rates</a>
+      <a class="btn btn-ghost" href="{{ url_for('improvement.index') }}">Compare biggest improvement</a>
     </div>
   {% endif %}
 {% endblock %}
@@ -103,6 +92,32 @@
         <p>Outcome, not effort. Read alone it overstates failure, just as the
            dose count read alone overstates success.</p>
       </li>
+    </ul>
+  </section>
+
+  {# ---- Explore: the four data views as a feature grid (VaxVision-style
+         structure). Built pages link straight in; unbuilt ones are shown
+         honestly as "in progress" rather than hidden. all_pages comes from the
+         application context processor. ---- #}
+  <section class="band lp-reveal">
+    <h2 class="section-head">Explore the data</h2>
+    <p class="section-intro">
+      Four focused views of the same WHO dataset, from a shallow glance to a deep
+      dive. Two are built; the other two are on the way.
+    </p>
+    <ul class="lp-explore">
+      {% for endpoint, label, code, owner, done in all_pages if code in ['2A', '2B', '3A', '3B'] %}
+        <li>
+          <a class="lp-explore-card{{ ' is-wip' if not done }}" href="{{ url_for(endpoint) }}">
+            <span class="lp-explore-code">{{ code }}</span>
+            <span class="lp-explore-mid">
+              <span class="lp-explore-label">{{ label }}</span>
+              {% if not done %}<span class="lp-explore-wip">in progress</span>{% endif %}
+            </span>
+            <span class="lp-explore-go" aria-hidden="true">&rarr;</span>
+          </a>
+        </li>
+      {% endfor %}
     </ul>
   </section>
 
@@ -269,17 +284,6 @@
             classified&rdquo; in every economic breakdown rather than
             disappearing from it.</li>
       </ul>
-    </div>
-
-    <div class="entry-cards">
-      <a class="entry-card" href="{{ url_for('coverage.index') }}">
-        <span class="entry-q">How well is a country or region covered right now?</span>
-        <span class="entry-go">Explore vaccination rates</span>
-      </a>
-      <a class="entry-card" href="{{ url_for('improvement.index') }}">
-        <span class="entry-q">Which countries improved most, and did cases actually fall?</span>
-        <span class="entry-go">Compare biggest improvement</span>
-      </a>
     </div>
   </section>
 

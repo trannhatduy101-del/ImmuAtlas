@@ -21,59 +21,63 @@
 {# ---- Filters. GET, so the ranking lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Choose a period and an antigen</h2>
 <form class="filters" method="get" action="{{ url_for('improvement.index') }}">
-  <div class="filter-row">
-    <div class="field">
-      <label for="f-antigen">Antigen</label>
-      <select id="f-antigen" name="antigen">
-        {% for a in antigens %}
-          <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
-            {{ a.antigen_name }}
-          </option>
-        {% endfor %}
-      </select>
+  <fieldset class="filter-group filter-group--key">
+    <legend>Set the comparison <span class="filter-tag key">required</span></legend>
+    <div class="filter-row">
+      <div class="field">
+        <label for="f-antigen">Antigen</label>
+        <select id="f-antigen" name="antigen">
+          {% for a in antigens %}
+            <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
+              {{ a.antigen_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-start">Start year</label>
+        <select id="f-start" name="start">
+          {% for y in years %}
+            <option value="{{ y.year }}" {% if y.year == start_year %}selected{% endif %}>{{ y.year }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-end">End year</label>
+        <select id="f-end" name="end">
+          {% for y in years %}
+            <option value="{{ y.year }}" {% if y.year == end_year %}selected{% endif %}>{{ y.year }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
+  </fieldset>
 
-    <div class="field">
-      <label for="f-start">Start year</label>
-      <select id="f-start" name="start">
-        {% for y in years %}
-          <option value="{{ y.year }}" {% if y.year == start_year %}selected{% endif %}>{{ y.year }}</option>
-        {% endfor %}
-      </select>
+  <fieldset class="filter-group">
+    <legend>Options</legend>
+    <div class="filter-row">
+      <div class="field">
+        <label for="f-n">Countries to rank</label>
+        <select id="f-n" name="n">
+          {% for opt in count_options %}
+            <option value="{{ opt }}" {% if opt == count %}selected{% endif %}>Top {{ opt }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-sort">Sort by</label>
+        <select id="f-sort" name="sort">
+          {% for key, label in sort_labels %}
+            <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field field-actions">
+        <button type="submit">Rank</button>
+        <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
+      </div>
     </div>
-
-    <div class="field">
-      <label for="f-end">End year</label>
-      <select id="f-end" name="end">
-        {% for y in years %}
-          <option value="{{ y.year }}" {% if y.year == end_year %}selected{% endif %}>{{ y.year }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="f-n">Countries to rank</label>
-      <select id="f-n" name="n">
-        {% for opt in count_options %}
-          <option value="{{ opt }}" {% if opt == count %}selected{% endif %}>Top {{ opt }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_labels %}
-          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field field-actions">
-      <button type="submit">Rank</button>
-      <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
-    </div>
-  </div>
+  </fieldset>
 </form>
 
 {% if rejected %}
