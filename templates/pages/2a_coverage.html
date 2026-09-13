@@ -20,6 +20,9 @@
 {# ---- Filters. GET, so the selection lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Filter</h2>
 <form class="filters" method="get" action="{{ url_for('coverage.index') }}">
+  {# Marks the request as a real submission, so a fresh visit shows the prompt
+     rather than a pre-run default selection. #}
+  <input type="hidden" name="submitted" value="1">
   <fieldset class="filter-group filter-group--key">
     <legend>Pick an antigen and year <span class="filter-tag key">main filters</span></legend>
     <div class="filter-row">
@@ -96,6 +99,15 @@
     </div>
   </fieldset>
 </form>
+
+{% if not submitted %}
+  <div class="empty-state prompt-state">
+    <h2>Choose your filters to begin</h2>
+    <p>Pick an antigen and year above &mdash; narrow by region or country if you
+       like &mdash; then press <strong>Apply</strong>. The regional summary and
+       country table appear here.</p>
+  </div>
+{% else %}
 
 {% if rejected %}
   <div class="rejected-note" role="status">
@@ -202,8 +214,8 @@
 
   {# ---- Country table ---- #}
   <h2 class="section-head">Country table</h2>
-  <div class="table-scroll">
-    <table>
+  <div class="table-scroll clean">
+    <table class="table--clean">
       <caption>
         {{ fmt_int(rows|length) }} records.
         Sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
@@ -248,7 +260,7 @@
 
   <p class="imp-export">
     <a href="{{ url_for('coverage.index', antigen=antigen, year=year, region=region,
-                        country=country, sort=sort_active, format='csv') }}">
+                        country=country, sort=sort_active, submitted='1', format='csv') }}">
       Download this table as CSV
     </a>
   </p>
@@ -309,6 +321,7 @@
     </dl>
   </div>
 
-{% endif %}
-{% endif %}
+{% endif %}{# results/empty #}
+{% endif %}{# submitted #}
+{% endif %}{# db_missing #}
 {% endblock %}

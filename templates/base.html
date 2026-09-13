@@ -5,18 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head_extra %}{% endblock %}
   {# Preload the two self-hosted fonts so headings/body don't flash the fallback. #}
   <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ url_for('static', filename='fonts/Fraunces.woff2') }}">
   <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ url_for('static', filename='fonts/PublicSans.woff2') }}">
-  {# Marks the document as scripted BEFORE first paint, so the nav is styled as
-     a dropdown from the start instead of flashing open and then collapsing.
-     With script disabled this never runs, the class is absent, and the CSS
-     falls back to submenus laid out in the flow. #}
-  <script>document.documentElement.className += " js";</script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
   {# Keyboard users must be able to jump the nav. WCAG AA. #}
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -102,9 +98,7 @@
         <ul class="footer-links">
           {% for endpoint, label, task, owner, done in all_pages %}
             <li>
-              <a href="{{ url_for(endpoint) }}">
-                <span class="footer-task">{{ task }}</span> {{ label }}
-              </a>
+              <a href="{{ url_for(endpoint) }}">{{ label }}</a>
               {% if not done %}<span class="wip">in progress</span>{% endif %}
             </li>
           {% endfor %}
@@ -167,64 +161,6 @@
       </p>
     </div>
   </footer>
-
-  <script>
-  // Nav submenus. The markup ships EXPANDED so that with no script every link
-  // is present and reachable; this collapses them and makes them interactive.
-  // Opening is on click and on keyboard, never on hover: a hover menu cannot be
-  // opened on a touch screen and is hard work for anyone with a motor
-  // impairment, and this nav is the only route to two of the six pages.
-  (function () {
-    var toggles = [].slice.call(document.querySelectorAll('.nav-toggle'));
-    if (!toggles.length) { return; }
-
-    function setOpen(btn, open) {
-      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-      var menu = document.getElementById(btn.getAttribute('aria-controls'));
-      if (menu) { menu.hidden = !open; }
-    }
-
-    function closeAll(except) {
-      toggles.forEach(function (b) { if (b !== except) { setOpen(b, false); } });
-    }
-
-    toggles.forEach(function (btn) {
-      setOpen(btn, false);                       // collapse once script is running
-      btn.addEventListener('click', function () {
-        var open = btn.getAttribute('aria-expanded') === 'true';
-        closeAll(btn);
-        setOpen(btn, !open);
-      });
-    });
-
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') {
-        var open = document.querySelector('.nav-toggle[aria-expanded="true"]');
-        closeAll();
-        if (open) { open.focus(); }              // focus must not be left adrift
-      }
-    });
-
-    // A click outside closes, but a click inside an open submenu must not.
-    document.addEventListener('click', function (e) {
-      if (!e.target.closest('.nav-item.has-sub')) { closeAll(); }
-    });
-
-    // Tabbing out of the whole item closes it, so the menu cannot be left
-    // hanging open behind the page.
-    document.querySelectorAll('.nav-item.has-sub').forEach(function (item) {
-      item.addEventListener('focusout', function (e) {
-        if (!item.contains(e.relatedTarget)) {
-          setOpen(item.querySelector('.nav-toggle'), false);
-        }
-      });
-    });
-  })();
-  </script>
-
-  {# Shared interaction layer (count-up, reveal-on-scroll, chart, region bars).
-     Self-contained; no-ops on pages that lack the elements it targets. #}
-  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
 
 </body>
 </html>

@@ -21,6 +21,9 @@
 {# ---- Filters. GET, so the ranking lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Choose a period and an antigen</h2>
 <form class="filters" method="get" action="{{ url_for('improvement.index') }}">
+  {# Marks the request as a real submission, so a fresh visit shows the prompt
+     rather than a pre-run ranking. #}
+  <input type="hidden" name="submitted" value="1">
   <fieldset class="filter-group filter-group--key">
     <legend>Set the comparison <span class="filter-tag key">required</span></legend>
     <div class="filter-row">
@@ -79,6 +82,15 @@
     </div>
   </fieldset>
 </form>
+
+{% if not submitted %}
+  <div class="empty-state prompt-state">
+    <h2>Set a period, then rank</h2>
+    <p>Choose an antigen and a start and end year above, pick how many countries
+       to rank, then press <strong>Rank</strong>. The comparison chart and the
+       ranking table appear here.</p>
+  </div>
+{% else %}
 
 {% if rejected %}
   <div class="rejected-note" role="status">
@@ -148,8 +160,8 @@
 
   {# ---- Full table, including the different dataset: did cases actually fall? ---- #}
   <h2 class="section-head">The ranking, with reported case rates beside it</h2>
-  <div class="table-scroll">
-    <table>
+  <div class="table-scroll clean">
+    <table class="table--clean">
       <caption>
         Top {{ rows | length }} countries by coverage gain in {{ antigen_name }},
         {{ start_year }} to {{ end_year }}. Case rates are for {{ disease_name }}.
@@ -195,7 +207,7 @@
 
   <p class="imp-export">
     <a href="{{ url_for('improvement.index', antigen=antigen, start=start_year,
-                        end=end_year, n=count, sort=sort_active, format='csv') }}">
+                        end=end_year, n=count, sort=sort_active, submitted='1', format='csv') }}">
       Download this ranking as CSV
     </a>
   </p>
@@ -236,6 +248,7 @@
     </dl>
   </div>
 
-{% endif %}
-{% endif %}
+{% endif %}{# results/empty #}
+{% endif %}{# submitted #}
+{% endif %}{# db_missing #}
 {% endblock %}
