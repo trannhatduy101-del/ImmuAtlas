@@ -1,295 +1,324 @@
 {% extends "base.html" %}
 {% block title %}{{ site_name }} &middot; {{ site_tagline }}{% endblock %}
 
-{# Hand-built SVG illustration per vaccine: a vial (the vaccine) with a small
-   label glyph standing for the pathogen it protects against -- spots for
-   measles, a rod for the pertussis bacterium, a ring for rubella. Decorative,
-   so it is aria-hidden; the disease name and blurb carry the meaning. Built in
-   SVG on purpose: no copyrighted photos, no generated imagery, works offline. #}
+{# VaxVision section STRUCTURE (hero -> stat grid -> portfolio -> data band ->
+   statement band -> caveat cards) carrying the ORIGINAL ImmuAtlas content:
+   the effort-vs-outcome tension, four honest figures, the 25-year trend with
+   its axis caveat, the sourced vaccine thresholds, and what the data cannot
+   tell you. Imagery is hand-built SVG (offline, no stock photos), matching the
+   ImmuAtlas ethos. Colours come from the teal/coral palette in
+   css/vaxvision-landing.css. ImmuAtlas header/footer (base.html) are kept. #}
+
+{% block body_class %}lp-vax{% endblock %}
+{% block head_extra %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vaxvision-landing.css') }}">
+{% endblock %}
+
+{# ---- Small inline SVG icons for the four stat cards (decorative). ---- #}
+{% macro stat_icon(kind) %}
+<svg class="snap-ico" viewBox="0 0 24 24" fill="none" aria-hidden="true" focusable="false"
+     stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+  {% if kind == 'globe' %}
+    <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18"/>
+  {% elif kind == 'dose' %}
+    <path d="M4 20l3-3M9 15l-4 4M18.5 5.5l-2-2M14 5l5 5M14 5l-6 6 5 5 6-6M9 10l5 5"/>
+  {% elif kind == 'gauge' %}
+    <path d="M12 13l4-3"/><path d="M3.5 17a9 9 0 1 1 17 0"/><circle cx="12" cy="13" r="1.4" fill="currentColor" stroke="none"/>
+  {% elif kind == 'virus' %}
+    <circle cx="12" cy="12" r="5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2"/>
+  {% endif %}
+</svg>
+{% endmacro %}
+
+{# ---- Vaccine vial per disease code: a vial with a pathogen glyph (spots =
+       measles, rod = pertussis, ring = rubella). Decorative, aria-hidden. ---- #}
 {% macro vaccine_art(code) %}
-<svg viewBox="0 0 72 72" class="lp-vax-svg" aria-hidden="true" focusable="false">
+<svg viewBox="0 0 72 72" class="vc-vial" aria-hidden="true" focusable="false">
   <rect class="v-cap"  x="27" y="7"  width="18" height="7"  rx="2"/>
   <rect class="v-neck" x="30" y="14" width="12" height="5"/>
   <rect class="v-body" x="24" y="18" width="24" height="45" rx="8"/>
   <path class="v-liquid" d="M24 40 H48 V55 a8 8 0 0 1 -8 8 H32 a8 8 0 0 1 -8 -8 Z"/>
   <rect class="v-label" x="27.5" y="29" width="17" height="17" rx="2"/>
   {% if code == 'MEA' %}
-    <circle class="v-glyph" cx="33" cy="34" r="1.7"/>
-    <circle class="v-glyph" cx="40" cy="33" r="1.7"/>
-    <circle class="v-glyph" cx="37" cy="39" r="1.7"/>
-    <circle class="v-glyph" cx="31" cy="40" r="1.7"/>
+    <circle class="v-glyph" cx="33" cy="34" r="1.7"/><circle class="v-glyph" cx="40" cy="33" r="1.7"/>
+    <circle class="v-glyph" cx="37" cy="39" r="1.7"/><circle class="v-glyph" cx="31" cy="40" r="1.7"/>
     <circle class="v-glyph" cx="42" cy="40.5" r="1.7"/>
   {% elif code == 'PER' %}
     <rect class="v-glyph" x="29" y="35.5" width="14" height="5" rx="2.5" transform="rotate(-18 36 38)"/>
   {% elif code == 'RUB' %}
-    <circle class="v-glyph-ring" cx="36" cy="37.5" r="5.2"/>
-    <circle class="v-glyph" cx="36" cy="37.5" r="1.6"/>
+    <circle class="v-glyph-ring" cx="36" cy="37.5" r="5.2"/><circle class="v-glyph" cx="36" cy="37.5" r="1.6"/>
   {% endif %}
 </svg>
 {% endmacro %}
 
 {% block hero %}
   {% if db_missing %}
-    <h1 class="hero-title">No data loaded</h1>
-    <p class="hero-sub">{{ db_missing }}</p>
+    <div class="wrap"><h1 class="hero-title">No data loaded</h1><p class="hero-sub">{{ db_missing }}</p></div>
   {% else %}
-    {# The hero states the tension the whole site is built around: effort read
-       alone overstates success, disease burden read alone overstates failure.
-       Both halves are queried, so the headline stays true when the data does. #}
-    <h1 class="lp-hero-head">Coverage is high. The cases haven&rsquo;t stopped.</h1>
-    <p class="lp-hero-lead">
-      Across {{ fmt_int(facts.n_countries) }} countries, {{ facts.year_min }}&ndash;{{ facts.year_max }},
-      reported immunisation coverage sits high &mdash; yet preventable infections are still
-      counted in the millions. This site holds both figures next to each other, and always
-      names the denominator behind each one.
-    </p>
+    <section class="explore-hero">
+      <div class="explore-hero-content">
+        <h1>Coverage is high. The cases haven&rsquo;t stopped.</h1>
+        <p>
+          Across {{ fmt_int(facts.n_countries) }} countries, {{ facts.year_min }}&ndash;{{ facts.year_max }},
+          reported immunisation coverage sits high &mdash; yet preventable infections are still counted in the
+          millions. This site holds both figures next to each other, and always names the denominator behind each one.
+        </p>
+        <a href="#snapshot-data" class="explore-btn">Explore the figures</a>
 
-    {# Primary calls to action: the hero drives straight into the two built
-       dashboards rather than ending on a statistic. #}
-    <div class="lp-hero-cta">
-      <a class="btn btn-primary" href="{{ url_for('coverage.index') }}">Explore vaccination rates</a>
-      <a class="btn btn-ghost" href="{{ url_for('improvement.index') }}">Compare biggest improvement</a>
-    </div>
+        {# Hero illustration: a rising coverage line with case bars that never
+           reach zero -- the whole site's tension in one picture. #}
+        <svg class="explore-image lp-hero-art" viewBox="0 0 900 340" role="img"
+             aria-label="A coverage line rising over time while disease-case bars remain present beneath it.">
+          <defs>
+            <linearGradient id="cov" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          {% for gx in range(0, 901, 90) %}<line x1="{{ gx }}" y1="20" x2="{{ gx }}" y2="300" stroke="#ffffff" stroke-opacity="0.06"/>{% endfor %}
+          {% set bars = [130,120,108,96,150,88,76,70,64,58] %}
+          {% for b in bars %}
+            <rect x="{{ 40 + loop.index0 * 86 }}" y="{{ 300 - b }}" width="46" height="{{ b }}" rx="4"
+                  fill="#f97316" fill-opacity="0.55"/>
+          {% endfor %}
+          <polygon points="40,180 900,60 900,300 40,300" fill="url(#cov)" opacity="0.5"/>
+          <polyline points="40,180 126,170 212,150 298,140 384,120 470,110 556,96 642,86 728,74 814,66 886,60"
+                    fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      </div>
+    </section>
   {% endif %}
 {% endblock %}
 
 {% block main %}
 {% if db_missing %}
-  <div class="empty-state">
-    <h2>Nothing to show</h2>
-    <p>{{ db_missing }}</p>
-    <p>This page shows nothing rather than a figure it cannot stand behind.</p>
-  </div>
+  <div class="empty-state"><h2>Nothing to show</h2><p>{{ db_missing }}</p></div>
 {% else %}
 
-  {# ---- Four facts, 2 x 2. The count is fixed at four by the brief. ---- #}
-  <section class="band lp-reveal">
-    <h2 class="section-head">Four figures from this data</h2>
-    <ul class="lp-figure-cards">
-      <li class="lp-figure-card">
-        <span class="fact-figure lp-count" data-to="{{ facts.n_countries }}" data-kind="int">{{ fmt_int(facts.n_countries) }}</span>
-        <span class="fact-label">countries reporting</span>
-        <p>Across {{ facts.year_max - facts.year_min + 1 }} years,
-           {{ facts.year_min }} to {{ facts.year_max }}. The full extent of the
-           data, not a selection.</p>
-      </li>
-      <li class="lp-figure-card">
-        <span class="fact-figure lp-count" data-to="{{ facts.total_doses }}" data-kind="big">{{ fmt_big(facts.total_doses) }}</span>
-        <span class="fact-label">doses recorded</span>
-        <p>Effort, not outcome. A dose delivered is not the same as a child
-           protected, which is why this sits beside the case count.</p>
-      </li>
-      <li class="lp-figure-card">
-        <span class="fact-figure">{{ fmt_pct(facts.coverage_first) }} &rarr; {{ fmt_pct(facts.coverage_last) }}</span>
-        <span class="fact-label">average reported coverage</span>
-        <p>Mean of national figures in {{ facts.year_min }} against
-           {{ facts.year_max }}. Denominator: the birth cohort each country
-           targeted, which is what WHO reports as coverage.</p>
-      </li>
-      <li class="lp-figure-card">
-        <span class="fact-figure lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</span>
-        <span class="fact-label">reported cases</span>
-        <p>Outcome, not effort. Read alone it overstates failure, just as the
-           dose count read alone overstates success.</p>
-      </li>
-    </ul>
-  </section>
+  {# ---- Four figures from this data (was VaxVision "Snapshot Data") ---- #}
+  <section id="snapshot-data" class="snapshot-section">
+    <div class="snapshot-header">
+      <h2>Four figures from this data</h2>
+      <p>
+        Effort read alone overstates success; disease burden read alone overstates failure. These four are counted
+        straight from the WHO dataset across {{ fmt_int(facts.n_countries) }} countries &mdash; nothing typed in.
+      </p>
+      <a href="{{ url_for('coverage.index') }}" class="stats-btn">View all statistics</a>
+    </div>
 
-  {# ---- Explore: the four data views as a feature grid (VaxVision-style
-         structure). Built pages link straight in; unbuilt ones are shown
-         honestly as "in progress" rather than hidden. all_pages comes from the
-         application context processor. ---- #}
-  <section class="band lp-reveal">
-    <h2 class="section-head">Explore the data</h2>
-    <p class="section-intro">
-      Four focused views of the same WHO dataset, from a shallow glance to a deep
-      dive. Two are built; the other two are on the way.
-    </p>
-    <ul class="lp-explore">
-      {% for endpoint, label, code, owner, done in all_pages if code in ['2A', '2B', '3A', '3B'] %}
-        <li>
-          <a class="lp-explore-card{{ ' is-wip' if not done }}" href="{{ url_for(endpoint) }}">
-            <span class="lp-explore-code">{{ code }}</span>
-            <span class="lp-explore-mid">
-              <span class="lp-explore-label">{{ label }}</span>
-              {% if not done %}<span class="lp-explore-wip">in progress</span>{% endif %}
-            </span>
-            <span class="lp-explore-go" aria-hidden="true">&rarr;</span>
-          </a>
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
+    <div class="snapshot-grid">
+      <article class="snap-stat">
+        <span class="snap-tag snap-tag--context">Context</span>
+        {{ stat_icon('globe') }}
+        <span class="snap-fig lp-count" data-to="{{ facts.n_countries }}" data-kind="int">{{ fmt_int(facts.n_countries) }}</span>
+        <span class="snap-label">countries reporting</span>
+        <p>Across {{ facts.year_max - facts.year_min + 1 }} years, {{ facts.year_min }} to {{ facts.year_max }}. The full extent of the data, not a selection.</p>
+      </article>
 
-  {# ---- Vaccine info: a picture card per vaccine. The face shows the vaccine
-         illustration, disease, antigens and threshold; opening the card reveals
-         a blurb, the caveat, the reporting count, the threshold citation, and a
-         link to WHO. Built on <details> so it opens on click AND on keyboard,
-         and works with no script at all. Text and links come from the database
-         (disease_info + herd_immunity_threshold), never hardcoded here. ---- #}
-  <section class="band lp-reveal">
-    <h2 class="section-head">Vaccine information</h2>
-    <p class="section-intro">
-      Three preventable diseases, each with the coverage WHO says is needed to
-      stop transmission. Open a card to read more and reach its WHO page. The
-      thresholds are stored with their sources, not written into this page.
-    </p>
-    <ul class="lp-vax-list">
-      {% for d in diseases %}
-        <li>
-          <details class="lp-vax">
-            <summary class="lp-vax-face">
-              <span class="lp-vax-pic">{{ vaccine_art(d.inf_type) }}</span>
-              <span class="lp-vax-heading">
-                <span class="lp-vax-name">{{ d.disease_name }}</span>
-                {% if d.vaccine_label %}<span class="lp-vax-antigen">{{ d.vaccine_label }}</span>{% endif %}
-                {% if d.threshold_pct is not none %}
-                  <span class="lp-vax-thr"><strong>{{ fmt_pct(d.threshold_pct, 0) }}</strong> coverage needed</span>
-                {% else %}
-                  <span class="lp-vax-thr">No threshold set for this disease.</span>
-                {% endif %}
-              </span>
-              <span class="lp-vax-chev" aria-hidden="true">
-                <svg viewBox="0 0 12 8" width="13" height="9" focusable="false">
-                  <path d="M1 1.5 L6 6.5 L11 1.5" fill="none" stroke="currentColor"
-                        stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-                </svg>
-              </span>
-            </summary>
-            <div class="lp-vax-body">
-              {% if d.blurb %}<p class="lp-vax-blurb">{{ d.blurb }}</p>{% endif %}
-              {% if d.threshold_note %}<p class="lp-vax-note">{{ d.threshold_note }}</p>{% endif %}
-              <p class="disease-count">
-                {{ fmt_int(d.n_countries_reporting) }} countries reported at least
-                one case in at least one year.
-              </p>
-              {% if d.threshold_pct is not none and d.threshold_source %}
-                <p class="citation">
-                  Threshold source: {{ d.threshold_source }}
-                  {% if d.threshold_url %}<a href="{{ d.threshold_url }}" rel="noopener">Read it</a>{% endif %}
-                </p>
-              {% endif %}
-              {% if d.who_url %}
-                <a class="lp-vax-who" href="{{ d.who_url }}" target="_blank" rel="noopener">
-                  Read about {{ d.disease_name }} on WHO
-                  <span class="lp-ext" aria-hidden="true">&#8599;</span>
-                  <span class="visually-hidden">(opens in a new tab)</span>
-                </a>
-              {% endif %}
-            </div>
-          </details>
-        </li>
-      {% endfor %}
-    </ul>
-  </section>
+      <article class="snap-stat">
+        <span class="snap-tag snap-tag--effort">Effort</span>
+        {{ stat_icon('dose') }}
+        <span class="snap-fig lp-count" data-to="{{ facts.total_doses }}" data-kind="big">{{ fmt_big(facts.total_doses) }}</span>
+        <span class="snap-label">doses recorded</span>
+        <p>A dose delivered is not the same as a child protected, which is why this sits beside the case count.</p>
+      </article>
 
-  {# ---- Data: the trend, and what the data cannot tell you ---- #}
-  <section class="band lp-reveal">
-    <h2 class="section-head">The data</h2>
+      <article class="snap-stat">
+        <span class="snap-tag snap-tag--effort">Effort</span>
+        {{ stat_icon('gauge') }}
+        <span class="snap-fig">{{ fmt_pct(facts.coverage_first) }} &rarr; {{ fmt_pct(facts.coverage_last) }}</span>
+        <span class="snap-label">average reported coverage</span>
+        <p>Mean of national figures in {{ facts.year_min }} against {{ facts.year_max }}. Denominator: the birth cohort each country targeted.</p>
+      </article>
 
-    {% if chart %}
-      <figure class="chart lp-chart">
-        {# The line draws itself when it scrolls into view, and each year's
-           point is hover- AND keyboard-focusable, revealing the exact figures.
-           Without script the SVG is a normal static chart with the same
-           aria-label, and the full table below is the non-visual equivalent. #}
-        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" class="trend lp-trend" role="img"
-             aria-label="Line chart of average reported coverage from
-                         {{ chart.first.year }} at {{ fmt_pct(chart.first.avg_coverage) }}
-                         to {{ chart.last.year }} at {{ fmt_pct(chart.last.avg_coverage) }}.
-                         The figures are in the table below the chart.">
-          <polyline points="{{ chart.polyline }}" class="trend-line" pathLength="1" />
-          {% for x, y, row in chart.coords %}
-            <g class="lp-pt" tabindex="0" role="img"
-               data-year="{{ row.year }}"
-               data-cov="{{ fmt_pct(row.avg_coverage) }}"
-               data-report="{{ fmt_int(row.n_reporting) }}"
-               data-cases="{{ fmt_int(row.total_cases) }}"
-               aria-label="{{ row.year }}: {{ fmt_pct(row.avg_coverage) }} average coverage,
-                           {{ fmt_int(row.n_reporting) }} national figures reporting,
-                           {{ fmt_int(row.total_cases) }} reported cases.">
-              <circle cx="{{ x }}" cy="{{ y }}" r="2.5" class="trend-dot" />
-              <circle cx="{{ x }}" cy="{{ y }}" r="9" class="lp-hit" />
-            </g>
-          {% endfor %}
-        </svg>
-        <div class="lp-tip" hidden aria-hidden="true"></div>
-        <figcaption>
-          <p class="chart-axis">
-            Vertical axis runs {{ chart.y_min }}% to {{ chart.y_max }}%, not from
-            zero. A change of a few points would be invisible on a full axis;
-            the zoom is stated here so the shape is not read as larger than it is.
-          </p>
-          <p>
-            Two things move this line and the data cannot separate them. A rise
-            can mean more children were vaccinated, or more countries reported:
-            {{ fmt_int(chart.first.n_reporting) }} national figures in
-            {{ chart.first.year }} against {{ fmt_int(chart.last.n_reporting) }}
-            in {{ chart.last.year }}. Any dip around 2020 and 2021 likewise
-            reflects disrupted surveillance as well as disrupted vaccination.
-          </p>
-        </figcaption>
-      </figure>
-
-      <details class="data-details">
-        <summary>Show the figures behind this chart</summary>
-        <div class="table-scroll">
-          <table>
-            <caption>Average reported coverage and total reported cases, by year</caption>
-            <thead>
-              <tr>
-                <th scope="col">Year</th>
-                <th scope="col" class="num">Average coverage</th>
-                <th scope="col" class="num">National figures reported</th>
-                <th scope="col" class="num">Reported cases</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for row in trend %}
-                <tr>
-                  <th scope="row">{{ row.year }}</th>
-                  <td class="num">{{ fmt_pct(row.avg_coverage) }}</td>
-                  <td class="num">{{ fmt_int(row.n_reporting) }}</td>
-                  <td class="num">{{ fmt_int(row.total_cases) }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      </details>
-    {% endif %}
-
-    <h3 class="sub-head">What this data can and cannot tell you</h3>
-    <div class="caveats">
-      <ul>
-        <li><strong>{{ fmt_int(caveats.rows_no_coverage) }} of
-            {{ fmt_int(caveats.rows_coverage_total) }}</strong> vaccination
-            records carry no coverage figure. They are stored as blanks, not
-            nulls, so a naive average counts them as zero. This site excludes
-            them instead.</li>
-        <li><strong>{{ fmt_int(caveats.rows_above_100) }}</strong> records report
-            coverage above 100%. Kept, not capped: doses given outside the
-            target cohort are real.</li>
-        <li><strong>{{ fmt_int(caveats.rows_suspicious_zero) }} of
-            {{ fmt_int(caveats.rows_infection_total) }}</strong> case records are
-            zero in every year for that country and disease. A genuine zero and
-            an unreported year look identical here. Those records are flagged
-            rather than counted as success, and the flag is an inference, not a
-            fact.</li>
-        <li><strong>{{ fmt_int(caveats.rows_unmatched_territory) }}</strong>
-            vaccination records come from territories with no matching country
-            entry. Shown as unmatched, never dropped.</li>
-        <li><strong>{{ fmt_int(caveats.countries_no_economy) }}</strong> countries
-            have no economic classification. They appear as &ldquo;Not
-            classified&rdquo; in every economic breakdown rather than
-            disappearing from it.</li>
-      </ul>
+      <article class="snap-stat snap-stat--outcome">
+        <span class="snap-tag snap-tag--outcome">Outcome</span>
+        {{ stat_icon('virus') }}
+        <span class="snap-fig lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</span>
+        <span class="snap-label">reported cases</span>
+        <p>Read alone it overstates failure, just as the dose count read alone overstates success.</p>
+      </article>
     </div>
   </section>
 
-  {# The interaction layer (count-up, self-drawing chart, reveal-on-scroll) now
-     lives in static/js/site.js, loaded once from base.html and shared by every
-     page. Everything above still works with that script removed. #}
+  {# ---- Vaccine information (was "Immunization Portfolio") ---- #}
+  <section class="vaccine-cards-section">
+    <div class="vc-inner">
+      <h2>Vaccine information</h2>
+      <p class="vc-subtitle">
+        Each preventable disease with the coverage WHO says is needed to stop transmission &mdash; thresholds stored
+        with their sources, not written into this page.
+      </p>
+
+      {# Case-style master/detail. Default: three equal colour cards in a row.
+         Click one -> that card becomes the big panel (left), the other two
+         shrink to clickable chips beside a home button, and the detail opens on
+         the right with the full blurb, sourced threshold and the WHO link. The
+         home button returns to the three-card grid. Progressive enhancement:
+         with no JS every card's detail is shown stacked, so nothing is hidden. #}
+      {# Vial photo per disease code (files live in static/img/). #}
+      {% set vax_photo = {'MEA': 'img/vax-mea.webp', 'PER': 'img/vax-per.png', 'RUB': 'img/vax-rub.webp'} %}
+      <div class="vax-cases">
+        <div class="vax-rail">
+          {% for d in diseases %}
+            <button type="button" class="vcase vcase--c{{ loop.index }}" data-idx="{{ loop.index }}"
+                    aria-expanded="false" aria-controls="vcd-{{ loop.index }}">
+              <span class="vcase-badge">{{ d.vaccine_label or 'Vaccine ' ~ loop.index }}</span>
+              <span class="vcase-media">
+                <img src="{{ url_for('static', filename=vax_photo.get(d.inf_type, 'img/vax-mea.webp')) }}"
+                     alt="{{ d.disease_name }} vaccine vial" loading="lazy">
+              </span>
+              <span class="vcase-title">{{ d.disease_name }}</span>
+            </button>
+          {% endfor %}
+          <button type="button" class="vax-home" hidden aria-label="Back to all vaccines">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+                 stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/>
+            </svg>
+          </button>
+        </div>
+
+        <div class="vax-panel">
+          {% for d in diseases %}
+            <div class="vcase-detail" id="vcd-{{ loop.index }}"{% if not loop.first %} hidden{% endif %}>
+              <div class="vcase-detail-media">
+                <img src="{{ url_for('static', filename=vax_photo.get(d.inf_type, 'img/vax-mea.webp')) }}"
+                     alt="{{ d.disease_name }} vaccine vial" loading="lazy">
+              </div>
+              <div class="vcase-detail-body">
+                <span class="vcase-detail-badge vcase-dot--c{{ loop.index }}">{{ d.vaccine_label or 'Vaccine ' ~ loop.index }}</span>
+                <h3 class="vcase-detail-title">{{ d.disease_name }}</h3>
+                {% if d.threshold_pct is not none %}
+                  <p class="vcase-thr"><strong>{{ fmt_pct(d.threshold_pct, 0) }}</strong> coverage needed to stop transmission</p>
+                {% endif %}
+                <p>{{ d.blurb or 'A vaccine-preventable disease tracked in this dataset.' }}</p>
+                <p class="vcase-report">{{ fmt_int(d.n_countries_reporting) }} countries reported at least one case in at least one year.</p>
+                {% if d.threshold_source %}<p class="vcase-src">Threshold source: {{ d.threshold_source }}</p>{% endif %}
+                {% if d.who_url %}
+                  <a class="vc-more-link" href="{{ d.who_url }}" target="_blank" rel="noopener">
+                    Read on WHO <span class="vc-arrow">&rarr;</span>
+                    <span class="visually-hidden">(opens in a new tab)</span></a>
+                {% endif %}
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </section>
+
+  {# ---- The data: a hook that opens with a question and lets the reader
+         reveal the honest answer. Native <details> = interactive, keyboard
+         accessible, and works with no JavaScript at all. ---- #}
+  <section class="spotlight" id="the-data">
+    <div class="spotlight-inner">
+      <span class="spotlight-eyebrow">Before you dive in</span>
+      <h2 class="spotlight-q">If coverage is this high, why do the cases keep coming?</h2>
+      <p class="spotlight-lead">
+        {{ fmt_pct(facts.coverage_last) }} average reported coverage across
+        {{ fmt_int(facts.n_countries) }} countries &mdash; and still,
+        {{ fmt_big(facts.total_cases) }} cases on record.
+      </p>
+      <details class="spotlight-reveal">
+        <summary>
+          <span class="spotlight-summary-open">Reveal the answer</span>
+          <span class="spotlight-summary-close">Hide the answer</span>
+        </summary>
+        <div class="spotlight-answer">
+          <p>Because an <strong>average hides where it fails</strong>. A country can sit near the top and
+             still miss whole communities; a global mean can climb while outbreaks flare in the gaps. High
+             coverage and persistent cases are not a contradiction &mdash; they are the same data read at
+             two scales.</p>
+          <p class="spotlight-kicker">That gap between effort and outcome is what every page here is built
+             to show &mdash; with the denominator behind each number always named.</p>
+        </div>
+      </details>
+    </div>
+  </section>
+
+  {# ---- NEW idea 1: Effort meets outcome -- the two headline numbers set
+         directly against each other, the whole thesis in one band. ---- #}
+  <section class="faceoff">
+    <div class="faceoff-inner">
+      <div class="faceoff-head">
+        <span class="faceoff-eyebrow">The whole point</span>
+        <h2>Effort on one side, outcome on the other</h2>
+      </div>
+      <div class="faceoff-pair">
+        <article class="faceoff-side faceoff-effort">
+          <span class="faceoff-tag">Effort</span>
+          <span class="faceoff-fig">{{ fmt_big(facts.total_doses) }}</span>
+          <span class="faceoff-label">doses recorded</span>
+          <p>What was put in.</p>
+        </article>
+        <span class="faceoff-vs" aria-hidden="true">vs</span>
+        <article class="faceoff-side faceoff-outcome">
+          <span class="faceoff-tag">Outcome</span>
+          <span class="faceoff-fig">{{ fmt_big(facts.total_cases) }}</span>
+          <span class="faceoff-label">reported cases</span>
+          <p>What still happened.</p>
+        </article>
+      </div>
+      <p class="faceoff-note">Neither number is the story on its own. Held together, across {{ fmt_int(facts.n_countries) }} countries, they are.</p>
+    </div>
+  </section>
+
+  {# ---- Closing CTA: every view of the dataset, listed equally (no page is
+         singled out). all_pages comes from the app context processor. ---- #}
+  <section class="cta-band">
+    <div class="cta-inner">
+      <h2 class="cta-title">Explore the rest of the site</h2>
+      <p class="cta-sub">Every view of the same WHO dataset &mdash; pick where to go next.</p>
+      <div class="cta-grid">
+        {% for endpoint, label, task, owner, done in all_pages if endpoint != 'landing.index' %}
+          <a class="cta-card" href="{{ url_for(endpoint) }}">
+            <span class="cta-card-body">
+              <span class="cta-card-t">{{ label }}</span>
+              {% if not done %}<span class="cta-wip">in progress</span>{% endif %}
+            </span>
+            <span class="cta-go" aria-hidden="true">&rarr;</span>
+          </a>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  {# Vaccine cases master/detail. Default = three-card grid; selecting a card
+     opens the detail view; the home button returns to the grid. Keyboard-driven
+     (real <button>s + aria). Runs only with .js, so no-script shows everything. #}
+  <script>
+  (function () {
+    if (!document.documentElement.classList.contains('js')) { return; }
+    var root = document.querySelector('.vax-cases');
+    if (!root) { return; }
+    var cards = [].slice.call(root.querySelectorAll('.vcase'));
+    var details = [].slice.call(root.querySelectorAll('.vcase-detail'));
+    var home = root.querySelector('.vax-home');
+
+    function select(idx) {
+      root.classList.add('is-open');
+      cards.forEach(function (c) {
+        var on = c.getAttribute('data-idx') === idx;
+        c.classList.toggle('is-active', on);
+        c.setAttribute('aria-expanded', on ? 'true' : 'false');
+      });
+      details.forEach(function (d) { d.hidden = (d.id !== 'vcd-' + idx); });
+      if (home) { home.hidden = false; }
+    }
+    function reset() {
+      root.classList.remove('is-open');
+      cards.forEach(function (c) { c.classList.remove('is-active'); c.setAttribute('aria-expanded', 'false'); });
+      if (home) { home.hidden = true; }
+    }
+
+    // Start in the grid state (no card active), matching the reference default.
+    reset();
+    cards.forEach(function (c) {
+      c.addEventListener('click', function () { select(c.getAttribute('data-idx')); });
+    });
+    if (home) { home.addEventListener('click', reset); }
+  })();
+  </script>
 
 {% endif %}
 {% endblock %}

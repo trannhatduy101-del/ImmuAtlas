@@ -90,6 +90,23 @@ def index():
     valid_regions = {r["region_id"] for r in regions}
     valid_countries = {r["country_id"] for r in countries}
 
+    # Land on a "choose your filters" prompt until the visitor actually submits
+    # the form (which carries submitted=1). Nothing is pre-run, so no figure
+    # appears that the visitor did not ask for. A CSV request always implies a
+    # submitted selection.
+    submitted = "submitted" in request.args or request.args.get("format") == "csv"
+    if not submitted:
+        return render_template(
+            "pages/2a_coverage.html",
+            db_missing=None, submitted=False,
+            antigens=antigens, years=years, regions=regions, countries=countries,
+            antigen=None, year=None, region=None, country=None,
+            sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
+            summary=None, region_view=[], rows=[], threshold=None,
+            conflict=None, rejected=[], fix_region=fix_region,
+            fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,
+        )
+
     # An absent parameter falls back to the default; an invalid one falls back
     # to no filter. Those are different, and conflating them would silently
     # widen a selection the visitor thought was narrow.
@@ -171,7 +188,7 @@ def index():
 
     return render_template(
         "pages/2a_coverage.html",
-        db_missing=None,
+        db_missing=None, submitted=True,
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
         sort_active=sort_active, sort_labels=SORT_LABELS,

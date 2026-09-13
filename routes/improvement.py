@@ -121,6 +121,11 @@ def index():
 
     valid_antigens = {a["antigen"] for a in antigens}
     valid_years = {y["year"] for y in years}
+
+    # The dropdowns land pre-filled with a sensible default period, but nothing
+    # is ranked until the visitor presses Rank (the form carries submitted=1).
+    # A CSV request always implies a submitted selection.
+    submitted = "submitted" in request.args or request.args.get("format") == "csv"
     year_values = sorted(valid_years)
     disease_for = {a["antigen"]: a["disease_name"] for a in antigens}
     name_for = {a["antigen"]: a["antigen_name"] for a in antigens}
@@ -173,12 +178,12 @@ def index():
         start_year=start_year, end_year=end_year,
         count=count, count_options=COUNT_OPTIONS,
         sort_active=sort_active, sort_labels=SORT_LABELS,
-        rejected=rejected, range_error=range_error,
+        rejected=rejected, range_error=range_error, submitted=submitted,
         rows=[], view=[], eligible=0, axis_max=100,
         fmt_int=db.fmt_int, fmt_pct=db.fmt_pct,
     )
 
-    if range_error or antigen is None:
+    if not submitted or range_error or antigen is None:
         return render_template("pages/3a_improvement.html", **ctx)
 
     rows = _rows_for(antigen, start_year, end_year, order_by, count)

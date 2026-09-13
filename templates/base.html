@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head_extra %}{% endblock %}
   {# Preload the two self-hosted fonts so headings/body don't flash the fallback. #}
   <link rel="preload" as="font" type="font/woff2" crossorigin
         href="{{ url_for('static', filename='fonts/Fraunces.woff2') }}">
@@ -16,7 +17,7 @@
      falls back to submenus laid out in the flow. #}
   <script>document.documentElement.className += " js";</script>
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
 
   {# Keyboard users must be able to jump the nav. WCAG AA. #}
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -102,9 +103,7 @@
         <ul class="footer-links">
           {% for endpoint, label, task, owner, done in all_pages %}
             <li>
-              <a href="{{ url_for(endpoint) }}">
-                <span class="footer-task">{{ task }}</span> {{ label }}
-              </a>
+              <a href="{{ url_for(endpoint) }}">{{ label }}</a>
               {% if not done %}<span class="wip">in progress</span>{% endif %}
             </li>
           {% endfor %}

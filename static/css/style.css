@@ -36,22 +36,27 @@
 :root {
   /* Paper is tinted a hair off pure white toward the teal anchor: a flat
      #ffffff surface reads as synthetic. Contrast against --ink is unchanged. */
-  --bg:          #fbfcfc;
-  --bg-sunk:     #f4f6f6;
-  --bg-flag:     #fff6e5;
-  --bg-deep:     #0a2c4d;
+  /* Palette: a water-blue "effort" anchor (vaccination) against a coral
+     "outcome" (disease cases), so the site's central contrast is carried by
+     colour as well as words. Ocean/azure blues read as clean and clinical. All
+     text colours below still clear WCAG AA (4.5:1) on the paper. */
+  --bg:          #f4f9fd;
+  --bg-sunk:     #e4f0fa;
+  --bg-flag:     #fdead9;
+  --bg-deep:     #082f49;   /* deep ocean footer, high contrast with inverted ink */
 
-  --ink:         #295691;
-  --ink-muted:   #4a5158;
-  --ink-invert:  #eef4f3;
-  --ink-invert-muted: #a8c3c1;
+  --ink:         #0c2a42;   /* dark navy body text, ~12:1 on paper */
+  --ink-muted:   #4a5a68;
+  --ink-invert:  #e8f2fb;
+  --ink-invert-muted: #a3c3dc;
 
-  --accent:      #10589e;
+  --accent:      #0369a1;   /* azure-700, ~5.9:1 on paper */
   --accent-ink:  #ffffff;
-  --accent-lift: #2f7fd1;
-  --accent-strong: #0c4479;   /* button/hover, darker than --accent */
-  --accent-wash: #eef4fb;     /* faint blue fill for the highlighted filter group */
-  --flag-rule:   #a9701a;
+  --accent-lift: #06b6d4;   /* cyan "water" accent */
+  --accent-strong: #075985;   /* button/hover, darker than --accent */
+  --accent-wash: #e0f2fe;     /* faint sky fill for the highlighted filter group */
+  --outcome:     #c2410c;     /* coral for the case/outcome figure, ~6.4:1 */
+  --flag-rule:   #c2410c;
 
   /* Status colours for result badges (e.g. "cases fell" / "cases rose").
      Always paired with a word, never the only signal. The green harmonises
@@ -61,9 +66,9 @@
   --warn-ink:    #8a5a00;
   --none-ink:    #5f676d;
 
-  --rule:        #d9dedf;
-  --rule-deep:   #1e3d5e;
-  --focus:       #10589e;
+  --rule:        #d3e2ee;
+  --rule-deep:   #1e3a52;
+  --focus:       #0369a1;
 
   --wrap:        68rem;
   --step:        1.25rem;
@@ -271,10 +276,19 @@ summary:focus-visible {
 /* Hero band --------------------------------------------------------------- */
 
 .hero {
-  background: var(--bg-sunk);
+  /* A soft indigo wash instead of a flat panel: enough colour to feel
+     designed, light enough that --ink keeps its AA contrast on top. */
+  background: linear-gradient(155deg, var(--bg-sunk) 0%, var(--accent-wash) 55%, var(--bg) 100%);
   border-bottom: 1px solid var(--rule);
   padding: 2.4rem 0 2.2rem;
 }
+/* "Discover more" lands on #figures; offset the jump so the heading isn't
+   flush against the top edge, and ease the scroll where motion is allowed. */
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+#figures { scroll-margin-top: 1.5rem; }
+.btn-discover svg { transition: transform .15s var(--ease-out); }
+.btn-discover:hover svg { transform: translateY(2px); }
 .hero-title {
   margin: 0 0 .5rem;
   /* Fluid display size gives the page a clear top-of-hierarchy without a web
@@ -482,6 +496,39 @@ th, td { padding: .4rem .7rem; border-bottom: 1px solid var(--rule); text-align:
 thead th { border-bottom: 2px solid var(--rule); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
+/* Clean results table (2A/3A): a rounded card, sticky uppercase header, zebra
+   rows and a hover highlight. Opt-in via `.table-scroll.clean` + `.table--clean`
+   so other tables are untouched. */
+.table-scroll.clean {
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 2px 14px rgba(12, 42, 66, .05);
+}
+.table--clean { font-size: .92rem; }
+.table--clean caption {
+  padding: .8rem 1rem;
+  border-bottom: 1px solid var(--rule);
+  color: var(--ink-muted);
+  font-size: .84rem;
+}
+.table--clean thead th {
+  position: sticky; top: 0; z-index: 1;
+  background: var(--bg-sunk);
+  color: var(--ink);
+  font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
+  border-bottom: 1px solid var(--rule);
+  padding: .65rem 1rem;
+}
+.table--clean th, .table--clean td { padding: .6rem 1rem; border-bottom: 1px solid var(--rule); }
+.table--clean tbody tr:last-child th, .table--clean tbody tr:last-child td { border-bottom: 0; }
+.table--clean tbody tr:nth-child(even) { background: rgba(3, 105, 161, .035); }
+.table--clean tbody tr:hover { background: var(--accent-wash); }
+.table--clean tbody th[scope="row"] { font-weight: 600; color: var(--ink); }
+
+/* Filter prompt shown before a selection is submitted. */
+.prompt-state { text-align: center; }
+
 /* Diseases ---------------------------------------------------------------- */
 
 .disease-list {
@@ -513,7 +560,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .caveats {
   background: var(--bg-flag);
-  border-left: 3px solid var(--flag-rule);
+  border: 1px solid var(--flag-rule);
+  border-radius: var(--radius);
   padding: 1rem 1rem 1rem 1.2rem;
   margin-top: 1rem;
   max-width: 48rem;
@@ -546,7 +594,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .empty-state {
   background: var(--bg-sunk);
-  border-left: 3px solid var(--flag-rule);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
   padding: 1.2rem;
   max-width: 44rem;
 }
@@ -634,8 +683,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 .selection-line {
-  border-left: 3px solid var(--accent);
-  padding-left: .9rem;
+  background: var(--accent-wash);
+  border-radius: var(--radius);
+  padding: .6rem .9rem;
   max-width: 46rem;
   font-size: .95rem;
 }
@@ -724,7 +774,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .rejected-note {
   background: var(--bg-flag);
-  border-left: 3px solid var(--flag-rule);
+  border: 1px solid var(--flag-rule);
+  border-radius: var(--radius);
   padding: .8rem 1rem;
   margin: 0 0 1.2rem;
   max-width: 48rem;
@@ -905,9 +956,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 @media (max-width: 40rem) { .lp-figure-cards { grid-template-columns: 1fr; } }
 .lp-figure-card {
+  /* A coloured top edge groups the four as one set and makes the big number
+     the first thing the eye reaches, without a templated left-stripe. */
   border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 1rem 1.1rem;
+  border-top: 3px solid var(--accent);
+  border-radius: 0;   /* squared so the 3px accent top edge sits flush */
+  padding: 1.1rem 1.2rem;
   background: var(--bg);
   transition: border-color .15s var(--ease-out),
               box-shadow .15s var(--ease-out),
@@ -915,10 +969,22 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .lp-figure-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 4px 14px rgba(22, 25, 29, .08);
+  box-shadow: 0 6px 18px rgba(36, 48, 107, .12);
   transform: translateY(-2px);
 }
-.lp-figure-card p { margin: 0; font-size: .92rem; color: var(--ink-muted); }
+/* Bigger, heavier figures read at a glance; the last card (reported cases) is
+   the one "outcome" number, coloured coral so it reads apart from the effort
+   figures above it. Colour is backed by the label text, never the only signal. */
+.lp-figure-card .fact-figure {
+  font-size: clamp(2rem, 1.5rem + 1.8vw, 2.7rem);
+  font-weight: 800;
+  letter-spacing: -.02em;
+  margin-bottom: .1rem;
+}
+.lp-figure-card .fact-label { font-size: .8rem; }
+.lp-figure-card:last-child { border-top-color: var(--outcome); }
+.lp-figure-card:last-child .fact-figure { color: var(--outcome); }
+.lp-figure-card p { margin: .3rem 0 0; font-size: .94rem; color: var(--ink-muted); }
 
 /* Vaccine information — interactive picture cards --------------------------- */
 .lp-vax-list {
