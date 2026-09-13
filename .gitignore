@@ -15,3 +15,6 @@ venv/
 Thumbs.db
 .vscode/
 .idea/
+
+# Design tooling (impeccable writes a hook cache here; not part of the project)
+.impeccable/
