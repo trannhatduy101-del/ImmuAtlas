@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {# Preload the two self-hosted fonts so headings/body don't flash the fallback. #}
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ url_for('static', filename='fonts/Fraunces.woff2') }}">
+  <link rel="preload" as="font" type="font/woff2" crossorigin
+        href="{{ url_for('static', filename='fonts/PublicSans.woff2') }}">
   {# Marks the document as scripted BEFORE first paint, so the nav is styled as
      a dropdown from the start instead of flashing open and then collapsing.
      With script disabled this never runs, the class is absent, and the CSS
@@ -216,6 +221,10 @@
     });
   })();
   </script>
+
+  {# Shared interaction layer (count-up, reveal-on-scroll, chart, region bars).
+     Self-contained; no-ops on pages that lack the elements it targets. #}
+  <script src="{{ url_for('static', filename='js/site.js') }}" defer></script>
 
 </body>
 </html>
