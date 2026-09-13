@@ -8,11 +8,11 @@
    and footer are identical on all six pages.
 
    Contrast targets WCAG AA, 4.5:1 for body text. Measured against the page
-   paper #fbfcfc (a hair off pure white, tinted toward the teal anchor so the
-   surface does not read as flat synthetic white; contrast is unchanged):
+   paper #fbfcfc (a hair off pure white so the surface does not read as flat
+   synthetic white). The anchor is a WHO-style blue:
      --ink        #16191d   ~17:1
      --ink-muted  #4a5158   ~8:1
-     --accent     #0b5d5d   ~6.3:1
+     --accent     #10589e   ~7.0:1
    No meaning is ever carried by colour alone; status is spelled out in words. */
 
 /* Self-hosted, latin-subset variable fonts, bundled in static/fonts/ under the
@@ -39,17 +39,18 @@
   --bg:          #fbfcfc;
   --bg-sunk:     #f4f6f6;
   --bg-flag:     #fff6e5;
-  --bg-deep:     #0c3b3b;
+  --bg-deep:     #0a2c4d;
 
-  --ink:         #16191d;
+  --ink:         #295691;
   --ink-muted:   #4a5158;
   --ink-invert:  #eef4f3;
   --ink-invert-muted: #a8c3c1;
 
-  --accent:      #0b5d5d;
+  --accent:      #10589e;
   --accent-ink:  #ffffff;
-  --accent-lift: #14807d;
-  --accent-strong: #094a4a;   /* button/hover, darker than --accent */
+  --accent-lift: #2f7fd1;
+  --accent-strong: #0c4479;   /* button/hover, darker than --accent */
+  --accent-wash: #eef4fb;     /* faint blue fill for the highlighted filter group */
   --flag-rule:   #a9701a;
 
   /* Status colours for result badges (e.g. "cases fell" / "cases rose").
@@ -61,8 +62,8 @@
   --none-ink:    #5f676d;
 
   --rule:        #d9dedf;
-  --rule-deep:   #1d5555;
-  --focus:       #0b5d5d;
+  --rule-deep:   #1e3d5e;
+  --focus:       #10589e;
 
   --wrap:        68rem;
   --step:        1.25rem;
@@ -92,37 +93,6 @@
   /* 4-pt spacing scale, named so rhythm is consistent across pages. */
   --space-1: .25rem;  --space-2: .5rem;  --space-3: .75rem;
   --space-4: 1rem;    --space-5: 1.5rem; --space-6: 2.5rem;
-}
-
-/* Dark mode — auto-follows the viewer's OS. Only the token VALUES change; every
-   rule and the SVG vaccine art read colour through these tokens, so they adapt
-   with no extra CSS. Contrast holds WCAG AA: light ink on dark paper, the teal
-   and amber lightened so they stay legible on a dark surface. */
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg:            #0f1517;
-    --bg-sunk:       #161e21;
-    --bg-flag:       #241d0e;
-    --bg-deep:       #0b2624;
-
-    --ink:           #e6eef0;
-    --ink-muted:     #9fb0b4;
-
-    --accent:        #46b7b1;
-    --accent-ink:    #06211f;
-    --accent-lift:   #57c4bf;
-    --accent-strong: #379a94;
-    --flag-rule:     #d69a3c;
-
-    --ok:            #58bd8c;
-    --ok-bg:         #15271d;
-    --warn-ink:      #e0a54a;
-    --none-ink:      #9aa4a8;
-
-    --rule:          #26312f;
-    --rule-deep:     #2c5a58;
-    --focus:         #46b7b1;
-  }
 }
 
 *, *::before, *::after { box-sizing: border-box; }
@@ -590,13 +560,36 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Filters ----------------------------------------------------------------- */
 
-.filters {
-  background: var(--bg-sunk);
+.filters { margin: 1.2rem 0 1.6rem; }
+
+/* Filter groups: the main choices sit in a highlighted (accent) box; optional
+   refinements and display controls sit in plain boxes, each labelled so the bar
+   reads as "choose these, then narrow if you want". */
+.filters .filter-group {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
-  padding: 1rem;
-  margin: 1.2rem 0 1.6rem;
+  padding: .8rem 1rem 1rem;
+  margin: 0 0 .7rem;
+  background: var(--bg);
 }
+.filters .filter-group:last-of-type { margin-bottom: 0; }
+.filters .filter-group--key { border-color: var(--accent); background: var(--accent-wash); }
+.filters legend {
+  display: inline-flex; align-items: center; gap: .5rem;
+  padding: 0 .3rem; margin-left: -.3rem;
+  font-size: var(--text-sm); font-weight: 600;
+}
+.filter-group--key legend { color: var(--accent); }
+.filter-tag {
+  font-size: .64rem; text-transform: uppercase; letter-spacing: .05em;
+  font-weight: 700; padding: .1rem .35rem; border-radius: 2px;
+}
+.filter-tag.key { color: var(--accent-ink); background: var(--accent); }
+.filter-tag.opt {
+  color: var(--ink-muted); background: var(--bg-sunk); border: 1px solid var(--rule);
+}
+/* Main inputs get an accent edge so the eye lands on them first. */
+.filter-group--key .field select { border-color: var(--accent); }
 .filter-row {
   display: flex;
   flex-wrap: wrap;
@@ -669,7 +662,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: var(--radius);
   overflow: hidden;
 }
-.bar-fill { height: 100%; background: var(--accent); transition: width .8s var(--ease-out); }
+.bar-fill { height: 100%; background: var(--accent); }
 
 /* The threshold marker is an addition to a bar that is already labelled with
    its own figure, so the comparison never depends on seeing the line. */
@@ -1087,3 +1080,90 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 .imp-export { margin: .9rem 0 0; }
 .imp-export a { color: var(--accent); font-weight: 600; }
+
+/* ===========================================================================
+   Landing CTA buttons + the "Explore the data" feature grid (VaxVision-style
+   structure): hero drives into the dashboards, and a card grid surfaces all
+   four data views near the top instead of hiding them at the bottom.
+   =========================================================================== */
+.lp-hero-cta { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.4rem; }
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-base);
+  padding: .62rem 1.2rem;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
+.btn-ghost { background: transparent; color: var(--accent); border-color: var(--accent); }
+.btn-ghost:hover { background: var(--accent-wash); }
+
+.lp-explore {
+  list-style: none;
+  margin: 1rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.lp-explore-card {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: .7rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: var(--bg);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color .15s var(--ease-out),
+              box-shadow .15s var(--ease-out),
+              transform .15s var(--ease-out);
+}
+.lp-explore-card:hover {
+  border-color: var(--accent);
+  box-shadow: 0 4px 14px rgba(22, 25, 29, .08);
+  transform: translateY(-2px);
+}
+.lp-explore-code {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--accent-ink);
+  background: var(--accent);
+  width: 2.3rem;
+  height: 2.3rem;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius);
+}
+.lp-explore-mid { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.lp-explore-label { font-weight: 600; }
+.lp-explore-wip {
+  align-self: start;
+  color: var(--warn-ink);
+  background: var(--bg-flag);
+  border: 1px solid var(--flag-rule);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  font-size: .62rem;
+  font-weight: 700;
+  padding: .05rem .35rem;
+  border-radius: 2px;
+}
+.lp-explore-go { color: var(--accent); font-size: 1.15rem; }
+.lp-explore-card.is-wip .lp-explore-code { background: var(--ink-muted); }
+
+@media (prefers-reduced-motion: reduce) {
+  .btn, .lp-explore-card { transition: none; }
+  .lp-explore-card:hover { transform: none; }
+}

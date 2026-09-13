@@ -108,20 +108,7 @@
     els.forEach(function (el) { io.observe(el); });
   }
 
-  // --- coverage region bars grow from 0 to their width on first paint (2A) ---
-  function initBars() {
-    var bars = [].slice.call(document.querySelectorAll('.bar-fill'));
-    if (reduce || !bars.length) { return; }
-    bars.forEach(function (b) {
-      var w = b.style.width;
-      if (!w) { return; }
-      b.style.width = '0%';
-      b.getBoundingClientRect();                 // force a reflow before the change
-      requestAnimationFrame(function () { b.style.width = w; });
-    });
-  }
-
-  function boot() { initCounts(); initChart(); initReveal(); initBars(); }
+  function boot() { initCounts(); initChart(); initReveal(); }
   if (document.readyState !== 'loading') { boot(); }
   else { document.addEventListener('DOMContentLoaded', boot); }
 })();
