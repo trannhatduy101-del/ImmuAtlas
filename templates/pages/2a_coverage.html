@@ -20,71 +20,81 @@
 {# ---- Filters. GET, so the selection lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Filter</h2>
 <form class="filters" method="get" action="{{ url_for('coverage.index') }}">
-  <div class="filter-row">
-    <div class="field">
-      <label for="f-antigen">Antigen</label>
-      <select id="f-antigen" name="antigen">
-        <option value="">All antigens</option>
-        {% for a in antigens %}
-          <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
-            {{ a.antigen }} &middot; {{ a.disease_name }}
-          </option>
-        {% endfor %}
-      </select>
+  <fieldset class="filter-group filter-group--key">
+    <legend>Pick an antigen and year <span class="filter-tag key">main filters</span></legend>
+    <div class="filter-row">
+      <div class="field">
+        <label for="f-antigen">Antigen</label>
+        <select id="f-antigen" name="antigen">
+          <option value="">All antigens</option>
+          {% for a in antigens %}
+            <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
+              {{ a.antigen }} &middot; {{ a.disease_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-year">Year</label>
+        <select id="f-year" name="year">
+          <option value="">All years</option>
+          {% for y in years %}
+            <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>{{ y.year }}</option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
+  </fieldset>
 
-    <div class="field">
-      <label for="f-year">Year</label>
-      <select id="f-year" name="year">
-        <option value="">All years</option>
-        {% for y in years %}
-          <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>{{ y.year }}</option>
-        {% endfor %}
-      </select>
+  <fieldset class="filter-group">
+    <legend>Narrow by place <span class="filter-tag opt">optional</span></legend>
+    <div class="filter-row">
+      <div class="field">
+        <label for="f-region">Region</label>
+        <select id="f-region" name="region">
+          <option value="">All regions</option>
+          {% for r in regions %}
+            <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>
+              {{ fix_region(r.region_name) }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field">
+        <label for="f-country">Country</label>
+        <select id="f-country" name="country">
+          <option value="">All countries</option>
+          {% for c in countries %}
+            <option value="{{ c.country_id }}" {% if c.country_id == country %}selected{% endif %}>
+              {{ c.country_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
     </div>
+    <p class="filter-note">
+      Region and country apply together. Selecting both narrows to that country
+      within that region, which is empty when the country sits elsewhere.
+    </p>
+  </fieldset>
 
-    <div class="field">
-      <label for="f-region">Region</label>
-      <select id="f-region" name="region">
-        <option value="">All regions</option>
-        {% for r in regions %}
-          <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>
-            {{ fix_region(r.region_name) }}
-          </option>
-        {% endfor %}
-      </select>
+  <fieldset class="filter-group">
+    <legend>Display</legend>
+    <div class="filter-row">
+      <div class="field">
+        <label for="f-sort">Sort the country table by</label>
+        <select id="f-sort" name="sort">
+          {% for key, label in sort_labels %}
+            <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="field field-actions">
+        <button type="submit">Apply</button>
+        <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
+      </div>
     </div>
-
-    <div class="field">
-      <label for="f-country">Country</label>
-      <select id="f-country" name="country">
-        <option value="">All countries</option>
-        {% for c in countries %}
-          <option value="{{ c.country_id }}" {% if c.country_id == country %}selected{% endif %}>
-            {{ c.country_name }}
-          </option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field">
-      <label for="f-sort">Sort the country table by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_labels %}
-          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <div class="field field-actions">
-      <button type="submit">Apply</button>
-      <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
-    </div>
-  </div>
-  <p class="filter-note">
-    Region and country apply together. Selecting both narrows to that country
-    within that region, which is empty when the country sits elsewhere.
-  </p>
+  </fieldset>
 </form>
 
 {% if rejected %}
