@@ -16,3 +16,4 @@
 # immunisation2.db would corrupt the supplied data, which is the one file in
 # this repository that cannot be regenerated.
 *.db binary
+*.woff2 binary
