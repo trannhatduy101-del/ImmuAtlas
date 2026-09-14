@@ -3,11 +3,14 @@
    it never touches the shared ImmuAtlas header/footer or the other five pages.
    The four colour vars below are the ones index.css referenced from VaxVision's
    global.css; copied here so this file stands alone. Edit freely. */
+/* These four are now aliases onto the shared ImmuAtlas tokens in style.css, so
+   there is ONE source of truth for the palette: retuning --accent etc. there
+   flows through to this landing sheet too, and no independent hex can drift. */
 :root {
-  --primary-dark:   #075985;
-  --primary-hover:  #7fc2e8;
-  --orange-primary: #c2410c;
-  --orange-hover:   #c2410ccc;
+  --primary-dark:   var(--accent-strong);
+  --primary-hover:  var(--accent-lift);
+  --orange-primary: var(--outcome);
+  --orange-hover:   var(--outcome);
 }
 
 /* Keep the ImmuAtlas header/footer, but let the VaxVision hero + full-bleed
@@ -15,6 +18,24 @@
 body.lp-vax .hero { padding: 0; background: none; border: 0; }
 body.lp-vax .hero > .wrap { max-width: none; padding: 0; margin: 0; }
 body.lp-vax main.wrap { max-width: none; padding: 0; }
+
+/* In-page wayfinding strip. Centred over the full-bleed page; plain anchors. */
+.lp-jump {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+  gap: .4rem 1.1rem; max-width: 1000px; margin: 0 auto; padding: 16px 20px;
+  border-bottom: 1px solid var(--rule);
+}
+.lp-jump-label {
+  font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink-muted);
+}
+.lp-jump a {
+  font-size: .9rem; font-weight: 600; color: var(--accent); text-decoration: none;
+  padding: .1rem 0; border-bottom: 2px solid transparent;
+}
+.lp-jump a:hover { border-bottom-color: var(--accent-lift); }
+/* Anchor offset so a jumped-to band isn't flush against the viewport top. */
+#vaccines, #trend, #explore { scroll-margin-top: 24px; }
 
 /* ---- Original VaxVision index.css below (unchanged) -------------------- */
 
@@ -38,7 +59,7 @@ EXPLORE HERO SECTION
     /* No stock photo: a deep teal gradient built from the palette, with a faint
        data-grid pattern layered on top (inline SVG, offline, on-brand). */
     background:
-      linear-gradient(150deg, #082f49 0%, #075985 55%, #0891b2 100%);
+      linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 55%, #0891b2 100%);
   }
   .explore-hero::after {
     content: "";
@@ -97,7 +118,7 @@ EXPLORE HERO SECTION
     justify-content: center;
     min-height: 52px;
     padding: 0 26px;
-    color: #075985;
+    color: var(--accent-strong);
     text-decoration: none;
     font-family: var(--font-body);
     font-size: 15px;
@@ -288,7 +309,7 @@ SNAPSHOT DATA SECTION
 .snapshot-card-text h3 {
     font-size: 25px;
     font-weight: 800;
-    color: #075985;
+    color: var(--accent-strong);
     margin-bottom: 8px;
     line-height: 1.1;
 }
@@ -433,7 +454,7 @@ VACCINE CARDS SECTION
     font-family: var(--font-body);
     font-size: 18px;
     font-weight: 800;
-    color: #075985;
+    color: var(--accent-strong);
     margin-bottom: 12px;
     line-height: 1.35;
 
@@ -455,9 +476,9 @@ VACCINE CARDS SECTION
     font-family: var(--font-body);
     font-size: 14px;
     font-weight: 700;
-    color: #075985;
+    color: var(--accent-strong);
     text-decoration: none;
-    border-bottom: 1.5px solid #075985;
+    border-bottom: 1.5px solid var(--accent-strong);
     padding-bottom: 1px;
     transition: color 0.22s ease, border-color 0.22s ease, gap 0.22s ease;
 }
@@ -468,7 +489,7 @@ VACCINE CARDS SECTION
 }
 
 .vc-more-link:hover {
-    color: #06b6d4;
+    color: var(--accent-lift);
     border-color: #f7f7f8;
 }
 
@@ -506,7 +527,7 @@ DID YOU KNOW SECTIONS
     font-weight: 700;
     letter-spacing: 0.08em;
     text-transform: uppercase;
-    color: #c2410c;
+    color: var(--outcome);
     background: #fff3ec;
     border-radius: 999px;
     padding: 6px 16px;
@@ -515,7 +536,7 @@ DID YOU KNOW SECTIONS
 
 .facts-header h2 {
     font-family: var(--font-body);
-    color: #082f49;
+    color: var(--bg-deep);
     margin-bottom: 14px;
     letter-spacing: -0.5px;
 }
@@ -563,7 +584,7 @@ DID YOU KNOW SECTIONS
     font-family: var(--font-body);
     font-size: clamp(22px, 2.4vw, 30px);
     font-weight: 800;
-    color: #082f49;
+    color: var(--bg-deep);
     line-height: 1.25;
 }
 
@@ -588,7 +609,7 @@ DID YOU KNOW SECTIONS
     font-size: 26px;
     font-weight: 800;
     letter-spacing: -1px;
-    color: #c2410c;
+    color: var(--outcome);
 }
 
 .fact-stat-label {
@@ -620,7 +641,7 @@ DID YOU KNOW SECTIONS
     left: 16px;
     background: rgba(255, 255, 255, 0.92);
     backdrop-filter: blur(8px);
-    color: #075985;
+    color: var(--accent-strong);
     font-size: 12px;
     font-weight: 700;
     padding: 7px 14px;
@@ -740,7 +761,7 @@ LATEST UPDATES SECTION
     font-family: var(--font-body);
     font-size: clamp(28px, 3vw, 42px);
     font-weight: 800;
-    color: #082f49;
+    color: var(--bg-deep);
     text-align: center;
     margin-bottom: 12px;
     letter-spacing: -0.5px;
@@ -804,14 +825,14 @@ LATEST UPDATES SECTION
 .tag--research,
 .tag--policy {
     background: #fff3ec;
-    color: #c2410c;
+    color: var(--outcome);
 }
 
 .update-card h3 {
     font-family: var(--font-body);
     font-size: 17px;
     font-weight: 800;
-    color: #082f49;
+    color: var(--bg-deep);
     line-height: 1.35;
 }
 
@@ -980,7 +1001,7 @@ RESPONSIVE - INDEX ONLY
 /* ---- Four figures: SVG-icon stat cards (replaces photo-overlay cards) ---- */
 .snapshot-section { padding: clamp(48px, 7vw, 84px) clamp(18px, 6vw, 90px) clamp(64px, 8vw, 100px); }
 .snapshot-header { text-align: left; }
-.snapshot-header h2 { color: #075985; font-family: var(--font-display); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); }
+.snapshot-header h2 { color: var(--accent-strong); font-family: var(--font-display); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); }
 .snapshot-header p { color: #4a5b57; }
 .snapshot-grid { width: 100%; }
 @media (max-width: 40rem) { .snapshot-grid { grid-template-columns: 1fr; } }
@@ -1001,29 +1022,29 @@ RESPONSIVE - INDEX ONLY
 .snap-stat:hover { box-shadow: 0 16px 34px rgba(8,47,73,0.12); transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) { .snap-stat:hover { transform: none; } }
 
-.snap-ico { width: 30px; height: 30px; color: #0369a1; margin: .2rem 0 .5rem; }
-.snap-stat--outcome .snap-ico { color: #c2410c; }
+.snap-ico { width: 30px; height: 30px; color: var(--accent); margin: .2rem 0 .5rem; }
+.snap-stat--outcome .snap-ico { color: var(--outcome); }
 
 .snap-tag {
   align-self: flex-start; font-size: .66rem; font-weight: 800; letter-spacing: .06em;
   text-transform: uppercase; padding: .18rem .5rem; border-radius: 999px;
 }
 .snap-tag--context { color: #4a5b57; background: #eef3f8; }
-.snap-tag--effort  { color: #0c4a72; background: #e0f2fe; }
-.snap-tag--outcome { color: #9a3412; background: #fdead9; }
+.snap-tag--effort  { color: #0c4a72; background: var(--accent-wash); }
+.snap-tag--outcome { color: #9a3412; background: var(--bg-flag); }
 
 .snap-fig {
   font-family: var(--font-display); font-weight: 800;
   font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.6rem); line-height: 1.05;
-  letter-spacing: -.02em; color: #075985; font-variant-numeric: tabular-nums;
+  letter-spacing: -.02em; color: var(--accent-strong); font-variant-numeric: tabular-nums;
 }
-.snap-stat--outcome .snap-fig { color: #c2410c; }
+.snap-stat--outcome .snap-fig { color: var(--outcome); }
 .snap-label { font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: #4a5b57; margin-bottom: .5rem; }
 .snap-stat p { font-size: .92rem; line-height: 1.55; color: #4a5b57; margin: 0; }
 
 /* ---- Vaccine information section: teal gradient (no stock photo) ---- */
 .vaccine-cards-section {
-  background: linear-gradient(150deg, #075985 0%, #082f49 100%);
+  background: linear-gradient(150deg, var(--accent-strong) 0%, var(--bg-deep) 100%);
 }
 .vc-card { border-radius: 14px; }
 .vc-card--featured { outline: 2px solid #7dd3fc; outline-offset: -2px; }
@@ -1031,21 +1052,21 @@ RESPONSIVE - INDEX ONLY
 .vc-vial { width: 96px; height: 96px; }
 .vc-vial .v-cap { fill: #0c4a72; }
 .vc-vial .v-neck { fill: #cbe7e2; }
-.vc-vial .v-body { fill: #e6f4f1; stroke: #0369a1; stroke-width: 1.5; }
-.vc-vial .v-liquid { fill: #06b6d4; opacity: .9; }
-.vc-vial .v-label { fill: #ffffff; stroke: #0369a1; stroke-width: 1; }
-.vc-vial .v-glyph { fill: #c2410c; }
-.vc-vial .v-glyph-ring { fill: none; stroke: #c2410c; stroke-width: 1.6; }
-.vc-antigen { font-weight: 600; color: #0369a1; font-size: .82em; }
+.vc-vial .v-body { fill: #e6f4f1; stroke: var(--accent); stroke-width: 1.5; }
+.vc-vial .v-liquid { fill: var(--accent-lift); opacity: .9; }
+.vc-vial .v-label { fill: #ffffff; stroke: var(--accent); stroke-width: 1; }
+.vc-vial .v-glyph { fill: var(--outcome); }
+.vc-vial .v-glyph-ring { fill: none; stroke: var(--outcome); stroke-width: 1.6; }
+.vc-antigen { font-weight: 600; color: var(--accent); font-size: .82em; }
 .vc-thr { color: #9a3412; font-size: 14px; margin-bottom: 10px; }
-.vc-thr strong { color: #c2410c; }
-.vc-more-link { color: #0369a1; }
+.vc-thr strong { color: var(--outcome); }
+.vc-more-link { color: var(--accent); }
 
 /* ---- The data band: chart on the left, explanation on the right ---- */
-#the-data .facts-eyebrow { color: #0369a1; }
+#the-data .facts-eyebrow { color: var(--accent); }
 .lp-chart.fact-img-wrap { background: none; box-shadow: none; padding: 0; }
 .lp-chart .trend { width: 100%; height: auto; background: #eef6fd; border: 1px solid #cfe3f2; border-radius: 12px; }
-#the-data .fact-tag { background: #e0f2fe; color: #0c4a72; }
+#the-data .fact-tag { background: var(--accent-wash); color: #0c4a72; }
 
 /* ===========================================================================
    Distinctive rework: expanding vaccine panels + face-off + CTA. Water-blue.
@@ -1070,13 +1091,13 @@ RESPONSIVE - INDEX ONLY
   box-shadow: 0 6px 20px rgba(8,47,73,0.14); transition: transform .18s ease, box-shadow .18s ease;
 }
 .vcase:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(8,47,73,0.22); }
-.vcase--c1 { background: #0369a1; }
+.vcase--c1 { background: var(--accent); }
 .vcase--c2 { background: #0e7490; }
-.vcase--c3 { background: #082f49; }
+.vcase--c3 { background: var(--bg-deep); }
 
 .vcase-badge {
   align-self: flex-start; max-width: 100%; font-family: var(--font-body);
-  background: rgba(255,255,255,0.94); color: #0c2a42;
+  background: rgba(255,255,255,0.94); color: var(--ink);
   font-size: .72rem; font-weight: 700; letter-spacing: .01em; line-height: 1.25;
   padding: .3rem .7rem; border-radius: 14px;
 }
@@ -1090,7 +1111,7 @@ RESPONSIVE - INDEX ONLY
 
 .vax-home {
   cursor: pointer; display: none;                 /* shown only once a card is open */
-  place-items: center; border-radius: 14px; background: #06b6d4; color: #ffffff;
+  place-items: center; border-radius: 14px; background: var(--accent-lift); color: #ffffff;
   box-shadow: 0 6px 20px rgba(8,47,73,0.14); transition: transform .18s ease;
 }
 .vax-home:hover { transform: translateY(-3px); }
@@ -1153,12 +1174,12 @@ RESPONSIVE - INDEX ONLY
 .vcase-detail-body { flex: 1 1 auto; min-width: 0; }
 .vcase-detail-badge { display: inline-block; font-family: var(--font-body); font-size: .72rem; font-weight: 700;
   letter-spacing: .01em; padding: .3rem .7rem; border-radius: 14px; color: #ffffff; }
-.vcase-dot--c1 { background: #0369a1; } .vcase-dot--c2 { background: #0e7490; } .vcase-dot--c3 { background: #082f49; }
-.vcase-detail-title { font-family: var(--font-display); color: #075985; font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem); margin: .5rem 0 .2rem; }
-.vcase-thr { color: #075985; font-size: 1rem; margin: 0 0 12px; }
-.vcase-thr strong { color: #0369a1; font-size: 1.15rem; }
-.vax-panel p { font-size: .96rem; line-height: 1.65; color: #4a5a68; margin: 0 0 12px; }
-.vcase-report { font-weight: 600; color: #0c2a42 !important; }
+.vcase-dot--c1 { background: var(--accent); } .vcase-dot--c2 { background: #0e7490; } .vcase-dot--c3 { background: var(--bg-deep); }
+.vcase-detail-title { font-family: var(--font-display); color: var(--accent-strong); font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem); margin: .5rem 0 .2rem; }
+.vcase-thr { color: var(--accent-strong); font-size: 1rem; margin: 0 0 12px; }
+.vcase-thr strong { color: var(--accent); font-size: 1.15rem; }
+.vax-panel p { font-size: .96rem; line-height: 1.65; color: var(--ink-muted); margin: 0 0 12px; }
+.vcase-report { font-weight: 600; color: var(--ink) !important; }
 .vcase-src { font-size: .84rem !important; color: #6b7c8a !important; }
 
 @media (prefers-reduced-motion: reduce) { .vcase, .vax-home { transition: none; } .vcase:hover, .vax-home:hover { transform: none; } }
@@ -1174,56 +1195,68 @@ RESPONSIVE - INDEX ONLY
 }
 @media (max-width: 30rem) { .vax-rail { grid-template-columns: 1fr; } }
 
-/* ---- Face-off band: effort vs outcome ---- */
-.faceoff { background: linear-gradient(135deg, #082f49 0%, #0369a1 100%); color: #fff;
-  padding: clamp(56px, 8vw, 96px) 20px; }
-.faceoff-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
-.faceoff-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem;
-  font-weight: 700; color: #7dd3fc; }
-.faceoff-head h2 { font-family: var(--font-display); color: #fff; margin: .3rem 0 0;
-  font-size: clamp(1.7rem, 1.2rem + 2vw, 2.6rem); }
-.faceoff-pair { display: flex; align-items: stretch; justify-content: center;
-  gap: clamp(14px, 3vw, 40px); margin: 32px 0 8px; }
-.faceoff-side { flex: 1 1 0; min-width: 0; padding: 26px 22px; border-radius: 18px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.14);
-  display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.faceoff-tag { text-transform: uppercase; letter-spacing: .06em; font-size: .7rem; font-weight: 800;
-  padding: .2rem .6rem; border-radius: 999px; }
-.faceoff-effort .faceoff-tag { color: #7dd3fc; background: rgba(6,182,212,0.2); }
-.faceoff-outcome .faceoff-tag { color: #fdba74; background: rgba(251,146,60,0.2); }
-.faceoff-fig { font-family: var(--font-display); font-weight: 800; line-height: 1;
-  font-size: clamp(2.1rem, 1.5rem + 3vw, 3.4rem); font-variant-numeric: tabular-nums; margin-top: 6px; }
-.faceoff-effort .faceoff-fig { color: #7dd3fc; }
-.faceoff-outcome .faceoff-fig { color: #fdba74; }
-.faceoff-label { text-transform: uppercase; letter-spacing: .05em; font-size: .8rem; color: rgba(255,255,255,0.85); }
-.faceoff-side p { margin: .3rem 0 0; color: rgba(255,255,255,0.75); font-size: .92rem; }
-.faceoff-vs { align-self: center; font-size: .8rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .1em; color: rgba(255,255,255,0.6); }
-.faceoff-note { max-width: 58ch; margin: 18px auto 0; color: rgba(255,255,255,0.85); }
-@media (max-width: 40rem) {
-  .faceoff-pair { flex-direction: column; }
-  .faceoff-vs { padding: 4px 0; }
-}
+/* ---- 25-year trajectory band: coverage climbs, cases barely move ----
+   Replaces the old face-off band (which only restated two numbers). This shows
+   the same thesis as a real trend from routes/landing.py, with the truncated
+   axis and the reporting caveat stated in the caption. */
+.lp-trend-band { background: #ffffff; padding: clamp(52px, 8vw, 92px) 20px; }
+.lp-trend-inner { max-width: 1000px; margin: 0 auto; }
+.lp-trend-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem;
+  font-weight: 700; color: var(--accent); }
+.lp-trend-band h2 { font-family: var(--font-display); color: var(--accent-strong); line-height: 1.12;
+  font-size: clamp(1.7rem, 1.2rem + 2vw, 2.6rem); margin: .35rem 0 .35rem; }
+/* Twin metrics: effort (up) beside outcome (still high), same grammar so the
+   contrast is read at a glance rather than decoded from a caption. */
+.lp-twin { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: .4rem 0 1.5rem; }
+@media (max-width: 40rem) { .lp-twin { grid-template-columns: 1fr; } }
+.lp-twin-card { border: 1px solid var(--rule); border-radius: 16px; background: var(--bg); padding: 20px 22px; }
+.lp-twin-label { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-muted); font-weight: 700; }
+.lp-twin-move { display: flex; align-items: baseline; gap: .55rem; flex-wrap: wrap; margin: .5rem 0 .6rem; }
+.lp-twin-from { font-family: var(--font-display); font-size: 1.4rem; color: #6b7c8a; font-variant-numeric: tabular-nums; }
+.lp-twin-arrow { color: var(--accent-lift); font-size: 1.15rem; }
+.lp-twin-to { font-family: var(--font-display); font-weight: 800; line-height: 1;
+  font-size: clamp(1.9rem, 1.4rem + 1.8vw, 2.7rem); font-variant-numeric: tabular-nums; }
+.lp-twin-up .lp-twin-to { color: var(--accent); }
+.lp-twin-flat .lp-twin-to { color: var(--outcome); }
+.lp-twin-verdict { display: inline-block; font-size: .8rem; font-weight: 700; padding: .18rem .65rem; border-radius: 999px; }
+.lp-twin-up .lp-twin-verdict { color: var(--accent-strong); background: var(--accent-wash); }
+.lp-twin-flat .lp-twin-verdict { color: #9a3412; background: var(--bg-flag); }
+
+.lp-trend-takeaway { font-size: 1.05rem; color: var(--ink); max-width: 62ch; margin: 0 0 1.6rem; }
+.lp-trend-takeaway strong { color: var(--accent-strong); }
+
+.lp-trend-chart { margin: 0; }
+.lp-trend-cap-top { font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
+  color: var(--ink-muted); font-weight: 700; margin-bottom: .5rem; }
+.lp-trend-note { margin-top: .7rem; }
+.lp-trend-note summary { cursor: pointer; font-size: .85rem; color: var(--accent); font-weight: 600; }
+.lp-trend-note p { font-size: .84rem; color: var(--ink-muted); line-height: 1.55; margin: .5rem 0 0; max-width: 74ch; }
+.lp-trend-chart svg { width: 100%; height: auto; background: var(--bg);
+  border: 1px solid var(--rule); border-radius: 16px; padding: 14px;
+  box-shadow: 0 2px 6px rgba(8,47,73,.06), 0 12px 26px rgba(8,47,73,.09); }
+.lp-trend-area { fill: var(--accent-lift); opacity: .12; }
+.lp-trend-yr { fill: var(--ink-muted); font-size: 11px; font-family: var(--font-body); }
 
 /* ---- Closing CTA band ---- */
-.cta-band { background: #f4f9fd; padding: clamp(56px, 8vw, 96px) 20px; }
+.cta-band { background: var(--bg); padding: clamp(56px, 8vw, 96px) 20px; }
 .cta-inner { max-width: 1000px; margin: 0 auto; text-align: center; }
-.cta-title { font-family: var(--font-display); color: #075985; font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); margin: 0 0 .3rem; }
-.cta-sub { color: #4a5a68; margin: 0 0 32px; }
+.cta-title { font-family: var(--font-display); color: var(--accent-strong); font-size: clamp(1.6rem, 1.2rem + 1.6vw, 2.2rem); margin: 0 0 .3rem; }
+.cta-sub { color: var(--ink-muted); margin: 0 0 32px; }
 .cta-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; text-align: left; }
 .cta-wip { display: inline-block; margin-top: 2px; font-size: .64rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .05em; color: #9a3412; background: #fdead9; border-radius: 999px; padding: .1rem .45rem; }
+  letter-spacing: .05em; color: #9a3412; background: var(--bg-flag); border-radius: 999px; padding: .1rem .45rem; }
 @media (max-width: 44rem) { .cta-grid { grid-template-columns: 1fr; } }
 .cta-card { display: flex; align-items: center; gap: 16px; padding: 22px 24px;
   background: #fff; border: 1px solid #cfe3f2; border-radius: 16px; text-decoration: none; color: var(--ink);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.cta-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(8,47,73,0.12); border-color: #0369a1; }
-.cta-card-k { flex: none; width: 46px; height: 46px; border-radius: 12px; background: #0369a1; color: #fff;
+.cta-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(8,47,73,0.12); border-color: var(--accent); }
+.cta-card-k { flex: none; width: 46px; height: 46px; border-radius: 12px; background: var(--accent); color: #fff;
   font-family: var(--font-display); font-weight: 700; display: grid; place-items: center; }
 .cta-card-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
-.cta-card-t { font-weight: 700; color: #075985; }
-.cta-card-d { font-size: .9rem; color: #4a5a68; }
-.cta-go { margin-left: auto; color: #0369a1; font-size: 1.35rem; transition: transform .2s ease; }
+.cta-card-t { font-weight: 700; color: var(--accent-strong); }
+.cta-card-d { font-size: .9rem; color: var(--ink-muted); }
+.cta-go { margin-left: auto; color: var(--accent); font-size: 1.35rem; transition: transform .2s ease; }
 .cta-card:hover .cta-go { transform: translateX(4px); }
 @media (prefers-reduced-motion: reduce) {
   .cta-card, .cta-go { transition: none; }
@@ -1232,20 +1265,20 @@ RESPONSIVE - INDEX ONLY
 }
 
 /* ---- The data: question + reveal spotlight (native <details>) ---- */
-.spotlight { background: linear-gradient(160deg, #f4f9fd 0%, #e4f0fa 100%); padding: clamp(56px, 8vw, 100px) 20px; }
+.spotlight { background: linear-gradient(160deg, var(--bg) 0%, var(--bg-sunk) 100%); padding: clamp(56px, 8vw, 100px) 20px; }
 .spotlight-inner { max-width: 820px; margin: 0 auto; text-align: center; }
-.spotlight-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 700; color: #0369a1; }
-.spotlight-q { font-family: var(--font-display); color: #075985; line-height: 1.1;
+.spotlight-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 700; color: var(--accent); }
+.spotlight-q { font-family: var(--font-display); color: var(--accent-strong); line-height: 1.1;
   font-size: clamp(1.8rem, 1.3rem + 2.4vw, 3rem); margin: .4rem 0 .6rem; }
-.spotlight-lead { color: #4a5a68; font-size: 1.1rem; max-width: 58ch; margin: 0 auto 26px; }
+.spotlight-lead { color: var(--ink-muted); font-size: 1.1rem; max-width: 58ch; margin: 0 auto 26px; }
 .spotlight-reveal summary {
   list-style: none; cursor: pointer; display: inline-flex; align-items: center;
-  background: #0369a1; color: #ffffff; font-weight: 700; padding: .72rem 1.4rem; border-radius: 999px;
+  background: var(--accent); color: #ffffff; font-weight: 700; padding: .72rem 1.4rem; border-radius: 999px;
   transition: background .18s ease;
 }
 .spotlight-reveal summary::-webkit-details-marker { display: none; }
-.spotlight-reveal summary:hover { background: #075985; }
-.spotlight-reveal[open] summary { background: #06b6d4; }
+.spotlight-reveal summary:hover { background: var(--accent-strong); }
+.spotlight-reveal[open] summary { background: var(--accent-lift); }
 .spotlight-reveal summary:focus-visible { outline: 3px solid #7dd3fc; outline-offset: 3px; }
 .spotlight-summary-close { display: none; }
 .spotlight-reveal[open] .spotlight-summary-open { display: none; }
@@ -1253,7 +1286,7 @@ RESPONSIVE - INDEX ONLY
 .spotlight-answer { max-width: 64ch; margin: 24px auto 0; text-align: left;
   background: #ffffff; border: 1px solid #cfe3f2; border-radius: 16px; padding: 22px 26px;
   box-shadow: 0 12px 30px rgba(8,47,73,0.08); }
-.spotlight-answer p { color: #4a5a68; line-height: 1.65; margin: 0 0 12px; }
+.spotlight-answer p { color: var(--ink-muted); line-height: 1.65; margin: 0 0 12px; }
 .spotlight-answer p:last-child { margin-bottom: 0; }
-.spotlight-kicker { color: #075985 !important; font-weight: 600; }
+.spotlight-kicker { color: var(--accent-strong) !important; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .spotlight-reveal summary { transition: none; } }

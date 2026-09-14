@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="ImmuAtlas">
+  <defs>
+    <linearGradient id="ia" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0369a1"/>
+      <stop offset="1" stop-color="#075985"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="13" fill="url(#ia)"/>
+  <!-- the water accent, echoing the section marks + hero top-rule -->
+  <rect x="12" y="47" width="40" height="3.5" rx="1.75" fill="#06b6d4"/>
+  <text x="32" y="40" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif"
+        font-size="30" font-weight="700" fill="#ffffff" letter-spacing="-1">IA</text>
+</svg>

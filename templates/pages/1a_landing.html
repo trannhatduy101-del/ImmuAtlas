@@ -65,24 +65,28 @@
         </p>
         <a href="#snapshot-data" class="explore-btn">Explore the figures</a>
 
-        {# Hero illustration: a rising coverage line with case bars that never
-           reach zero -- the whole site's tension in one picture. #}
-        <svg class="explore-image lp-hero-art" viewBox="0 0 900 340" role="img"
-             aria-label="A coverage line rising over time while disease-case bars remain present beneath it.">
+        {# Hero illustration: an abstract "water" motif -- layered waves rising
+           to the right. Deliberately NOT a chart: no axis, no bars, no data, so
+           it reads as decoration and never as a figure the reader could mistake
+           for a sourced number. The real 25-year trend is shown lower down. #}
+        <svg class="explore-image lp-hero-art" viewBox="0 0 900 320" role="img"
+             aria-label="An abstract motif of layered water waves rising toward the right.">
           <defs>
-            <linearGradient id="cov" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#5eead4"/><stop offset="1" stop-color="#5eead4" stop-opacity="0"/>
+            <linearGradient id="wv" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#06b6d4"/>
+            </linearGradient>
+            <linearGradient id="wvfill" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0" stop-color="#06b6d4" stop-opacity=".34"/><stop offset="1" stop-color="#06b6d4" stop-opacity="0"/>
             </linearGradient>
           </defs>
-          {% for gx in range(0, 901, 90) %}<line x1="{{ gx }}" y1="20" x2="{{ gx }}" y2="300" stroke="#ffffff" stroke-opacity="0.06"/>{% endfor %}
-          {% set bars = [130,120,108,96,150,88,76,70,64,58] %}
-          {% for b in bars %}
-            <rect x="{{ 40 + loop.index0 * 86 }}" y="{{ 300 - b }}" width="46" height="{{ b }}" rx="4"
-                  fill="#f97316" fill-opacity="0.55"/>
-          {% endfor %}
-          <polygon points="40,180 900,60 900,300 40,300" fill="url(#cov)" opacity="0.5"/>
-          <polyline points="40,180 126,170 212,150 298,140 384,120 470,110 556,96 642,86 728,74 814,66 886,60"
-                    fill="none" stroke="#5eead4" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M0,222 C150,184 300,252 450,214 S760,156 900,192 L900,320 L0,320 Z" fill="rgba(255,255,255,0.06)"/>
+          <path d="M0,252 C160,218 320,276 470,238 S770,196 900,228 L900,320 L0,320 Z" fill="rgba(255,255,255,0.05)"/>
+          <path d="M0,236 C140,206 280,256 430,202 C580,150 720,124 900,100 L900,320 L0,320 Z" fill="url(#wvfill)"/>
+          <path d="M0,236 C140,206 280,256 430,202 C580,150 720,124 900,100"
+                fill="none" stroke="url(#wv)" stroke-width="4" stroke-linecap="round"/>
+          <circle cx="430" cy="202" r="5" fill="#7dd3fc"/>
+          <circle cx="140" cy="206" r="4" fill="#7dd3fc" opacity=".8"/>
+          <circle cx="884" cy="103" r="6" fill="#e0f2fe"/>
         </svg>
       </div>
     </section>
@@ -93,6 +97,17 @@
 {% if db_missing %}
   <div class="empty-state"><h2>Nothing to show</h2><p>{{ db_missing }}</p></div>
 {% else %}
+
+  {# In-page wayfinding for a long landing: jump straight to any band. Plain
+     anchor links, no JavaScript. #}
+  <nav class="lp-jump" aria-label="On this page">
+    <span class="lp-jump-label">On this page</span>
+    <a href="#snapshot-data">Figures</a>
+    <a href="#vaccines">Vaccines</a>
+    <a href="#the-data">The question</a>
+    <a href="#trend">25-year trend</a>
+    <a href="#explore">Explore</a>
+  </nav>
 
   {# ---- Four figures from this data (was VaxVision "Snapshot Data") ---- #}
   <section id="snapshot-data" class="snapshot-section">
@@ -109,7 +124,7 @@
       <article class="snap-stat">
         <span class="snap-tag snap-tag--context">Context</span>
         {{ stat_icon('globe') }}
-        <span class="snap-fig lp-count" data-to="{{ facts.n_countries }}" data-kind="int">{{ fmt_int(facts.n_countries) }}</span>
+        <span class="snap-fig">{{ fmt_int(facts.n_countries) }}</span>
         <span class="snap-label">countries reporting</span>
         <p>Across {{ facts.year_max - facts.year_min + 1 }} years, {{ facts.year_min }} to {{ facts.year_max }}. The full extent of the data, not a selection.</p>
       </article>
@@ -117,7 +132,7 @@
       <article class="snap-stat">
         <span class="snap-tag snap-tag--effort">Effort</span>
         {{ stat_icon('dose') }}
-        <span class="snap-fig lp-count" data-to="{{ facts.total_doses }}" data-kind="big">{{ fmt_big(facts.total_doses) }}</span>
+        <span class="snap-fig">{{ fmt_big(facts.total_doses) }}</span>
         <span class="snap-label">doses recorded</span>
         <p>A dose delivered is not the same as a child protected, which is why this sits beside the case count.</p>
       </article>
@@ -133,7 +148,7 @@
       <article class="snap-stat snap-stat--outcome">
         <span class="snap-tag snap-tag--outcome">Outcome</span>
         {{ stat_icon('virus') }}
-        <span class="snap-fig lp-count" data-to="{{ facts.total_cases }}" data-kind="big">{{ fmt_big(facts.total_cases) }}</span>
+        <span class="snap-fig">{{ fmt_big(facts.total_cases) }}</span>
         <span class="snap-label">reported cases</span>
         <p>Read alone it overstates failure, just as the dose count read alone overstates success.</p>
       </article>
@@ -141,7 +156,7 @@
   </section>
 
   {# ---- Vaccine information (was "Immunization Portfolio") ---- #}
-  <section class="vaccine-cards-section">
+  <section class="vaccine-cards-section" id="vaccines">
     <div class="vc-inner">
       <h2>Vaccine information</h2>
       <p class="vc-subtitle">
@@ -245,36 +260,83 @@
     </div>
   </section>
 
-  {# ---- NEW idea 1: Effort meets outcome -- the two headline numbers set
-         directly against each other, the whole thesis in one band. ---- #}
-  <section class="faceoff">
-    <div class="faceoff-inner">
-      <div class="faceoff-head">
-        <span class="faceoff-eyebrow">The whole point</span>
-        <h2>Effort on one side, outcome on the other</h2>
+  {# ---- The 25-year trajectory: the effort-vs-outcome thesis shown as real
+         movement rather than restated. Coverage climbs while reported cases
+         barely fall. The y-axis is truncated on purpose (an 82->89 rise is
+         invisible on a full 0-100 scale) and the caption says so, along with
+         the honest caveat that part of the rise is simply wider reporting.
+         Geometry comes from routes/landing.py (chart); every number is real. ---- #}
+  {% if chart %}
+  {% set cov_up = (chart.last.avg_coverage - chart.first.avg_coverage) | round | int %}
+  <section class="lp-trend-band" id="trend">
+    <div class="lp-trend-inner">
+      <span class="lp-trend-eyebrow">{{ chart.first.year }} &rarr; {{ chart.last.year }} &middot; twenty-five years</span>
+      <h2>Coverage keeps climbing. The cases haven&rsquo;t stopped.</h2>
+
+      {# The contrast, as two metrics in the same grammar so the tension is
+         instant: effort up on the left, outcome still high on the right. Every
+         figure is computed from the real trend, never typed in. #}
+      <div class="lp-twin">
+        <div class="lp-twin-card lp-twin-up">
+          <span class="lp-twin-label">Reported coverage</span>
+          <span class="lp-twin-move">
+            <span class="lp-twin-from">{{ fmt_pct(chart.first.avg_coverage, 0) }}</span>
+            <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
+            <span class="lp-twin-to">{{ fmt_pct(chart.last.avg_coverage, 0) }}</span>
+          </span>
+          <span class="lp-twin-verdict">&uarr; up {{ cov_up }} points</span>
+        </div>
+        {% if chart.first.total_cases and chart.last.total_cases %}
+          {% set cases_down = ((chart.first.total_cases - chart.last.total_cases) / chart.first.total_cases * 100) | round | int %}
+          <div class="lp-twin-card lp-twin-flat">
+            <span class="lp-twin-label">Reported cases a year</span>
+            <span class="lp-twin-move">
+              <span class="lp-twin-from">{{ fmt_big(chart.first.total_cases) }}</span>
+              <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
+              <span class="lp-twin-to">{{ fmt_big(chart.last.total_cases) }}</span>
+            </span>
+            <span class="lp-twin-verdict">&darr; down {{ cases_down }}% &mdash; still millions</span>
+          </div>
+        {% endif %}
       </div>
-      <div class="faceoff-pair">
-        <article class="faceoff-side faceoff-effort">
-          <span class="faceoff-tag">Effort</span>
-          <span class="faceoff-fig">{{ fmt_big(facts.total_doses) }}</span>
-          <span class="faceoff-label">doses recorded</span>
-          <p>What was put in.</p>
-        </article>
-        <span class="faceoff-vs" aria-hidden="true">vs</span>
-        <article class="faceoff-side faceoff-outcome">
-          <span class="faceoff-tag">Outcome</span>
-          <span class="faceoff-fig">{{ fmt_big(facts.total_cases) }}</span>
-          <span class="faceoff-label">reported cases</span>
-          <p>What still happened.</p>
-        </article>
-      </div>
-      <p class="faceoff-note">Neither number is the story on its own. Held together, across {{ fmt_int(facts.n_countries) }} countries, they are.</p>
+
+      <p class="lp-trend-takeaway">
+        Twenty-five years of effort lifted coverage by <strong>{{ cov_up }} points</strong> &mdash;
+        yet preventable cases are <strong>still counted in the millions</strong> every year. That gap
+        is the whole reason this site holds both numbers side by side.
+      </p>
+
+      {# The chart is now support, not the headline: one short label, and the
+         methodology caveats tucked into a toggle so they don't block the point. #}
+      <figure class="lp-trend-chart">
+        <figcaption class="lp-trend-cap-top">Average reported coverage, year by year ({{ chart.first.year }}&ndash;{{ chart.last.year }})</figcaption>
+        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" role="img"
+             aria-label="A line rising gently from {{ fmt_pct(chart.first.avg_coverage, 0) }} in {{ chart.first.year }} to {{ fmt_pct(chart.last.avg_coverage, 0) }} in {{ chart.last.year }}.">
+          {# baseline y = CHART_H(200) - PAD_B(26) = 174, kept in step with landing.py #}
+          <polygon class="lp-trend-area" points="{{ chart.coords[0][0] }},174 {{ chart.polyline }} {{ chart.coords[-1][0] }},174"/>
+          <polyline class="trend-line" points="{{ chart.polyline }}"/>
+          {% for x, y, row in chart.coords %}<circle class="trend-dot" cx="{{ x }}" cy="{{ y }}" r="2.2"/>{% endfor %}
+          <text class="lp-trend-yr" x="{{ chart.coords[0][0] }}" y="194" text-anchor="start">{{ chart.first.year }}</text>
+          <text class="lp-trend-yr" x="{{ chart.coords[-1][0] }}" y="194" text-anchor="end">{{ chart.last.year }}</text>
+        </svg>
+        <details class="lp-trend-note">
+          <summary>How to read this chart</summary>
+          <p>
+            The line uses a {{ chart.y_min }}&ndash;{{ chart.y_max }}% scale, not 0&ndash;100 &mdash; on a
+            full scale a {{ cov_up }}-point rise would look almost flat, so the axis is zoomed to make the
+            movement visible. Part of the rise is also wider reporting: {{ fmt_int(chart.first.n_reporting) }}
+            reported figures went into the {{ chart.first.year }} average, {{ fmt_int(chart.last.n_reporting) }}
+            into {{ chart.last.year }}&rsquo;s.
+          </p>
+        </details>
+      </figure>
     </div>
   </section>
+  {% endif %}
 
   {# ---- Closing CTA: every view of the dataset, listed equally (no page is
          singled out). all_pages comes from the app context processor. ---- #}
-  <section class="cta-band">
+  <section class="cta-band" id="explore">
     <div class="cta-inner">
       <h2 class="cta-title">Explore the rest of the site</h2>
       <p class="cta-sub">Every view of the same WHO dataset &mdash; pick where to go next.</p>

@@ -143,11 +143,28 @@ def index():
               "region": region, "country": country}
 
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
+    outcome = db.query_one(db.load_query("coverage_outcome"), params)
     region_rows = db.query(db.load_query("coverage_by_region"), params)
     # The only concatenation allowed near SQL in this project. order_by can only
     # be one of the literal strings in SORT_KEYS.
     rows = db.query(db.load_query("coverage_by_country") + " ORDER BY " + order_by,
                     params)
+
+    # Paginate the country table: 8 rows a page, navigated by a ?page= GET link
+    # so it works without JavaScript and stays bookmarkable. The full `rows` is
+    # kept (the CSV export needs every row); only the displayed slice is paged.
+    PER_PAGE = 8
+    total_rows = len(rows)
+    total_pages = max(1, -(-total_rows // PER_PAGE))
+    try:
+        page = int(request.args.get("page", 1))
+    except (TypeError, ValueError):
+        page = 1
+    page = max(1, min(page, total_pages))
+    page_start = (page - 1) * PER_PAGE
+    page_rows = rows[page_start:page_start + PER_PAGE]
+    page_from = page_start + 1 if total_rows else 0
+    page_to = min(page_start + PER_PAGE, total_rows)
 
     threshold = None
     if antigen:
@@ -192,7 +209,9 @@ def index():
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
         sort_active=sort_active, sort_labels=SORT_LABELS,
-        summary=summary, region_view=region_view, rows=rows,
+        summary=summary, outcome=outcome, region_view=region_view, rows=rows,
+        page_rows=page_rows, page=page, total_pages=total_pages,
+        total_rows=total_rows, page_from=page_from, page_to=page_to,
         threshold=threshold, conflict=conflict, rejected=rejected,
         fix_region=fix_region,
         fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,

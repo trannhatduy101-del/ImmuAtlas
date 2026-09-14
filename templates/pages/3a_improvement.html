@@ -114,39 +114,90 @@
     {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
   </p>
 
-  {# ---- Dumbbell chart: each country's coverage at the two years, and the jump
-         between them. The numbers are printed beside every bar, so the chart is
-         a reading aid, not the only way to get the figure; the full table and a
-         CSV download carry everything. ---- #}
-  <div class="imp-chart lp-reveal">
-    <p class="imp-legend" aria-hidden="true">
-      <span class="imp-key imp-key-start">Start &middot; {{ start_year }}</span>
-      <span class="imp-key imp-key-end">End &middot; {{ end_year }}</span>
-      <span class="imp-axismax">axis to {{ axis_max }}%</span>
-    </p>
-    <ul class="imp-rows">
+  {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
+         so the two Sub-Task A result pages read as one product. The biggest
+         improver is the hero figure; the pool average and the "did cases fall"
+         count ride alongside it. Every figure comes from SQL (imp_summary,
+         top_gainer), never typed in. ---- #}
+  {% if imp_summary and top_gainer %}
+    <section class="outcome-verdict">
+      <p class="ov-context">
+        {{ antigen_name }} &middot; {{ start_year }}&ndash;{{ end_year }} &middot;
+        top {{ rows | length }} of {{ fmt_int(eligible) }} countries
+      </p>
+      <div class="ov-main">
+        <span class="ov-fig">{{ '%+.1f'|format(top_gainer.coverage_change) }} pp</span>
+        <div class="ov-detail">
+          <span class="ov-label">biggest gain &mdash; <strong>{{ top_gainer.country_name }}</strong>
+            ({{ fmt_pct(top_gainer.coverage_start) }} &rarr; {{ fmt_pct(top_gainer.coverage_end) }})</span>
+          <p class="ov-verdict">
+            Average gain across all {{ fmt_int(eligible) }} ranked countries:
+            <strong>{% if imp_summary.avg_gain is not none %}{{ '%+.1f'|format(imp_summary.avg_gain) }} pp{% else %}&mdash;{% endif %}</strong>.
+            {% if imp_summary.n_with_cases %}
+              <span class="ov-gap ov-gap--{{ 'up' if imp_summary.n_cases_fell * 2 >= imp_summary.n_with_cases else 'down' }}">
+                {{ fmt_int(imp_summary.n_cases_fell) }} of {{ fmt_int(imp_summary.n_with_cases) }} also saw reported cases fall
+              </span>
+            {% endif %}
+          </p>
+        </div>
+      </div>
+      <p class="ov-note">Coverage denominator: the birth cohort each country targets. Only countries that reported {{ antigen_name }} in both years are ranked, so none can appear from nowhere.</p>
+    </section>
+  {% endif %}
+
+  <h2 class="section-head">Result &middot; biggest improvement</h2>
+
+  {# ---- Ranked bar chart (the result as one readable picture): each country is
+         a bar on the coverage scale. The pale part is the {{start_year}} level;
+         the solid part is the change to {{end_year}}, so the longer the solid
+         bar, the bigger the improvement (a decline is drawn coral). Every figure
+         is printed beside its bar, and the full table + CSV carry everything, so
+         the chart is a reading aid rather than the only way to get a number. ---- #}
+  <figure class="imp-viz">
+    <figcaption class="imp-viz-cap">
+      Each bar sits on the coverage scale. The pale part is where the country was
+      in <strong>{{ start_year }}</strong>; the solid part is the change to
+      <strong>{{ end_year }}</strong> &mdash; the longer the solid bar, the bigger
+      the improvement.
+    </figcaption>
+    <div class="imp-viz-legend" aria-hidden="true">
+      <span class="imp-viz-key imp-viz-key--base">{{ start_year }} level</span>
+      <span class="imp-viz-key imp-viz-key--gain">gain to {{ end_year }}</span>
+      <span class="imp-viz-key imp-viz-key--loss">decline</span>
+    </div>
+    <div class="imp-viz-scale" aria-hidden="true">
+      <span></span>
+      <div class="imp-viz-ruler">
+        {% for k in range(0, 5) %}
+          <span class="imp-viz-tick" style="left: {{ k * 25 }}%">{{ (axis_max * k / 4) | round | int }}%</span>
+        {% endfor %}
+      </div>
+    </div>
+    <ol class="imp-ranks">
       {% for item in view %}
         {% set r = item.row %}
-        <li class="imp-row">
-          <div class="imp-country">
-            <span class="imp-name">{{ r.country_name }}</span>
-            <span class="imp-region">{{ r.region_name }}</span>
-          </div>
-          <div class="imp-track" aria-hidden="true">
-            <span class="imp-connect {{ 'is-up' if item.up else 'is-down' }}"
-                  style="left: {{ item.bar_left }}%; width: {{ item.bar_width }}%"></span>
-            <span class="imp-dot imp-dot-start" style="left: {{ item.p_start }}%"></span>
-            <span class="imp-dot imp-dot-end" style="left: {{ item.p_end }}%"></span>
-          </div>
-          <div class="imp-delta">
-            {{ fmt_pct(r.coverage_start) }} <span aria-hidden="true">&rarr;</span>
-            {{ fmt_pct(r.coverage_end) }}
-            <strong class="{{ 'up' if item.up else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</strong>
+        <li class="imp-rank {{ 'is-down' if not item.up }}">
+          <span class="imp-rank-n">{{ loop.index }}</span>
+          <div class="imp-rank-main">
+            <div class="imp-rank-head">
+              <span class="imp-rank-country">{{ r.country_name }}</span>
+              <span class="imp-rank-region">{{ r.region_name }}</span>
+            </div>
+            <div class="imp-rank-track" role="img"
+                 aria-label="{{ r.country_name }}: {{ fmt_pct(r.coverage_start) }} in {{ start_year }} rising to {{ fmt_pct(r.coverage_end) }} in {{ end_year }}, a change of {{ '%+.1f'|format(r.coverage_change) }} percentage points.">
+              <span class="imp-rank-base" style="width: {{ item.p_start }}%"></span>
+              <span class="imp-rank-seg {{ 'up' if item.up else 'down' }}"
+                    style="left: {{ item.bar_left }}%; width: {{ item.bar_width }}%"></span>
+            </div>
+            <div class="imp-rank-nums">
+              <span>{{ fmt_pct(r.coverage_start) }} <span aria-hidden="true">&rarr;</span> {{ fmt_pct(r.coverage_end) }}</span>
+              <span class="imp-rank-badge {{ 'up' if item.up else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</span>
+            </div>
           </div>
         </li>
       {% endfor %}
-    </ul>
-  </div>
+    </ol>
+  </figure>
 
   {# ---- Full ranking table (VaxVision-style block: gradient header with title
          + download), including the different dataset: did cases actually fall? ---- #}
@@ -159,36 +210,45 @@
       </a>
     </div>
     <div class="vx-table-wrap">
-      <table class="vx-table">
+      <table class="vx-table vx-table--rank">
         <thead>
           <tr>
             <th scope="col">Country</th>
-            <th scope="col">Region</th>
-            <th scope="col" class="num">Coverage {{ start_year }}</th>
-            <th scope="col" class="num">Coverage {{ end_year }}</th>
+            <th scope="col" class="num">Coverage <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
             <th scope="col" class="num">Change</th>
-            <th scope="col" class="num">Cases/100k {{ start_year }}</th>
-            <th scope="col" class="num">Cases/100k {{ end_year }}</th>
-            <th scope="col">Did cases fall?</th>
+            <th scope="col" class="num">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
+            <th scope="col">Cases trend</th>
           </tr>
         </thead>
         <tbody>
           {% for r in rows %}
             <tr>
-              <th scope="row" class="vx-cell-key">{{ r.country_name }}</th>
-              <td>{{ r.region_name }}</td>
-              <td class="num">{{ fmt_pct(r.coverage_start) }}</td>
-              <td class="num">{{ fmt_pct(r.coverage_end) }}</td>
-              <td class="num">{{ '%+.1f'|format(r.coverage_change) }} pp</td>
-              <td class="num">{% if r.cases_start is not none %}{{ '%.2f'|format(r.cases_start) }}{% else %}&mdash;{% endif %}</td>
-              <td class="num">{% if r.cases_end is not none %}{{ '%.2f'|format(r.cases_end) }}{% else %}&mdash;{% endif %}</td>
+              <th scope="row" class="vx-cell-key">
+                <span class="vx-key-name">{{ r.country_name }}</span>
+                <span class="vx-sub">{{ r.region_name }}</span>
+              </th>
+              <td class="num vx-range">
+                <span class="vx-from">{{ fmt_pct(r.coverage_start) }}</span>
+                <span class="arrow" aria-hidden="true">&rarr;</span>
+                <span class="vx-to">{{ fmt_pct(r.coverage_end) }}</span>
+              </td>
+              <td class="num">
+                <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</span>
+              </td>
+              <td class="num vx-range">
+                {% if r.cases_start is not none and r.cases_end is not none %}
+                  <span class="vx-from">{{ '%.2f'|format(r.cases_start) }}</span>
+                  <span class="arrow" aria-hidden="true">&rarr;</span>
+                  <span class="vx-to">{{ '%.2f'|format(r.cases_end) }}</span>
+                {% else %}&mdash;{% endif %}
+              </td>
               <td>
                 {% if r.case_change is none %}
                   <span class="imp-tag none">no case data</span>
                 {% elif r.case_change < 0 %}
-                  <span class="imp-tag fell">fell {{ '%.2f'|format(-r.case_change) }}</span>
+                  <span class="imp-tag fell">&darr; fell {{ '%.2f'|format(-r.case_change) }}</span>
                 {% elif r.case_change > 0 %}
-                  <span class="imp-tag rose">rose {{ '%.2f'|format(r.case_change) }}</span>
+                  <span class="imp-tag rose">&uarr; rose {{ '%.2f'|format(r.case_change) }}</span>
                 {% else %}
                   <span class="imp-tag flat">no change</span>
                 {% endif %}
