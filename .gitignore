@@ -16,3 +16,8 @@ Thumbs.db
 .vscode/
 .idea/
 
+
+# Source vaccine images kept locally; the app uses the copies in static/img/
+/Mealses.webp
+/Pertussis.png
+/Rubella.webp
