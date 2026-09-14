@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {# On-brand SVG favicon (the water-blue "IA" mark), so the browser tab reads as
+     a finished product rather than a blank default. SVG scales to any size. #}
+  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <meta name="theme-color" content="#0369a1">
   {% block head_extra %}{% endblock %}
   {# Preload the two self-hosted fonts so headings/body don't flash the fallback. #}
   <link rel="preload" as="font" type="font/woff2" crossorigin
@@ -55,7 +59,6 @@
                     <li>
                       <a href="{{ url_for(sub_endpoint) }}"
                          {% if request.endpoint == sub_endpoint %}aria-current="page" class="current"{% endif %}>
-                        <span class="sub-code">{{ code }}</span>
                         <span class="sub-label">{{ sub_label }}</span>
                       </a>
                     </li>

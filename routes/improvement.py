@@ -88,6 +88,20 @@ def _eligible_count(antigen, start_year, end_year):
                            "end_year": end_year}) or 0
 
 
+def _summary_for(antigen, start_year, end_year):
+    """Headline figures for the KPI row, aggregated in SQL over the eligible
+    pool (never in Python): average and largest coverage gain, and how many
+    countries also saw their reported case rate fall."""
+    base = db.load_query("coverage_improvement")
+    sql = ("SELECT ROUND(AVG(coverage_change), 1) AS avg_gain, "
+           "ROUND(MAX(coverage_change), 1)        AS max_gain, "
+           "SUM(CASE WHEN case_change < 0 THEN 1 ELSE 0 END)          AS n_cases_fell, "
+           "SUM(CASE WHEN case_change IS NOT NULL THEN 1 ELSE 0 END)  AS n_with_cases "
+           "FROM (" + base + ")")
+    return db.query_one(sql, {"antigen": antigen, "start_year": start_year,
+                              "end_year": end_year})
+
+
 def _dumbbell(rows, axis_max):
     """Turn each row into bar geometry for the dumbbell chart. Percentages of
     axis_max; direction so a decline can be drawn differently from a gain. This
@@ -180,6 +194,7 @@ def index():
         sort_active=sort_active, sort_labels=SORT_LABELS,
         rejected=rejected, range_error=range_error, submitted=submitted,
         rows=[], view=[], eligible=0, axis_max=100,
+        imp_summary=None, top_gainer=None,
         fmt_int=db.fmt_int, fmt_pct=db.fmt_pct,
     )
 
@@ -189,6 +204,10 @@ def index():
     rows = _rows_for(antigen, start_year, end_year, order_by, count)
     ctx["rows"] = rows
     ctx["eligible"] = _eligible_count(antigen, start_year, end_year)
+    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year)
+    # The single biggest gainer, for the KPI row, regardless of the table sort.
+    _top = _rows_for(antigen, start_year, end_year, SORT_KEYS["gain_desc"], 1)
+    ctx["top_gainer"] = _top[0] if _top else None
 
     # CSV export of exactly what is shown: same antigen, years, N and sort.
     if request.args.get("format") == "csv":

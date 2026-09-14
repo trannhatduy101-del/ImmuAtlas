@@ -7,12 +7,146 @@
 {% endblock %}
 
 {% block main %}
-  {% set planned = [
-    "Both personas read from v_persona_full, plus their goals, needs and pain
-     points. Persona content is never hardcoded into the template.",
-  ] %}
-  {% set blocked_on = "Daniel Nguyen is a stub in the database. The teammate who
-     owns Sub-Task B supplies his content and its sources; they are not to be
-     invented." %}
-  {% include "_components/unbuilt.html" with context %}
+
+<section class="mission-section">
+  <h2 class="section-head">Our mission</h2>
+  <p class="section-intro">
+    ImmuAtlas helps the public explore reliable information about vaccination and
+    preventable infectious diseases &mdash; with the context and denominators
+    needed to read every figure honestly.
+  </p>
+</section>
+
+<section class="mission-section">
+  <h2 class="section-head">Who we serve</h2>
+  <p class="section-intro">Two people this site is built for. Pick one to see what they need from it.</p>
+
+  {# Two persona buttons toggle the panels below -- pure CSS (radio + label),
+     no JavaScript. The first persona is shown by default. #}
+  <div class="persona-switch">
+    {% for p in personas %}
+      <input type="radio" name="persona" id="persona-{{ p.key }}" class="persona-radio"
+             {% if loop.first %}checked{% endif %}>
+    {% endfor %}
+
+    <div class="persona-tabs">
+      {% for p in personas %}
+        <label class="persona-btn" for="persona-{{ p.key }}">
+          <img class="persona-btn-ava" src="{{ url_for('static', filename=p.image) }}" alt="" loading="lazy">
+          <span>{{ p.name }}</span>
+        </label>
+      {% endfor %}
+    </div>
+
+    <div class="persona-panels">
+      {% for p in personas %}
+        <article class="persona-panel pcard" id="ppanel-{{ p.key }}">
+          <div class="pcard-cols">
+
+            {# Left column: identity, quote, meta, skills. #}
+            <div class="pcol">
+              <div class="pbox pbox--profile">
+                <h3 class="pcard-name">{{ p.name }}</h3>
+                <img class="pcard-photo" src="{{ url_for('static', filename=p.photo) }}"
+                     alt="{{ p.name }}" loading="lazy">
+                <blockquote class="pcard-quote">&ldquo;{{ p.quote }}&rdquo;</blockquote>
+              </div>
+              <div class="pbox pbox--meta">
+                <dl class="pcard-meta">
+                  <div><dt>Age</dt><dd>{{ p.age }}</dd></div>
+                  <div><dt>Location</dt><dd>{{ p.location }}</dd></div>
+                  <div><dt>Occupation</dt><dd>{{ p.occupation }}</dd></div>
+                  <div><dt>User group</dt><dd>{{ p.group }}</dd></div>
+                </dl>
+              </div>
+              <div class="pbox">
+                <h4>Skills</h4>
+                <ul class="pcard-list">{% for s in p.skills %}<li>{{ s }}</li>{% endfor %}</ul>
+              </div>
+            </div>
+
+            {# Middle column: bio, personality, pain points. #}
+            <div class="pcol">
+              <div class="pbox">
+                <h4>Bio</h4>
+                <p>{{ p.bio }}</p>
+              </div>
+              <div class="pbox">
+                <h4>Personality</h4>
+                <ul class="pcard-sliders">
+                  {% for t in p.personality %}
+                    <li class="pcard-slider">
+                      <span class="pcard-slider-l">{{ t.left }}</span>
+                      <span class="pcard-track" aria-hidden="true"><span class="pcard-dot" style="left: {{ t.pos }}%"></span></span>
+                      <span class="pcard-slider-r">{{ t.right }}</span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="pbox">
+                <h4>Pain points</h4>
+                <ul class="pcard-list">{% for pp in p.pains %}<li>{{ pp }}</li>{% endfor %}</ul>
+              </div>
+            </div>
+
+            {# Right column: goals, needs, motivations, channels. #}
+            <div class="pcol">
+              <div class="pbox">
+                <h4>Goals</h4>
+                <ul class="pcard-list">{% for g in p.goals %}<li>{{ g }}</li>{% endfor %}</ul>
+              </div>
+              <div class="pbox">
+                <h4>Needs</h4>
+                <ul class="pcard-list">{% for n in p.needs %}<li>{{ n }}</li>{% endfor %}</ul>
+              </div>
+              <div class="pbox">
+                <h4>Motivations</h4>
+                <ul class="pcard-bars">
+                  {% for b in p.motivations %}
+                    <li class="pcard-bar">
+                      <span class="pcard-bar-label">{{ b.label }}</span>
+                      <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+              <div class="pbox">
+                <h4>Preferred channels</h4>
+                <ul class="pcard-bars">
+                  {% for b in p.channels %}
+                    <li class="pcard-bar">
+                      <span class="pcard-bar-label">{{ b.label }}</span>
+                      <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
+                    </li>
+                  {% endfor %}
+                </ul>
+              </div>
+            </div>
+
+          </div>
+        </article>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<section class="mission-section">
+  <h2 class="section-head">Our team</h2>
+  <div class="team-list">
+    {% for member in team_members %}
+      {% set placeholder = 'HERE' in (member['full_name'] or '')|upper %}
+      <div class="team-member">
+        {% if placeholder %}
+          {# Never print a fake student number as though it were real. #}
+          <p class="todo">Sub-Task {{ member['sub_task'] }}: name and student number not filled in yet</p>
+        {% else %}
+          <h3>{{ member['full_name'] }}</h3>
+          <p class="team-id">{{ member['student_number'] }} &middot; Sub-Task {{ member['sub_task'] }}</p>
+          {% if member['responsibility'] %}<p>{{ member['responsibility'] }}</p>{% endif %}
+        {% endif %}
+      </div>
+    {% endfor %}
+  </div>
+</section>
+
 {% endblock %}

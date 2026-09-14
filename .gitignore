@@ -17,6 +17,10 @@ Thumbs.db
 .idea/
 
 
+# Local reference material and one-off exports (not part of the app)
+/Personas.pdf
+/improvement_*.csv
+
 # Source vaccine images kept locally; the app uses the copies in static/img/
 /Mealses.webp
 /Pertussis.png
