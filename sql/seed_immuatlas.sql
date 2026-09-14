@@ -33,7 +33,7 @@ DELETE FROM herd_immunity_threshold;
 -- =====================================================================
 
 INSERT INTO team_member (student_number, full_name, sub_task, responsibility, display_order) VALUES
-  ('s4160446', 'TRAN NHAT DUY', 'A',
+  ('s4160446', 'TRAN NHAT DUY',     'A',
    'Landing page, vaccination rates by country and region, biggest improvement analysis', 1),
   ('s4138996', 'TRAN MINH HUY', 'B',
    'Mission statement, infection data by economic status, above-average infection analysis', 2);
@@ -255,7 +255,7 @@ VALUES
  'EDIT: what happens if this site does not exist',
  'static/img/persona-daniel.jpg',
  'EDIT: photo credit and licence',
- 'sYYYYYYY', 2);
+ 's4138996', 2);
 
 -- Group-level content, already research-backed. Keep or refine.
 INSERT INTO persona_goal (persona_id, goal, page_code, priority, source_id) VALUES

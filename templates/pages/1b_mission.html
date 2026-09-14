@@ -1,18 +1,67 @@
 {% extends "base.html" %}
+
 {% block title %}Mission &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
   <h1 class="hero-title">Mission</h1>
-  <p class="hero-sub">Who this site is for, and what each of them needs from it.</p>
+  <p class="hero-sub">
+    Who this site is for, and what each of them needs from it.
+  </p>
 {% endblock %}
 
 {% block main %}
-  {% set planned = [
-    "Both personas read from v_persona_full, plus their goals, needs and pain
-     points. Persona content is never hardcoded into the template.",
-  ] %}
-  {% set blocked_on = "Daniel Nguyen is a stub in the database. The teammate who
-     owns Sub-Task B supplies his content and its sources; they are not to be
-     invented." %}
-  {% include "_components/unbuilt.html" with context %}
+
+<section class="mission-section">
+  <h2>Our Mission</h2>
+
+  <p>
+    ImmuAtlas helps the public explore reliable information about
+    vaccination and preventable infectious diseases.
+  </p>
+</section>
+
+<section class="mission-section">
+  <h2>Who We Serve</h2>
+
+  <div class="persona-grid">
+
+    {% for persona in personas %}
+    <article class="persona-card">
+
+      <img
+        src="{{ url_for('static', filename=persona.image) }}"
+        alt="{{ persona.name }}"
+        class="persona-image"
+      >
+
+      <h3>{{ persona.name }}</h3>
+
+    </article>
+    {% endfor %}
+
+  </div>
+</section>
+
+<section class="mission-section">
+  <h2>Our Team</h2>
+
+  <div class="team-list">
+
+    {% for member in team_members %}
+    <div class="team-member">
+
+      <h3>{{ member["full_name"] }}</h3>
+
+      <p>{{ member["student_number"] }}</p>
+
+      <p>{{ member["sub_task"] }}</p>
+
+      <p>{{ member["responsibility"] }}</p>
+
+    </div>
+    {% endfor %}
+
+  </div>
+</section>
+
 {% endblock %}

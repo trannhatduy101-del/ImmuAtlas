@@ -1,14 +1,28 @@
-"""1B Mission statement -- Sub-Task B.
-
-Not built yet. Renders an honest "not finished" page so the route and the nav
-link stay live (CLAUDE.md section 8, "All six pages reachable").
-"""
+"""1B Mission statement -- Sub-Task B."""
 
 from flask import Blueprint, render_template
+from db import load_query, query
 
 bp = Blueprint("mission", __name__)
 
 
 @bp.route("/mission")
 def index():
-    return render_template("pages/1b_mission.html")
+    team_members = query(load_query("team_members"))
+
+    personas = [
+        {
+            "name": "Grace Achieng",
+            "image": "img/Duy.png",
+        },
+        {
+            "name": "Daniel Nguyen",
+            "image": "img/Huy.png",
+        },
+    ]
+
+    return render_template(
+        "pages/1b_mission.html",
+        team_members=team_members,
+        personas=personas,
+    )
