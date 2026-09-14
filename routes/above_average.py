@@ -14,7 +14,6 @@ def _validate(value, allowed_values):
         return None
 
     value = str(value).strip()
-
     allowed = {str(item) for item in allowed_values}
 
     return value if value in allowed else None
@@ -22,7 +21,7 @@ def _validate(value, allowed_values):
 
 @bp.route("/above-average")
 def index():
-    # Load filter options directly from the database.
+    # Load filter options from the database
     infection_types = db.query(
         db.load_query("filter_infection_types")
     )
@@ -31,16 +30,18 @@ def index():
         db.load_query("filter_years")
     )
 
-    # Get available values from the database.
+    # Create lists of valid values for validation
     infection_type_values = [
-        row["inf_type"] for row in infection_types
+        row["inf_type"]
+        for row in infection_types
     ]
 
     year_values = [
-        row["year"] for row in years
+        row["year"]
+        for row in years
     ]
 
-    # Read user selections.
+    # Validate user selections
     selected_infection = _validate(
         request.args.get("infection_type"),
         infection_type_values
@@ -53,16 +54,20 @@ def index():
         year_values
     )
 
+    # Default values
     global_rate = None
     results = []
+    chart_results = []
 
+    # Run queries only when both filters are valid
     if selected_infection and selected_year:
+
         params = {
             "infection_type": selected_infection,
             "year": int(selected_year),
         }
 
-        # Calculate the population-weighted global infection rate.
+        # Calculate the global infection rate
         global_results = db.query(
             db.load_query("global_infection_rate"),
             params,
@@ -71,9 +76,15 @@ def index():
         if global_results:
             global_rate = global_results[0]
 
-        # Find countries whose rate is above the global rate.
+        # Find countries above the global infection rate
         results = db.query(
             db.load_query("countries_above_global_rate"),
+            params,
+        )
+
+        # Get Top 10 countries for the chart
+        chart_results = db.query(
+            db.load_query("countries_above_global_chart"),
             params,
         )
 
@@ -85,4 +96,5 @@ def index():
         selected_year=selected_year,
         global_rate=global_rate,
         results=results,
+        chart_results=chart_results,
     )

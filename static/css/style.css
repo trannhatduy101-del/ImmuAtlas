@@ -820,3 +820,90 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
         margin-top: 4px;
     }
 }
+/* ---------------------------------------------------------------------------
+   3B Above Global Rate - Balanced Layout
+   --------------------------------------------------------------------------- */
+
+.above-average-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.35fr);
+  gap: 1.5rem;
+  align-items: start;
+  margin-top: 1.2rem;
+}
+
+.above-average-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: .9rem;
+}
+
+.above-average-summary .stat-card {
+  min-height: 5.8rem;
+}
+
+.above-average-summary .stat-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.above-average-chart {
+  min-width: 0;
+}
+
+.above-average-chart .chart-card {
+  margin: 0;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.above-average-chart .chart-card h2 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+}
+
+.above-average-chart .bar-row {
+  margin-bottom: .65rem;
+}
+
+.above-average-chart .bar-label {
+  font-size: .78rem;
+}
+
+.above-average-chart .bar-track {
+  height: 1.05rem;
+}
+
+.above-average-chart .chart-note {
+  margin-bottom: 0;
+}
+
+/* Keep the countries count as a full-width statistic */
+.above-average-count {
+  margin-top: 1rem;
+}
+
+/* Results table */
+.above-average-results {
+  margin-top: 1.8rem;
+}
+
+/* Responsive layout */
+@media (max-width: 850px) {
+  .above-average-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .above-average-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .above-average-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .above-average-summary .stat-card:last-child {
+    grid-column: auto;
+  }
+}

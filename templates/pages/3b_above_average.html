@@ -115,6 +115,43 @@
         </div>
         <div>people represented</div>
       </div>
+<!-- CHART -->
+{% if chart_results %}
+<section class="card chart-card">
+
+    <h2>Top 10 Countries Above Global Rate</h2>
+
+    <div class="bar-chart">
+
+        {% for row in chart_results %}
+
+        <div class="bar-row">
+
+            <div class="bar-label">
+                <span>{{ row.country_name }}</span>
+                <strong>{{ row.country_rate_per_100k }}</strong>
+            </div>
+
+            <div class="bar-track">
+                <div
+                    class="bar-fill"
+                    style="width: {{ (row.country_rate_per_100k / chart_results[0].country_rate_per_100k * 100) if chart_results[0].country_rate_per_100k else 0 }}%;">
+                </div>
+            </div>
+
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+    <p class="chart-note">
+        Top 10 countries with the highest infection rates above the
+        global rate for the selected year and infection type.
+    </p>
+
+</section>
+{% endif %}
 
       <div class="fact">
         <div class="fact-label">Countries above global rate</div>
