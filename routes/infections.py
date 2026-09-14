@@ -1,128 +1,121 @@
-"""2B Infection data by economic status -- Sub-Task B.
-
-Allows the user to select one economic status, infection type and year.
-SQL performs filtering, aggregation, calculation and sorting. Python validates
-request values and formats data for presentation.
-"""
+"""2B Focused infection view by economic status -- Sub-Task B."""
 
 from flask import Blueprint, render_template, request
 
 import db
 
+bp = Blueprint("infections", __name__)
 
-bp = Blueprint("infections", __name__, url_prefix="/infections")
+
+def _validate(value, allowed_values):
+    """Return the value if it is in the allowed list; otherwise return None."""
+    if value is None:
+        return None
+
+    value = str(value).strip()
+    allowed = {str(item) for item in allowed_values}
+
+    return value if value in allowed else None
 
 
+# Safe sorting options.
+# The user selects a label, but only these predefined SQL fragments
+# are allowed to reach the ORDER BY clause.
 SORT_KEYS = {
-    "rate_desc": "cases_per_100k IS NULL, cases_per_100k DESC, country_name ASC",
-    "rate_asc": "cases_per_100k IS NULL, cases_per_100k ASC, country_name ASC",
-    "cases_desc": "cases IS NULL, cases DESC, country_name ASC",
-    "cases_asc": "cases IS NULL, cases ASC, country_name ASC",
-    "population_desc": "national_population IS NULL, national_population DESC, country_name ASC",
-    "country": "country_name ASC",
+    "rate_desc": "cases_per_100k DESC",
+    "rate_asc": "cases_per_100k ASC",
+    "cases_desc": "cases DESC",
+    "cases_asc": "cases ASC",
+    "country_asc": "country_name ASC",
 }
 
-SORT_LABELS = [
-    ("rate_desc", "Infection rate, highest first"),
-    ("rate_asc", "Infection rate, lowest first"),
-    ("cases_desc", "Cases, highest first"),
-    ("cases_asc", "Cases, lowest first"),
-    ("population_desc", "Population, largest first"),
-    ("country", "Country name"),
-]
+SORT_LABELS = {
+    "rate_desc": "Infection rate: highest first",
+    "rate_asc": "Infection rate: lowest first",
+    "cases_desc": "Cases: highest first",
+    "cases_asc": "Cases: lowest first",
+    "country_asc": "Country name",
+}
 
 DEFAULT_SORT = "rate_desc"
 
 
-def _validate(raw, allowed, cast=str):
-    """Validate a request value against values offered by the database."""
-    if raw is None or raw == "":
-        return None, False
-
-    try:
-        value = cast(raw)
-    except (TypeError, ValueError):
-        return None, True
-
-    if value in allowed:
-        return value, False
-
-    return None, True
-
-
-@bp.route("/")
+@bp.route("/infections")
 def index():
-    try:
-        economies = db.query(db.load_query("filter_economies"))
-        infection_types = db.query(db.load_query("filter_infection_types"))
-        years = db.query(db.load_query("filter_years"))
-    except db.DatabaseMissing as exc:
-        return render_template(
-            "pages/2b_infections.html",
-            db_missing=str(exc)
-        ), 503
+    # ---------------------------------------------------------
+    # 1. Load filter options from the database
+    # ---------------------------------------------------------
 
-    valid_economies = {
-        row["economy_phase"] for row in economies
-    }
+    economies = db.query(
+        db.load_query("filter_economies")
+    )
 
-    valid_infection_types = {
-        row["inf_type"] for row in infection_types
-    }
+    infection_types = db.query(
+        db.load_query("filter_infection_types")
+    )
 
-    valid_years = {
-        row["year"] for row in years
-    }
+    years = db.query(
+        db.load_query("filter_years")
+    )
 
-    rejected = []
+    # ---------------------------------------------------------
+    # 2. Get the values submitted by the user
+    # ---------------------------------------------------------
 
-    economy, bad = _validate(
+    selected_economy = _validate(
         request.args.get("economy"),
-        valid_economies
+        [row["economy_phase"] for row in economies],
     )
-    if bad:
-        rejected.append("economic status")
 
-    infection_type, bad = _validate(
+    selected_infection = _validate(
         request.args.get("infection_type"),
-        valid_infection_types
+        [row["inf_type"] for row in infection_types],
     )
-    if bad:
-        rejected.append("infection type")
 
-    year, bad = _validate(
+    selected_year = _validate(
         request.args.get("year"),
-        valid_years,
-        int
-    )
-    if bad:
-        rejected.append("year")
-
-    requested_sort = request.args.get("sort")
-    order_by = db.safe_order_by(
-        requested_sort,
-        SORT_KEYS,
-        DEFAULT_SORT
+        [row["year"] for row in years],
     )
 
-    sort_active = (
-        requested_sort
-        if requested_sort in SORT_KEYS
-        else DEFAULT_SORT
+    selected_sort = _validate(
+        request.args.get("sort"),
+        SORT_KEYS.keys(),
     )
 
-    if requested_sort is not None and requested_sort not in SORT_KEYS:
-        rejected.append("sort order")
+    if selected_sort is None:
+        selected_sort = DEFAULT_SORT
+
+    # ---------------------------------------------------------
+    # 3. Prepare empty results
+    # ---------------------------------------------------------
 
     results = []
     summary = None
 
-    if economy and infection_type and year:
+    # NEW:
+    # These results will be used for the visualisation/chart.
+    chart_results = []
+
+    # ---------------------------------------------------------
+    # 4. Only query the main data when all filters are valid
+    # ---------------------------------------------------------
+
+    if (
+        selected_economy
+        and selected_infection
+        and selected_year
+    ):
         params = {
-            "economy": economy,
-            "infection_type": infection_type,
-            "year": year,
+            "economy": selected_economy,
+            "infection_type": selected_infection,
+            "year": int(selected_year),
         }
+
+        # -----------------------------------------------------
+        # Main result table
+        # -----------------------------------------------------
+
+        order_by = SORT_KEYS[selected_sort]
 
         sql = (
             db.load_query("infections_by_economy")
@@ -130,26 +123,66 @@ def index():
             + order_by
         )
 
-        results = db.query(sql, params)
-
-        summary = db.query_one(
-            db.load_query("infections_economy_summary"),
-            params
+        results = db.query(
+            sql,
+            params,
         )
+
+        # -----------------------------------------------------
+        # Summary information
+        # -----------------------------------------------------
+
+        summary_results = db.query(
+            db.load_query("infections_economy_summary"),
+            params,
+        )
+
+        if summary_results:
+            summary = summary_results[0]
+
+        # -----------------------------------------------------
+        # NEW: Data for the visualisation
+        # -----------------------------------------------------
+        #
+        # This query gets the Top 10 countries with the
+        # highest infection rate for the selected filters.
+        #
+        # IMPORTANT:
+        # This is separate from the main table so the user can
+        # still choose any sorting method for the table.
+        # -----------------------------------------------------
+
+        chart_results = db.query(
+            db.load_query("infections_economy_chart"),
+            params,
+        )
+
+    # ---------------------------------------------------------
+    # 5. Render the page
+    # ---------------------------------------------------------
 
     return render_template(
         "pages/2b_infections.html",
-        db_missing=None,
+
+        # Filter options
         economies=economies,
         infection_types=infection_types,
         years=years,
+
+        # Selected filters
+        selected_economy=selected_economy,
+        selected_infection=selected_infection,
+        selected_year=selected_year,
+
+        # Sorting
+        selected_sort=selected_sort,
+        sort_options=SORT_LABELS,
+
+        # Main page data
         results=results,
         summary=summary,
-        selected_economy=economy,
-        selected_infection=infection_type,
-        selected_year=year,
-        sort_active=sort_active,
-        sort_labels=SORT_LABELS,
-        rejected=rejected,
-        fmt_int=db.fmt_int,
+
+        # NEW:
+        # Send Top 10 chart data to the HTML template.
+        chart_results=chart_results,
     )

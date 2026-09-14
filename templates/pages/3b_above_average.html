@@ -186,12 +186,13 @@
     </div>
 
     <div class="method-note">
-      <strong>How this comparison works:</strong>
-      the global infection rate is calculated from total reported cases
-      divided by the total population represented in the dataset.
-      Each country's rate is then compared against that global rate.
-      Countries are displayed from the highest infection rate to the lowest.
-    </div>
+  <strong>How this comparison works:</strong>
+  the global infection rate is calculated as total reported cases
+  divided by the total population represented in the dataset,
+  multiplied by 100,000. This population-weighted rate is compared
+  with each country's infection rate. Only countries above the
+  global rate are displayed, ordered from highest to lowest.
+</div>
 
   {% else %}
 
