@@ -1,17 +1,231 @@
 {% extends "base.html" %}
+
 {% block title %}Above the global rate &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
   <h1 class="hero-title">Countries above the global rate</h1>
-  <p class="hero-sub">Which countries report infection rates above the global rate, and by how much.</p>
+  <p class="hero-sub">
+    Compare country infection rates with the population-weighted global rate
+    for a selected year and infection type.
+  </p>
 {% endblock %}
 
 {% block main %}
-  {% set planned = [
-    "Countries above the global rate, with the global rate computed as a
-     population-weighted SUM/SUM rather than a mean of country rates.",
-  ] %}
-  {% set blocked_on = "Owned by the teammate on Sub-Task B. Also depends on open
-     question Q1: whether a reported zero means no cases or no report." %}
-  {% include "_components/unbuilt.html" with context %}
+
+<section class="section">
+  <div class="section-head">
+    <div>
+      <h2>Select a year and infection type</h2>
+      <p class="section-intro">
+        Choose the filters to identify countries reporting infection rates
+        above the global rate.
+      </p>
+    </div>
+  </div>
+
+  <form method="get" class="filters">
+    <div class="filter-row">
+
+      <div class="field">
+        <label for="infection_type">Infection type</label>
+
+        <select id="infection_type" name="infection_type" required>
+          <option value="">Select infection type</option>
+
+          {% for item in infection_types %}
+            <option
+              value="{{ item.inf_type }}"
+              {% if selected_infection == item.inf_type %}selected{% endif %}
+            >
+              {{ item.disease_name }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="year">Year</label>
+
+        <select id="year" name="year" required>
+          <option value="">Select year</option>
+
+          {% for item in years %}
+            <option
+              value="{{ item.year }}"
+              {% if selected_year|string == item.year|string %}selected{% endif %}
+            >
+              {{ item.year }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field field-actions">
+        <button type="submit">Compare rates</button>
+        <a class="reset" href="{{ url_for('above_average.index') }}">
+          Reset
+        </a>
+      </div>
+
+    </div>
+
+    <p class="filter-note">
+      The global rate is calculated using total cases divided by total
+      population, rather than averaging country rates.
+    </p>
+  </form>
+</section>
+
+
+{% if selected_infection and selected_year %}
+
+<section class="section">
+
+  {% if global_rate %}
+
+    <div class="selection-line">
+      Showing
+      <strong>{{ global_rate.disease_name }}</strong>
+      infection data for
+      <strong>{{ selected_year }}</strong>.
+    </div>
+
+    <div class="facts">
+
+      <div class="fact">
+        <div class="fact-label">Global infection rate</div>
+        <div class="fact-figure">
+          {{ "%.2f"|format(global_rate.global_rate_per_100k) }}
+        </div>
+        <div>cases per 100,000</div>
+      </div>
+
+      <div class="fact">
+        <div class="fact-label">Global reported cases</div>
+        <div class="fact-figure">
+          {{ "{:,}".format(global_rate.total_cases) }}
+        </div>
+        <div>reported cases</div>
+      </div>
+
+      <div class="fact">
+        <div class="fact-label">Total population</div>
+        <div class="fact-figure">
+          {{ "{:,}".format(global_rate.total_population) }}
+        </div>
+        <div>people represented</div>
+      </div>
+
+      <div class="fact">
+        <div class="fact-label">Countries above global rate</div>
+        <div class="fact-figure">
+          {{ results|length }}
+        </div>
+        <div>countries</div>
+      </div>
+
+    </div>
+
+  {% endif %}
+
+</section>
+
+
+<section class="section">
+
+  <div class="section-head">
+    <div>
+      <h2>Countries above the global rate</h2>
+
+      <p class="section-intro">
+        Only countries with a country infection rate higher than the
+        population-weighted global rate are shown.
+      </p>
+    </div>
+  </div>
+
+  {% if results %}
+
+    <div class="table-scroll">
+      <table class="table">
+
+        <thead>
+          <tr>
+            <th>Country</th>
+            <th>Reported cases</th>
+            <th>Population</th>
+            <th>Rate per 100k</th>
+          </tr>
+        </thead>
+
+        <tbody>
+
+          {% for row in results %}
+            <tr>
+              <td>{{ row.country_name }}</td>
+
+              <td>
+                {{ "{:,}".format(row.total_cases) }}
+              </td>
+
+              <td>
+                {{ "{:,}".format(row.population) }}
+              </td>
+
+              <td>
+                <strong>
+                  {{ "%.2f"|format(row.country_rate_per_100k) }}
+                </strong>
+              </td>
+            </tr>
+          {% endfor %}
+
+        </tbody>
+
+      </table>
+    </div>
+
+    <div class="method-note">
+      <strong>How this comparison works:</strong>
+      the global infection rate is calculated from total reported cases
+      divided by the total population represented in the dataset.
+      Each country's rate is then compared against that global rate.
+      Countries are displayed from the highest infection rate to the lowest.
+    </div>
+
+  {% else %}
+
+    <div class="empty-state">
+      No countries have an infection rate above the global rate for the
+      selected year and infection type.
+    </div>
+
+  {% endif %}
+
+</section>
+
+
+<section class="section">
+
+  <div class="method-note">
+    <strong>SQL and Python:</strong>
+    SQL performs the database-level filtering, aggregation, rate
+    calculation and comparison using a subquery. Python validates the
+    user's selections, sends the parameters to SQL, formats the returned
+    values and renders the page.
+  </div>
+
+</section>
+
+{% else %}
+
+<section class="section">
+  <div class="empty-state">
+    Select an infection type and year to compare country infection rates
+    with the global rate.
+  </div>
+</section>
+
+{% endif %}
+
 {% endblock %}
