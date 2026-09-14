@@ -23,81 +23,61 @@
   {# Marks the request as a real submission, so a fresh visit shows the prompt
      rather than a pre-run default selection. #}
   <input type="hidden" name="submitted" value="1">
-  <fieldset class="filter-group filter-group--key">
-    <legend>Pick an antigen and year <span class="filter-tag key">main filters</span></legend>
-    <div class="filter-row">
-      <div class="field">
-        <label for="f-antigen">Antigen</label>
-        <select id="f-antigen" name="antigen">
-          <option value="">All antigens</option>
-          {% for a in antigens %}
-            <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>
-              {{ a.antigen }} &middot; {{ a.disease_name }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="field">
-        <label for="f-year">Year</label>
-        <select id="f-year" name="year">
-          <option value="">All years</option>
-          {% for y in years %}
-            <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>{{ y.year }}</option>
-          {% endfor %}
-        </select>
-      </div>
+  {# All controls on one line, like a search bar. #}
+  <div class="filter-bar">
+    <div class="field">
+      <label for="f-antigen">Antigen</label>
+      <select id="f-antigen" name="antigen">
+        <option value="">All antigens</option>
+        {% for a in antigens %}
+          <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>{{ a.antigen }} &middot; {{ a.disease_name }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </fieldset>
-
-  <fieldset class="filter-group">
-    <legend>Narrow by place <span class="filter-tag opt">optional</span></legend>
-    <div class="filter-row">
-      <div class="field">
-        <label for="f-region">Region</label>
-        <select id="f-region" name="region">
-          <option value="">All regions</option>
-          {% for r in regions %}
-            <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>
-              {{ fix_region(r.region_name) }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="field">
-        <label for="f-country">Country</label>
-        <select id="f-country" name="country">
-          <option value="">All countries</option>
-          {% for c in countries %}
-            <option value="{{ c.country_id }}" {% if c.country_id == country %}selected{% endif %}>
-              {{ c.country_name }}
-            </option>
-          {% endfor %}
-        </select>
-      </div>
+    <div class="field">
+      <label for="f-year">Year</label>
+      <select id="f-year" name="year">
+        <option value="">All years</option>
+        {% for y in years %}
+          <option value="{{ y.year }}" {% if y.year == year %}selected{% endif %}>{{ y.year }}</option>
+        {% endfor %}
+      </select>
     </div>
-    <p class="filter-note">
-      Region and country apply together. Selecting both narrows to that country
-      within that region, which is empty when the country sits elsewhere.
-    </p>
-  </fieldset>
-
-  <fieldset class="filter-group">
-    <legend>Display</legend>
-    <div class="filter-row">
-      <div class="field">
-        <label for="f-sort">Sort the country table by</label>
-        <select id="f-sort" name="sort">
-          {% for key, label in sort_labels %}
-            <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
-          {% endfor %}
-        </select>
-      </div>
-      <div class="field field-actions">
-        <button type="submit">Apply</button>
-        <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
-      </div>
+    <div class="field">
+      <label for="f-region">Region</label>
+      <select id="f-region" name="region">
+        <option value="">All regions</option>
+        {% for r in regions %}
+          <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>{{ fix_region(r.region_name) }}</option>
+        {% endfor %}
+      </select>
     </div>
-  </fieldset>
+    <div class="field">
+      <label for="f-country">Country</label>
+      <select id="f-country" name="country">
+        <option value="">All countries</option>
+        {% for c in countries %}
+          <option value="{{ c.country_id }}" {% if c.country_id == country %}selected{% endif %}>{{ c.country_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-sort">Sort by</label>
+      <select id="f-sort" name="sort">
+        {% for key, label in sort_labels %}
+          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field field-actions">
+      <button type="submit">Apply</button>
+      <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
+    </div>
+  </div>
+  <p class="filter-note">
+    Region and country apply together &mdash; selecting both narrows to that
+    country within that region.
+  </p>
 </form>
 
 {% if not submitted %}
@@ -212,58 +192,56 @@
     </p>
   {% endif %}
 
-  {# ---- Country table ---- #}
-  <h2 class="section-head">Country table</h2>
-  <div class="table-scroll clean">
-    <table class="table--clean">
-      <caption>
-        {{ fmt_int(rows|length) }} records.
-        Sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
-      </caption>
-      <thead>
-        <tr>
-          <th scope="col">Country</th>
-          <th scope="col">Region</th>
-          <th scope="col" class="num">Coverage</th>
-          <th scope="col" class="num">Against threshold</th>
-          <th scope="col" class="num">Birth cohort</th>
-          <th scope="col" class="num">Doses per 100 people</th>
-          <th scope="col">Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {% for r in rows %}
+  {# ---- Country table (VaxVision-style block: gradient header with title +
+         download, clean roomy rows). ---- #}
+  <div class="vx-table-block">
+    <div class="vx-table-header">
+      <span class="vx-table-title">Country table</span>
+      <a class="vx-download" href="{{ url_for('coverage.index', antigen=antigen, year=year,
+                        region=region, country=country, sort=sort_active, submitted='1', format='csv') }}">
+        Download CSV
+      </a>
+    </div>
+    <div class="vx-table-wrap">
+      <table class="vx-table">
+        <thead>
           <tr>
-            <th scope="row">
-              {{ r.country_name }}
-              {% if r.unmatched_territory %}
-                <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
-              {% endif %}
-            </th>
-            <td>{{ fix_region(r.region_name) }}</td>
-            <td class="num">{{ fmt_pct(r.coverage_reported) }}</td>
-            <td class="num">
-              {% if r.gap_to_threshold is not none %}
-                {{ '%+.1f'|format(r.gap_to_threshold) }} pp
-              {% else %}
-                &mdash;
-              {% endif %}
-            </td>
-            <td class="num">{{ fmt_int(r.target_cohort) }}</td>
-            <td class="num">{{ fmt_pct(r.doses_per_100_population, 2) }}</td>
-            <td>{{ r.herd_immunity_status }}</td>
+            <th scope="col">Country</th>
+            <th scope="col">Region</th>
+            <th scope="col" class="num">Coverage</th>
+            <th scope="col" class="num">Against threshold</th>
+            <th scope="col" class="num">Birth cohort</th>
+            <th scope="col" class="num">Doses per 100 people</th>
+            <th scope="col">Status</th>
           </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {% for r in rows %}
+            <tr>
+              <th scope="row" class="vx-cell-key">
+                {{ r.country_name }}
+                {% if r.unmatched_territory %}
+                  <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
+                {% endif %}
+              </th>
+              <td>{{ fix_region(r.region_name) }}</td>
+              <td class="num">{{ fmt_pct(r.coverage_reported) }}</td>
+              <td class="num">
+                {% if r.gap_to_threshold is not none %}{{ '%+.1f'|format(r.gap_to_threshold) }} pp{% else %}&mdash;{% endif %}
+              </td>
+              <td class="num">{{ fmt_int(r.target_cohort) }}</td>
+              <td class="num">{{ fmt_pct(r.doses_per_100_population, 2) }}</td>
+              <td>{{ r.herd_immunity_status }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="vx-table-foot">
+      {{ fmt_int(rows|length) }} records &middot; sorted by
+      {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}
+    </div>
   </div>
-
-  <p class="imp-export">
-    <a href="{{ url_for('coverage.index', antigen=antigen, year=year, region=region,
-                        country=country, sort=sort_active, submitted='1', format='csv') }}">
-      Download this table as CSV
-    </a>
-  </p>
 
   {# ---- Method note ---- #}
   <div class="method-note">

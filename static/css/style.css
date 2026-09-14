@@ -707,6 +707,76 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--ink-muted);
 }
 
+/* Single-row filter bar (search-bar style): every control on one line, wrapping
+   to full-width fields only on narrow screens. */
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: .7rem .9rem;
+  padding: .9rem 1rem;
+  border: 1px solid var(--rule);
+  border-radius: 12px;
+  background: var(--bg);
+  box-shadow: 0 2px 14px rgba(12, 42, 66, .05);
+}
+.filter-bar .field { flex: 1 1 9rem; min-width: 8rem; }
+.filter-bar .field select { width: 100%; max-width: none; }
+.filter-bar .field-actions { flex: 0 0 auto; align-self: flex-end; }
+@media (max-width: 40rem) { .filter-bar .field { flex: 1 1 100%; } }
+
+/* VaxVision-style results table: rounded card with a gradient header carrying
+   the title and a download pill, an uppercase muted head, and roomy rows. */
+.vx-table-block {
+  margin: 1rem 0 1.4rem;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 2px 16px rgba(12, 42, 66, .06);
+}
+.vx-table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--bg-deep) 100%);
+}
+.vx-table-title { font-family: var(--font-body); font-size: .95rem; font-weight: 800; color: #fff; }
+.vx-download {
+  flex: none;
+  font-size: .8rem; font-weight: 700;
+  text-decoration: none; color: #fff;
+  border: 1px solid rgba(255, 255, 255, .5); border-radius: 999px;
+  padding: .35rem .85rem; white-space: nowrap;
+  transition: background .15s var(--ease-out), border-color .15s var(--ease-out);
+}
+.vx-download:hover { background: rgba(255, 255, 255, .16); border-color: rgba(255, 255, 255, .85); }
+.vx-table-wrap { overflow-x: auto; }
+.vx-table { width: 100%; border-collapse: collapse; }
+.vx-table thead { background: var(--bg-sunk); }
+.vx-table thead th {
+  padding: 12px 20px; text-align: left;
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--ink-muted); border-bottom: 1px solid var(--rule); white-space: nowrap;
+}
+.vx-table td, .vx-table tbody th {
+  padding: 14px 20px; text-align: left;
+  font-size: .92rem; color: var(--ink);
+  border-bottom: 1px solid var(--rule); vertical-align: middle;
+}
+.vx-table tbody th { font-weight: 700; }
+.vx-cell-key { white-space: nowrap; }
+.vx-table thead th.num, .vx-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.vx-table tbody tr:last-child td, .vx-table tbody tr:last-child th { border-bottom: 0; }
+.vx-table tbody tr:hover { background: var(--bg-sunk); }
+.vx-table-foot {
+  padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
+  border-top: 1px solid var(--rule);
+}
+@media (prefers-reduced-motion: reduce) { .vx-download { transition: none; } }
+
 .selection-line {
   background: var(--accent-wash);
   border-radius: var(--radius);
