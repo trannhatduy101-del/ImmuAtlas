@@ -96,6 +96,40 @@
     <p class="ov-note">Rate = total reported cases &divide; total population &times; 100,000 &mdash; population-weighted, so a large country counts more than a small one; never an average of country rates.</p>
   </section>
 
+  {# ---- All economic phases, side by side, for this disease/year --
+         independent of which single phase is selected above. ---- #}
+  {% if all_economies_summary %}
+    <h2 class="section-head">Result &middot; every economic phase</h2>
+    <div class="vx-table-block">
+      <div class="vx-table-header">
+        <span class="vx-table-title">{{ summary.disease_name }} &middot; {{ selected_year }} &middot; all phases</span>
+      </div>
+      <div class="vx-table-wrap">
+        <table class="vx-table">
+          <thead>
+            <tr>
+              <th scope="col">Economic phase</th>
+              <th scope="col" class="num">Countries</th>
+              <th scope="col" class="num">Total cases</th>
+              <th scope="col" class="num">Rate / 100k</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in all_economies_summary %}
+              <tr {% if row.economy_phase == selected_economy %}class="is-current"{% endif %}>
+                <th scope="row" class="vx-cell-key">{{ row.economy_phase }}</th>
+                <td class="num">{{ fmt_int(row.country_count) }}</td>
+                <td class="num">{{ fmt_int(row.total_cases) }}</td>
+                <td class="num"><strong>{% if row.infection_rate_per_100k is not none %}{{ '%.2f'|format(row.infection_rate_per_100k) }}{% else %}&mdash;{% endif %}</strong></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="vx-table-foot">Combines InfectionData, Country and CountryPopulation across every economic phase for {{ summary.disease_name }} in {{ selected_year }}.</div>
+    </div>
+  {% endif %}
+
   {# ---- Ranked bar chart: the ten highest-rate countries in the group. ---- #}
   {% if chart_results %}
     {% set rmax = chart_results[0].cases_per_100k or 1 %}

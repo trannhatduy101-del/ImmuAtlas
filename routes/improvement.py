@@ -102,27 +102,46 @@ def _summary_for(antigen, start_year, end_year):
                               "end_year": end_year})
 
 
-def _dumbbell(rows, axis_max):
-    """Turn each row into bar geometry for the dumbbell chart. Percentages of
-    axis_max; direction so a decline can be drawn differently from a gain. This
-    is display formatting (a number to a width), so it belongs here, not in SQL.
+def _gain_bars(rows):
+    """Diverging vertical-bar geometry (VaxVision-style dashboard):
+    one column per country, growing up from a zero line for a gain and down for
+    a decline. Each side of the zero line is scaled independently against the
+    largest change on that side, so the biggest gain and the biggest decline
+    both reach the edge of the plot. This is display formatting (a number to a
+    percentage), so it belongs here, not in SQL or the template.
     """
-    view = []
+    changes = [r["coverage_change"] for r in rows if r["coverage_change"] is not None]
+    max_gain = max([0.0] + [c for c in changes if c > 0])
+    max_loss = max([0.0] + [-c for c in changes if c < 0])
+    span = max_gain + max_loss
+    # The zero line sits proportionally to which side needs more room, kept
+    # within [15, 85] so a bar is never squashed flat when one side dominates
+    # -- but only when both sides actually have a bar; a side with none gets
+    # no reserved space (else an all-gain ranking wastes most of the plot).
+    if not span:
+        zero_pct = 50.0
+    elif max_loss == 0:
+        zero_pct = 100.0
+    elif max_gain == 0:
+        zero_pct = 0.0
+    else:
+        zero_pct = round(max(15.0, min(85.0, max_loss / span * 100)), 2)
+
+    bars = []
     for r in rows:
-        start = r["coverage_start"]
-        end = r["coverage_end"]
-        p_start = max(0.0, min(100.0, start / axis_max * 100)) if start is not None else 0.0
-        p_end = max(0.0, min(100.0, end / axis_max * 100)) if end is not None else 0.0
-        up = (end or 0) >= (start or 0)
-        view.append({
-            "row": r,
-            "p_start": round(p_start, 2),
-            "p_end": round(p_end, 2),
-            "bar_left": round(min(p_start, p_end), 2),
-            "bar_width": round(abs(p_end - p_start), 2),
-            "up": up,
-        })
-    return view
+        change = r["coverage_change"]
+        if change is None:
+            bars.append({"row": r, "up": True, "top_pct": zero_pct, "height_pct": 0.0})
+            continue
+        up = change >= 0
+        if up:
+            height_pct = round(change / max_gain * zero_pct, 2) if max_gain else 0.0
+            top_pct = round(zero_pct - height_pct, 2)
+        else:
+            height_pct = round(-change / max_loss * (100 - zero_pct), 2) if max_loss else 0.0
+            top_pct = zero_pct
+        bars.append({"row": r, "up": up, "top_pct": top_pct, "height_pct": height_pct})
+    return {"zero_pct": zero_pct, "bars": bars}
 
 
 @bp.route("/improvement")
@@ -188,7 +207,7 @@ def index():
         count=count, count_options=COUNT_OPTIONS,
         sort_active=sort_active, sort_labels=SORT_LABELS,
         rejected=rejected, range_error=range_error, submitted=submitted,
-        rows=[], view=[], eligible=0, axis_max=100,
+        rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0,
         imp_summary=None, top_gainer=None,
         fmt_int=db.fmt_int, fmt_pct=db.fmt_pct,
     )
@@ -215,15 +234,7 @@ def index():
     if request.args.get("format") == "csv":
         return _csv_response(rows, antigen, start_year, end_year)
 
-    # Axis runs 0 to at least 100; extend it when coverage above 100% is kept
-    # (doses outside the target cohort are real and never capped, the project spec 4.5).
-    ceiling = max([100] + [r["coverage_end"] for r in rows
-                           if r["coverage_end"] is not None]
-                          + [r["coverage_start"] for r in rows
-                             if r["coverage_start"] is not None])
-    axis_max = int((ceiling + 9) // 10 * 10)
-    ctx["axis_max"] = axis_max
-    ctx["view"] = _dumbbell(rows, axis_max)
+    ctx["bars"] = _gain_bars(rows)
 
     return render_template("pages/3a_improvement.html", **ctx)
 

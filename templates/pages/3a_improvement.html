@@ -151,47 +151,40 @@
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
 
-  {# ---- Slope chart: each country's coverage in the start year (left axis)
-         joined to its end year (right axis). An upward slope is an improvement,
-         the steeper the bigger; a downward line is a decline. The exact figures
+  {# ---- Vertical bar chart (VaxVision-style dashboard, recoloured onto the
+         shared ImmuAtlas tokens and type): one column per country, its change
+         in reported coverage. Bars above the line gained, bars below declined;
+         each side is scaled against its own largest change. The exact figures
          live in the table + CSV below, so the chart is a reading aid. ---- #}
-  <figure class="slope-viz">
-    <figcaption class="slope-cap">
-      Each line is a country: it starts at its <strong>{{ start_year }}</strong> coverage on the left
-      and ends at its <strong>{{ end_year }}</strong> coverage on the right. The steeper the upward
-      slope, the bigger the improvement; a line sloping down is a decline.
-    </figcaption>
-    <div class="slope-legend" aria-hidden="true">
-      <span class="slope-key slope-key--up">improved</span>
-      <span class="slope-key slope-key--down">declined</span>
+  <div class="vbar-chart">
+    <p class="vbar-cap">
+      Each column is a country&rsquo;s change in reported coverage, <strong>{{ start_year }}</strong>
+      to <strong>{{ end_year }}</strong>. Bars above the line gained; bars below the line declined.
+    </p>
+    <div class="vbar-legend" aria-hidden="true">
+      <span class="vbar-key vbar-key--up">gained</span>
+      <span class="vbar-key vbar-key--down">declined</span>
     </div>
-    <div class="slope-scroll">
-      {% set LX = 250 %}{% set RX = 690 %}{% set TOP = 28 %}{% set BOT = 410 %}{% set PH = 382 %}
-      <svg class="slope-svg" viewBox="0 0 820 452" role="img"
-           aria-label="Slope chart of reported coverage from {{ start_year }} to {{ end_year }} for the ranked countries.">
-        {% for g in [0, 50, 100] %}
-          {% set gy = (TOP + PH * (1 - g / 100)) | round(1) %}
-          <line class="slope-grid" x1="{{ LX }}" y1="{{ gy }}" x2="{{ RX }}" y2="{{ gy }}"/>
-        {% endfor %}
-        <line class="slope-axis" x1="{{ LX }}" y1="{{ TOP }}" x2="{{ LX }}" y2="{{ BOT }}"/>
-        <line class="slope-axis" x1="{{ RX }}" y1="{{ TOP }}" x2="{{ RX }}" y2="{{ BOT }}"/>
-        <text class="slope-year" x="{{ LX }}" y="{{ BOT + 28 }}" text-anchor="middle">{{ start_year }}</text>
-        <text class="slope-year" x="{{ RX }}" y="{{ BOT + 28 }}" text-anchor="middle">{{ end_year }}</text>
-        {% for item in view %}
-          {% set r = item.row %}
-          {% set ys = (TOP + PH * (1 - item.p_start / 100)) | round(1) %}
-          {% set ye = (TOP + PH * (1 - item.p_end / 100)) | round(1) %}
-          <g class="slope-item {{ 'up' if item.up else 'down' }}">
-            <line class="slope-line" x1="{{ LX }}" y1="{{ ys }}" x2="{{ RX }}" y2="{{ ye }}"/>
-            <circle class="slope-dot" cx="{{ LX }}" cy="{{ ys }}" r="3.4"/>
-            <circle class="slope-dot" cx="{{ RX }}" cy="{{ ye }}" r="3.4"/>
-            <text class="slope-name" x="{{ LX - 12 }}" y="{{ ys + 4 }}" text-anchor="end">{{ r.country_name }}</text>
-            <text class="slope-gain" x="{{ RX + 12 }}" y="{{ ye + 4 }}" text-anchor="start">{{ '%+.1f'|format(r.coverage_change) }} pp</text>
-          </g>
-        {% endfor %}
-      </svg>
+    <div class="vbar-scroll">
+      <div class="vbar-plot">
+        <div class="vbar-zero" style="top: {{ bars.zero_pct }}%"></div>
+        <ol class="vbar-cols">
+          {% for b in bars.bars %}
+            <li class="vbar-col"
+                title="{{ b.row.country_name }}: {{ '%+.1f'|format(b.row.coverage_change) }} pp">
+              <span class="vbar-fill {{ 'is-up' if b.up else 'is-down' }}"
+                    style="top: {{ b.top_pct }}%; height: {{ b.height_pct }}%;">
+                <span class="vbar-val">{{ '%+.1f'|format(b.row.coverage_change) }}</span>
+              </span>
+            </li>
+          {% endfor %}
+        </ol>
+      </div>
+      <ol class="vbar-names">
+        {% for b in bars.bars %}<li>{{ b.row.country_name }}</li>{% endfor %}
+      </ol>
     </div>
-  </figure>
+  </div>
 
   {# ---- Full ranking table (VaxVision-style block: gradient header with title
          + download), including the different dataset: did cases actually fall? ---- #}

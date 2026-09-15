@@ -43,7 +43,7 @@ SORT_LABELS = [
 ]
 DEFAULT_SORT = "coverage_desc"
 
-# the project spec 4.5: a typo in the source data, corrected for display only. Never
+# A typo in the source data, corrected for display only. Never
 # rewrite the supplied table.
 REGION_DISPLAY_FIX = {"Latin America & Carribean": "Latin America & Caribbean"}
 

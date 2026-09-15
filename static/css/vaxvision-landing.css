@@ -17,6 +17,11 @@
    sections escape the base .hero band and the 68rem .wrap on this page only. */
 body.lp-vax .hero { padding: 0; background: none; border: 0; }
 body.lp-vax .hero > .wrap { max-width: none; padding: 0; margin: 0; }
+/* The base hero band is dark, so its title/sub are inverted. This page throws
+   that band away, which would leave the "no data loaded" fallback heading
+   white on white -- put the ink back for that one branch. */
+body.lp-vax .hero .hero-title { color: var(--ink); }
+body.lp-vax .hero .hero-sub { color: var(--ink-muted); }
 body.lp-vax main.wrap { max-width: none; padding: 0; }
 
 /* In-page wayfinding strip. Centred over the full-bleed page; plain anchors. */

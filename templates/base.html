@@ -136,7 +136,10 @@
           {% for label, href in social_links %}
             <li><a href="{{ href }}" rel="noopener">{{ label }}</a></li>
           {% endfor %}
-          {% for s in sources %}
+          {# One link per destination: the two supplied datasets are cited
+             separately in the legal line below, but they live on the same WHO
+             portal, so listing that portal twice here says nothing extra. #}
+          {% for s in sources | unique(attribute='url') %}
             <li>
               <a href="{{ s.url }}" rel="noopener">{{ s.publication }}</a>
               {% if not s.verified %}<span class="wip">unverified</span>{% endif %}

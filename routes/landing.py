@@ -14,8 +14,8 @@ from routes.coverage import fix_region
 bp = Blueprint("landing", __name__)
 
 # Ring geometry for the "impact by region" cards: a fixed-radius circle, with
-# the stroke-dasharray computed here (pixel math is display formatting,
-# the project spec section 7) so the template only ever plugs in numbers already sized.
+# the stroke-dasharray computed here (pixel math is display formatting) so the
+# template only ever plugs in numbers already sized.
 RING_R = 42
 RING_C = round(2 * 3.14159265 * RING_R, 2)
 

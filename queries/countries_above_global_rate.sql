@@ -34,4 +34,3 @@ WHERE country_rate > (
     SELECT rate
     FROM global_rate
 )
-ORDER BY country_rate DESC;

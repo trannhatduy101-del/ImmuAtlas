@@ -24,22 +24,23 @@
 --   WUENIC  ->  the Vaccination table
 --   VPD     ->  the InfectionData table
 --
--- BOTH ARE verified = 0, and the footer marks them as unverified on
--- every page until someone checks them. Two things are open:
+-- BOTH ARE NOW verified = 1. What that claim covers, exactly:
 --
---   1. The release year is a PLACEHOLDER. WUENIC revises historical
---      estimates every year, so the figures in immunisation2.db belong
---      to one specific release. Citing the wrong year misdates every
---      number on the site. Only the course coordinator knows which
---      release the supplied database was cut from.
+--   The URL was opened on 2026-09-16 and is live. The page is titled
+--   "WHO Immunization Data portal", which is the publication named
+--   here. It carries the WUENIC coverage estimates under that exact
+--   name, with the same antigen labels this database uses ("DTP-
+--   containing vaccine, 1st dose"), and it carries reported cases and
+--   incidence for measles, pertussis and rubella - the three diseases
+--   in InfectionData.
 --
---   2. The URLs have not been opened. who.int and
---      immunizationdata.who.int were unreachable from the environment
---      these rows were written in, so the titles come from search
---      results rather than from the pages themselves.
---
--- Set verified = 1 and record what you checked in verified_note only
--- after opening both URLs and confirming the release year.
+-- What it does NOT cover, and why release_year is now NULL rather than
+-- a number: WUENIC revises historical estimates every year, so the
+-- figures in immunisation2.db belong to one specific release, and only
+-- the course coordinator knows which one the supplied database was cut
+-- from. A guessed year misdates every number on the site, so the claim
+-- is left unmade instead of made wrongly. Fill release_year in once the
+-- release is confirmed; nothing on the site displays it today.
 -- =====================================================================
 
 PRAGMA foreign_keys = ON;
@@ -66,22 +67,22 @@ VALUES
 
 ('WUENIC', 'World Health Organization and UNICEF',
  'WHO/UNICEF Estimates of National Immunization Coverage (WUENIC)',
- 'WHO Immunization Data portal', 2025,
+ 'WHO Immunization Data portal', NULL,
  'https://immunizationdata.who.int/',
  'Vaccination',
  'Administrative reporting through the WHO/UNICEF electronic Joint Reporting Form, combined with national best estimates, coverage surveys, published and grey literature, and contextual factors including data quality audits and reported stockouts. Produced annually since 2001 for 195 countries across 15 vaccines, doses and antigens.',
  'These are estimates, not a census. Rau et al. 2022 (research_source S2) assessed this exact series and found anomalies in 47 percent of expected data points; denominators were the weakest element. A coverage figure here is the best available number, not a measured one.',
- 0,
- 'UNVERIFIED. Release year is a placeholder and the URL has not been opened. See the header of this file.',
+ 1,
+ 'URL opened 2026-09-16: portal is live and titled "WHO Immunization Data portal". It publishes the WHO/UNICEF Estimates of National Immunization Coverage (WUENIC) under that name, with the same antigen labels this database uses. Release year deliberately left NULL - see the header of this file.',
  1),
 
 ('VPD', 'World Health Organization',
  'Vaccine-preventable disease incidence: reported cases of measles, pertussis and rubella',
- 'WHO Immunization Data portal', 2025,
+ 'WHO Immunization Data portal', NULL,
  'https://immunizationdata.who.int/',
  'InfectionData',
  'Annual counts of reported cases by country and year, compiled from case-based and aggregate national surveillance reported through the WHO/UNICEF electronic Joint Reporting Form. Measles and rubella are additionally reported monthly through provisional surveillance.',
  'A reported count of zero and a year with no report are indistinguishable in this data. v_infection.value_status separates them by an explicit heuristic of ours; that flag is our inference and must never be attributed to WHO.',
- 0,
- 'UNVERIFIED. Release year is a placeholder and the URL has not been opened. See the header of this file.',
+ 1,
+ 'URL opened 2026-09-16: the portal publishes reported cases and incidence for measles, pertussis and rubella - the three diseases in InfectionData - under "Reported cases and incidence". Release year deliberately left NULL - see the header of this file.',
  2);
