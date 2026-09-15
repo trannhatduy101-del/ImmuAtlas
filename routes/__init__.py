@@ -39,11 +39,11 @@ PRIMARY_NAV = [
 # All six, for the footer. endpoint, label, sub-task code, owner, finished
 ALL_PAGES = [
     ("landing.index",       "Landing",                 "1A", "Sub-Task A", True),
-    ("mission.index",       "Mission statement",       "1B", "Sub-Task B", False),
+    ("mission.index",       "Mission statement",       "1B", "Sub-Task B", True),
     ("coverage.index",      "Vaccination rates",       "2A", "Sub-Task A", True),
-    ("infections.index",    "Infections by economy",   "2B", "Sub-Task B", False),
+    ("infections.index",    "Infections by economy",   "2B", "Sub-Task B", True),
     ("improvement.index",   "Biggest improvement",     "3A", "Sub-Task A", True),
-    ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", False),
+    ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", True),
 ]
 
 # Kept under the old name so the unbuilt-page component and any existing import

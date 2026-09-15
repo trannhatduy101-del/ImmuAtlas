@@ -146,26 +146,21 @@ def index():
 
     rejected = []
 
-    # Antigen: default to the first offered so the page always lands on data.
+    # Antigen and the two years are REQUIRED: the page leaves them unset so the
+    # visitor chooses them (the form marks them with a red * and HTML `required`).
+    # No silent default is filled in, so a ranking never appears for a period the
+    # visitor did not actually pick.
     antigen, bad = _validate(request.args.get("antigen"), valid_antigens)
     if bad:
         rejected.append("antigen")
-    if antigen is None:
-        antigen = antigens[0]["antigen"] if antigens else None
 
-    # Years: default to the full span, which is where improvement is largest and
-    # matches the brief's own example (2000 to 2024).
     start_year, bad = _validate(request.args.get("start"), valid_years, int)
     if bad:
         rejected.append("start year")
-    if start_year is None:
-        start_year = year_values[0] if year_values else None
 
     end_year, bad = _validate(request.args.get("end"), valid_years, int)
     if bad:
         rejected.append("end year")
-    if end_year is None:
-        end_year = year_values[-1] if year_values else None
 
     count, bad = _validate(request.args.get("n"), set(COUNT_OPTIONS), int)
     if bad:
@@ -198,7 +193,14 @@ def index():
         fmt_int=db.fmt_int, fmt_pct=db.fmt_pct,
     )
 
-    if not submitted or range_error or antigen is None:
+    # A required field left unchosen means the visitor hasn't really submitted a
+    # selection yet -> show the "pick your fields" prompt rather than an empty
+    # result that looks like a data gap.
+    missing_required = antigen is None or start_year is None or end_year is None
+    if not submitted or missing_required:
+        ctx["submitted"] = False
+        return render_template("pages/3a_improvement.html", **ctx)
+    if range_error:
         return render_template("pages/3a_improvement.html", **ctx)
 
     rows = _rows_for(antigen, start_year, end_year, order_by, count)

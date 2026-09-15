@@ -1,5 +1,7 @@
 {% extends "base.html" %}
 {% block title %}Mission &middot; {{ site_name }}{% endblock %}
+{# Wider container on this page so the persona cards read across, not down. #}
+{% block body_class %}page-mission{% endblock %}
 
 {% block hero %}
   <h1 class="hero-title">Mission</h1>
@@ -20,10 +22,12 @@
 <section class="mission-section">
   <h2 class="section-head">Who we serve</h2>
   <p class="section-intro">Two people this site is built for. Pick one to see what they need from it.</p>
+</section>
 
-  {# Two persona buttons toggle the panels below -- pure CSS (radio + label),
-     no JavaScript. The first persona is shown by default. #}
-  <div class="persona-switch">
+{# Only the persona cards break out wider than the page (the rest of Mission
+   stays at normal width) so a whole persona's info reads across the screen.
+   Pure-CSS toggle: radios + labels, no JavaScript. #}
+<div class="persona-switch persona-wide">
     {% for p in personas %}
       <input type="radio" name="persona" id="persona-{{ p.key }}" class="persona-radio"
              {% if loop.first %}checked{% endif %}>
@@ -32,7 +36,7 @@
     <div class="persona-tabs">
       {% for p in personas %}
         <label class="persona-btn" for="persona-{{ p.key }}">
-          <img class="persona-btn-ava" src="{{ url_for('static', filename=p.image) }}" alt="" loading="lazy">
+          <img class="persona-btn-ava" src="{{ url_for('static', filename=p.photo) }}" alt="" loading="lazy">
           <span>{{ p.name }}</span>
         </label>
       {% endfor %}
@@ -41,94 +45,82 @@
     <div class="persona-panels">
       {% for p in personas %}
         <article class="persona-panel pcard" id="ppanel-{{ p.key }}">
-          <div class="pcard-cols">
 
-            {# Left column: identity, quote, meta, skills. #}
-            <div class="pcol">
-              <div class="pbox pbox--profile">
-                <h3 class="pcard-name">{{ p.name }}</h3>
-                <img class="pcard-photo" src="{{ url_for('static', filename=p.photo) }}"
-                     alt="{{ p.name }}" loading="lazy">
-                <blockquote class="pcard-quote">&ldquo;{{ p.quote }}&rdquo;</blockquote>
-              </div>
-              <div class="pbox pbox--meta">
-                <dl class="pcard-meta">
-                  <div><dt>Age</dt><dd>{{ p.age }}</dd></div>
-                  <div><dt>Location</dt><dd>{{ p.location }}</dd></div>
-                  <div><dt>Occupation</dt><dd>{{ p.occupation }}</dd></div>
-                  <div><dt>User group</dt><dd>{{ p.group }}</dd></div>
-                </dl>
-              </div>
-              <div class="pbox">
-                <h4>Skills</h4>
-                <ul class="pcard-list">{% for s in p.skills %}<li>{{ s }}</li>{% endfor %}</ul>
-              </div>
+          {# Identity banner: photo, name, role, meta and the quote, full width. #}
+          <div class="pcard-banner">
+            <img class="pcard-banner-photo" src="{{ url_for('static', filename=p.photo) }}"
+                 alt="{{ p.name }}" loading="lazy">
+            <div class="pcard-identity">
+              <h3 class="pcard-name">{{ p.name }}</h3>
+              <p class="pcard-role"><strong>{{ p.occupation }}</strong></p>
+              <p class="pcard-meta-line">{{ p.age }} &middot; {{ p.location }} &middot; {{ p.group }}</p>
+              <blockquote class="pcard-quote">&ldquo;{{ p.quote }}&rdquo;</blockquote>
             </div>
+          </div>
 
-            {# Middle column: bio, personality, pain points. #}
-            <div class="pcol">
-              <div class="pbox">
-                <h4>Bio</h4>
-                <p>{{ p.bio }}</p>
-              </div>
-              <div class="pbox">
-                <h4>Personality</h4>
-                <ul class="pcard-sliders">
-                  {% for t in p.personality %}
-                    <li class="pcard-slider">
-                      <span class="pcard-slider-l">{{ t.left }}</span>
-                      <span class="pcard-track" aria-hidden="true"><span class="pcard-dot" style="left: {{ t.pos }}%"></span></span>
-                      <span class="pcard-slider-r">{{ t.right }}</span>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-              <div class="pbox">
-                <h4>Pain points</h4>
-                <ul class="pcard-list">{% for pp in p.pains %}<li>{{ pp }}</li>{% endfor %}</ul>
-              </div>
+          {# Every persona fact as its own box; they reflow into as many columns
+             as the wide layout allows, so a whole persona is visible with little
+             scrolling. #}
+          <div class="pcard-body">
+            <div class="pbox">
+              <h4>About</h4>
+              <p>{{ p.bio }}</p>
             </div>
-
-            {# Right column: goals, needs, motivations, channels. #}
-            <div class="pcol">
-              <div class="pbox">
-                <h4>Goals</h4>
-                <ul class="pcard-list">{% for g in p.goals %}<li>{{ g }}</li>{% endfor %}</ul>
-              </div>
-              <div class="pbox">
-                <h4>Needs</h4>
-                <ul class="pcard-list">{% for n in p.needs %}<li>{{ n }}</li>{% endfor %}</ul>
-              </div>
-              <div class="pbox">
-                <h4>Motivations</h4>
-                <ul class="pcard-bars">
-                  {% for b in p.motivations %}
-                    <li class="pcard-bar">
-                      <span class="pcard-bar-label">{{ b.label }}</span>
-                      <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
-              <div class="pbox">
-                <h4>Preferred channels</h4>
-                <ul class="pcard-bars">
-                  {% for b in p.channels %}
-                    <li class="pcard-bar">
-                      <span class="pcard-bar-label">{{ b.label }}</span>
-                      <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
-                    </li>
-                  {% endfor %}
-                </ul>
-              </div>
+            <div class="pbox">
+              <h4>Goals</h4>
+              <ul class="pcard-list">{% for g in p.goals %}<li>{{ g }}</li>{% endfor %}</ul>
             </div>
-
+            <div class="pbox">
+              <h4>Needs</h4>
+              <ul class="pcard-list">{% for n in p.needs %}<li>{{ n }}</li>{% endfor %}</ul>
+            </div>
+            <div class="pbox">
+              <h4>Pain points</h4>
+              <ul class="pcard-list">{% for pp in p.pains %}<li>{{ pp }}</li>{% endfor %}</ul>
+            </div>
+            <div class="pbox">
+              <h4>Personality</h4>
+              <ul class="pcard-sliders">
+                {% for t in p.personality %}
+                  <li class="pcard-slider">
+                    <span class="pcard-slider-l">{{ t.left }}</span>
+                    <span class="pcard-track" aria-hidden="true"><span class="pcard-dot" style="left: {{ t.pos }}%"></span></span>
+                    <span class="pcard-slider-r">{{ t.right }}</span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="pbox">
+              <h4>Motivations</h4>
+              <ul class="pcard-bars">
+                {% for b in p.motivations %}
+                  <li class="pcard-bar">
+                    <span class="pcard-bar-label">{{ b.label }}</span>
+                    <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="pbox">
+              <h4>Preferred channels</h4>
+              <ul class="pcard-bars">
+                {% for b in p.channels %}
+                  <li class="pcard-bar">
+                    <span class="pcard-bar-label">{{ b.label }}</span>
+                    <span class="pcard-bar-track" aria-hidden="true"><span class="pcard-bar-fill" style="width: {{ b.pct }}%"></span></span>
+                  </li>
+                {% endfor %}
+              </ul>
+            </div>
+            <div class="pbox">
+              <h4>Skills</h4>
+              <ul class="pcard-list">{% for s in p.skills %}<li>{{ s }}</li>{% endfor %}</ul>
+            </div>
           </div>
         </article>
       {% endfor %}
     </div>
-  </div>
-</section>
+</div>
 
 <section class="mission-section">
   <h2 class="section-head">Our team</h2>

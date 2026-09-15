@@ -3,15 +3,171 @@
 
 {% block hero %}
   <h1 class="hero-title">Countries above the global rate</h1>
-  <p class="hero-sub">Which countries report infection rates above the global rate, and by how much.</p>
+  <p class="hero-sub">
+    For one disease and year, which countries report an infection rate higher
+    than the population-weighted global rate &mdash; and by how much.
+  </p>
 {% endblock %}
 
 {% block main %}
-  {% set planned = [
-    "Countries above the global rate, with the global rate computed as a
-     population-weighted SUM/SUM rather than a mean of country rates.",
-  ] %}
-  {% set blocked_on = "Owned by the teammate on Sub-Task B. Also depends on open
-     question Q1: whether a reported zero means no cases or no report." %}
-  {% include "_components/unbuilt.html" with context %}
+
+{# ---- Filters. GET, so the comparison lives in the URL and can be shared. ---- #}
+<h2 class="section-head">Filter</h2>
+<form class="filters" method="get" action="{{ url_for('above_average.index') }}">
+  <div class="filter-bar">
+    <div class="field">
+      <label for="f-infection">Infection type</label>
+      <select id="f-infection" name="infection_type">
+        <option value="">Select a disease</option>
+        {% for item in infection_types %}
+          <option value="{{ item.inf_type }}" {% if selected_infection == item.inf_type %}selected{% endif %}>{{ item.disease_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-year">Year</label>
+      <select id="f-year" name="year">
+        <option value="">Select a year</option>
+        {% for item in years %}
+          <option value="{{ item.year }}" {% if selected_year|string == item.year|string %}selected{% endif %}>{{ item.year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field field-actions">
+      <button type="submit">Compare rates</button>
+      <a class="reset" href="{{ url_for('above_average.index') }}">Reset</a>
+    </div>
+  </div>
+  <p class="filter-note">
+    The global rate is total cases divided by total population &mdash;
+    population-weighted, not an average of country rates.
+  </p>
+</form>
+
+{% if not (selected_infection and selected_year) %}
+  <div class="empty-state prompt-state">
+    <h2>Pick a disease and year</h2>
+    <p>Choose an infection type and a year above, then press
+       <strong>Compare rates</strong>. The global rate, the countries above it,
+       and the full table appear here.</p>
+  </div>
+{% elif not global_rate %}
+  <div class="empty-state">
+    <h2>No records for this selection</h2>
+    <p>Nothing in the data matches this disease and year. Try a different year.</p>
+  </div>
+{% else %}
+
+  {# ---- Verdict banner: the headline finding, same treatment as 2A/3A. ---- #}
+  <section class="outcome-verdict">
+    <p class="ov-context">
+      {{ global_rate.disease_name }} &middot; {{ selected_year }} &middot;
+      global rate {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k
+    </p>
+    <div class="ov-main">
+      <span class="ov-fig">{{ fmt_int(results | length) }}</span>
+      <div class="ov-detail">
+        <span class="ov-label">countries reported a rate above the global rate</span>
+        <p class="ov-verdict">
+          Global rate this year:
+          <strong>{{ '%.2f'|format(global_rate.global_rate_per_100k) }} per 100k</strong>
+          &mdash; {{ fmt_big(global_rate.total_cases) }} reported cases across
+          {{ fmt_big(global_rate.total_population) }} people.
+        </p>
+      </div>
+    </div>
+    <p class="ov-note">A country is &ldquo;above&rdquo; when its own rate (its cases &divide; its population &times; 100,000) exceeds the single global rate for the same disease and year.</p>
+  </section>
+
+  {% if results %}
+    {# ---- Ranked bar chart of the countries above the line ---- #}
+    {% if chart_results %}
+      {% set rmax = chart_results[0].country_rate_per_100k or 1 %}
+      <h2 class="section-head">Result &middot; furthest above</h2>
+      <figure class="imp-viz">
+        <figcaption class="imp-viz-cap">
+          The ten countries furthest above the global rate. The longer the bar,
+          the higher the reported rate (cases per 100,000).
+        </figcaption>
+        <ol class="imp-ranks">
+          {% for row in chart_results %}
+            <li class="imp-rank is-down">
+              <span class="imp-rank-n">{{ loop.index }}</span>
+              <div class="imp-rank-main">
+                <div class="imp-rank-head">
+                  <span class="imp-rank-country">{{ row.country_name }}</span>
+                </div>
+                <div class="imp-rank-track" role="img"
+                     aria-label="{{ row.country_name }}: {{ '%.2f'|format(row.country_rate_per_100k) }} cases per 100,000.">
+                  <span class="imp-rank-seg down" style="left: 0; width: {{ (row.country_rate_per_100k / rmax * 100) | round(1) }}%"></span>
+                </div>
+                <div class="imp-rank-nums">
+                  <span class="imp-rank-badge down">{{ '%.2f'|format(row.country_rate_per_100k) }} / 100k</span>
+                </div>
+              </div>
+            </li>
+          {% endfor %}
+        </ol>
+      </figure>
+    {% endif %}
+
+    {# ---- Full table of every country above the global rate ---- #}
+    <h2 class="section-head">Result &middot; all countries above</h2>
+    <div class="vx-table-block">
+      <div class="vx-table-header">
+        <span class="vx-table-title">{{ global_rate.disease_name }} &middot; {{ selected_year }} &middot; {{ fmt_int(results | length) }} above the global rate</span>
+      </div>
+      <div class="vx-table-wrap">
+        <table class="vx-table">
+          <thead>
+            <tr>
+              <th scope="col">Country</th>
+              <th scope="col" class="num">Reported cases</th>
+              <th scope="col" class="num">Population</th>
+              <th scope="col" class="num">Rate / 100k</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in results %}
+              <tr>
+                <th scope="row" class="vx-cell-key">{{ row.country_name }}</th>
+                <td class="num">{{ fmt_int(row.total_cases) }}</td>
+                <td class="num">{% if row.population is not none %}{{ fmt_int(row.population) }}{% else %}&mdash;{% endif %}</td>
+                <td class="num"><strong>{{ '%.2f'|format(row.country_rate_per_100k) }}</strong></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="vx-table-foot">Ordered from the highest rate down &middot; every row is above the {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k global rate</div>
+    </div>
+  {% else %}
+    <div class="empty-state">
+      <h2>No country is above the global rate</h2>
+      <p>For {{ global_rate.disease_name }} in {{ selected_year }}, no country
+         reported a rate higher than the global rate. Try another year.</p>
+    </div>
+  {% endif %}
+
+  {# ---- Method note ---- #}
+  <div class="method-note">
+    <h2>How this comparison works</h2>
+    <dl>
+      <dt>Global rate</dt>
+      <dd>Total reported cases &divide; total population &times; 100,000, summed
+        across the whole dataset for that disease and year. Population-weighted,
+        so it is not thrown off by a small country with an extreme rate.</dd>
+      <dt>Country rate</dt>
+      <dd>Each country&rsquo;s own cases &divide; its own population &times;
+        100,000, compared against that single global figure.</dd>
+      <dt>Who is shown</dt>
+      <dd>Only countries strictly above the global rate, ordered from highest to
+        lowest. A country at or below the line is left out by design.</dd>
+      <dt>SQL and Python</dt>
+      <dd>SQL does the aggregation, the rate calculation and the comparison in a
+        subquery; Python validates the two selections and formats the output.</dd>
+    </dl>
+  </div>
+
+{% endif %}
 {% endblock %}

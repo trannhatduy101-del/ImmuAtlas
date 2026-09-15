@@ -1,17 +1,198 @@
 {% extends "base.html" %}
-{% block title %}Infections &middot; {{ site_name }}{% endblock %}
+{% block title %}Infections by economic status &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
   <h1 class="hero-title">Infections by economic status</h1>
-  <p class="hero-sub">Reported cases and rates, grouped by the economic classification of each country.</p>
+  <p class="hero-sub">
+    Reported infection rates for one disease and year, for a chosen World-Bank
+    income group &mdash; counted as cases per 100,000 people, not averaged.
+  </p>
 {% endblock %}
 
 {% block main %}
-  {% set planned = [
-    "Infection data grouped by economic status, joined with LEFT JOIN so that
-     Ethiopia and Venezuela, whose economy field is blank, appear as
-     'Not classified' rather than vanishing from the analysis.",
-  ] %}
-  {% set blocked_on = "Owned by the teammate on Sub-Task B." %}
-  {% include "_components/unbuilt.html" with context %}
+
+{# ---- Filters. GET, so the selection lives in the URL and can be shared. ---- #}
+<h2 class="section-head">Filter</h2>
+<form class="filters" method="get" action="{{ url_for('infections.index') }}">
+  <div class="filter-bar">
+    <div class="field">
+      <label for="f-economy">Economic status</label>
+      <select id="f-economy" name="economy">
+        <option value="">Select a group</option>
+        {% for row in economies %}
+          <option value="{{ row.economy_phase }}" {% if selected_economy == row.economy_phase %}selected{% endif %}>{{ row.economy_phase }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-infection">Infection type</label>
+      <select id="f-infection" name="infection_type">
+        <option value="">Select a disease</option>
+        {% for row in infection_types %}
+          <option value="{{ row.inf_type }}" {% if selected_infection == row.inf_type %}selected{% endif %}>{{ row.disease_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-year">Year</label>
+      <select id="f-year" name="year">
+        <option value="">Select a year</option>
+        {% for row in years %}
+          <option value="{{ row.year }}" {% if selected_year|string == row.year|string %}selected{% endif %}>{{ row.year }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label for="f-sort">Sort by</label>
+      <select id="f-sort" name="sort">
+        {% for key, label in sort_options.items() %}
+          <option value="{{ key }}" {% if selected_sort == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div class="field field-actions">
+      <button type="submit">Apply</button>
+      <a class="reset" href="{{ url_for('infections.index') }}">Reset</a>
+    </div>
+  </div>
+  <p class="filter-note">
+    All three of economic status, infection type and year are needed &mdash; the
+    rate for a group has no meaning without a single disease and year.
+  </p>
+</form>
+
+{% if not (selected_economy and selected_infection and selected_year) %}
+  <div class="empty-state prompt-state">
+    <h2>Choose a group to begin</h2>
+    <p>Pick an economic status, an infection type and a year above, then press
+       <strong>Apply</strong>. The group&rsquo;s headline rate, a ranking of its
+       countries, and the full table appear here.</p>
+  </div>
+{% elif not summary %}
+  <div class="empty-state">
+    <h2>No records for this selection</h2>
+    <p>Nothing in the data matches this combination of group, disease and year.
+       Try a different year or disease.</p>
+  </div>
+{% else %}
+
+  {# ---- Verdict banner: the group's one headline rate, same treatment as 2A/3A. ---- #}
+  <section class="outcome-verdict">
+    <p class="ov-context">
+      {{ summary.disease_name }} &middot; {{ selected_economy }} &middot; {{ selected_year }}
+      &middot; {{ fmt_int(summary.country_count) }} countries
+    </p>
+    <div class="ov-main">
+      <span class="ov-fig">{{ '%.1f'|format(summary.infection_rate_per_100k) }}</span>
+      <div class="ov-detail">
+        <span class="ov-label">reported cases per 100,000 people in this income group</span>
+        <p class="ov-verdict">
+          <strong>{{ fmt_big(summary.total_cases) }}</strong> reported cases across
+          {{ fmt_int(summary.country_count) }} countries
+          ({{ fmt_big(summary.total_population) }} people).
+        </p>
+      </div>
+    </div>
+    <p class="ov-note">Rate = total reported cases &divide; total population &times; 100,000 &mdash; population-weighted, so a large country counts more than a small one; never an average of country rates.</p>
+  </section>
+
+  {# ---- Ranked bar chart: the ten highest-rate countries in the group. ---- #}
+  {% if chart_results %}
+    {% set rmax = chart_results[0].cases_per_100k or 1 %}
+    <h2 class="section-head">Result &middot; highest rates</h2>
+    <figure class="imp-viz">
+      <figcaption class="imp-viz-cap">
+        The ten countries with the highest reported infection rate in this group.
+        The longer the bar, the higher the rate (cases per 100,000).
+      </figcaption>
+      <ol class="imp-ranks">
+        {% for row in chart_results %}
+          <li class="imp-rank is-down">
+            <span class="imp-rank-n">{{ loop.index }}</span>
+            <div class="imp-rank-main">
+              <div class="imp-rank-head">
+                <span class="imp-rank-country">{{ row.country_name }}</span>
+              </div>
+              <div class="imp-rank-track" role="img"
+                   aria-label="{{ row.country_name }}: {{ '%.2f'|format(row.cases_per_100k) }} cases per 100,000.">
+                <span class="imp-rank-seg down" style="left: 0; width: {{ (row.cases_per_100k / rmax * 100) | round(1) }}%"></span>
+              </div>
+              <div class="imp-rank-nums">
+                <span class="imp-rank-badge down">{{ '%.2f'|format(row.cases_per_100k) }} / 100k</span>
+              </div>
+            </div>
+          </li>
+        {% endfor %}
+      </ol>
+    </figure>
+  {% endif %}
+
+  {# ---- Full country table ---- #}
+  <h2 class="section-head">Result &middot; by country</h2>
+  <div class="vx-table-block">
+    <div class="vx-table-header">
+      <span class="vx-table-title">{{ selected_economy }} &middot; {{ summary.disease_name }} &middot; {{ selected_year }}</span>
+    </div>
+    <div class="vx-table-wrap">
+      <table class="vx-table">
+        <thead>
+          <tr>
+            <th scope="col">Country</th>
+            <th scope="col" class="num">Reported cases</th>
+            <th scope="col" class="num">Population</th>
+            <th scope="col" class="num">Rate / 100k</th>
+            <th scope="col">Data</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in results %}
+            <tr>
+              <th scope="row" class="vx-cell-key">{{ row.country_name }}</th>
+              <td class="num">{{ fmt_int(row.cases) }}</td>
+              <td class="num">{% if row.national_population is not none %}{{ fmt_int(row.national_population) }}{% else %}&mdash;{% endif %}</td>
+              <td class="num"><strong>{% if row.cases_per_100k is not none %}{{ '%.2f'|format(row.cases_per_100k) }}{% else %}&mdash;{% endif %}</strong></td>
+              <td>
+                {% if row.value_status == 'suspicious_zero' %}
+                  <span class="vx-pill vx-pill--down">0 &mdash; check</span>
+                {% elif row.value_status == 'reported_zero' %}
+                  <span class="vx-pill vx-pill--none">reported 0</span>
+                {% else %}
+                  <span class="vx-pill vx-pill--none">reported</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="vx-table-foot">
+      {{ fmt_int(results | length) }} countries &middot; sorted by
+      {{ sort_options[selected_sort] | lower }}
+    </div>
+  </div>
+
+  {# ---- Method note ---- #}
+  <div class="method-note">
+    <h2>How these figures were calculated</h2>
+    <dl>
+      <dt>Infection rate</dt>
+      <dd>Reported cases &divide; national population &times; 100,000. A rate, not
+        a raw count, so a large country and a small one can be compared.</dd>
+      <dt>Group rate</dt>
+      <dd>The whole group&rsquo;s cases divided by the whole group&rsquo;s
+        population (population-weighted), not the mean of the country rates &mdash;
+        those two differ, and only the first answers &ldquo;how common is this
+        disease in this group?&rdquo;.</dd>
+      <dt>Data status</dt>
+      <dd>&ldquo;reported&rdquo; is a normal figure; &ldquo;reported 0&rdquo; is a
+        genuine zero; &ldquo;0 &mdash; check&rdquo; is a zero that looks
+        suspicious in context &mdash; it is flagged rather than dropped or trusted.</dd>
+      <dt>SQL and Python</dt>
+      <dd>SQL does the filtering, the rate calculation and the sorting; Python
+        validates every selection against the values the page offers before it
+        reaches the database, then formats the numbers for reading.</dd>
+    </dl>
+  </div>
+
+{% endif %}
 {% endblock %}

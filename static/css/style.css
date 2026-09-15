@@ -730,6 +730,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--ink-muted);
   font-weight: 600;
 }
+/* Red asterisk marking a required filter. Colour is backed by the word
+   "required" in the note and the native `required` attribute, so it is not the
+   only signal. */
+.req { color: var(--outcome); font-weight: 700; margin-left: .1rem; }
 .field select {
   font: inherit;
   font-size: .92rem;
@@ -1402,6 +1406,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* ---------------------------------------------------------------------------
    1B Mission -- ported from Sub-Task B, styled to match the rest of the site.
    --------------------------------------------------------------------------- */
+/* Only the persona card block breaks out wider than the page; the rest of the
+   Mission page keeps the normal 68rem width. main.wrap is viewport-centred, so
+   50% + translateX(-50%) re-centres the wide block on the viewport; capped to the
+   viewport minus a gutter so it never causes sideways scroll. */
+.persona-wide {
+  width: min(92rem, calc(100vw - 2rem));
+  margin-left: 50%;
+  transform: translateX(-50%);
+}
+
 .mission-section { max-width: 62rem; margin: 0 0 2.4rem; }
 .mission-section > p { color: var(--ink-muted); max-width: 60ch; }
 
@@ -1416,7 +1430,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--bg); color: var(--ink); font-weight: 600;
   transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
-.persona-btn-ava { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; flex: none; }
+.persona-btn-ava { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; object-position: center 12%; flex: none; }
 /* Active + focused button (enumerated for the two personas). */
 #persona-grace:checked ~ .persona-tabs label[for="persona-grace"],
 #persona-daniel:checked ~ .persona-tabs label[for="persona-daniel"] {
@@ -1437,13 +1451,29 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--bg-sunk);
   padding: 1rem; box-shadow: var(--shadow-md);
 }
-.pcard-cols {
-  display: grid; gap: 1rem;
-  grid-template-columns: 0.95fr 1fr 1fr;
-  align-items: start;
+/* Identity banner across the top, then a two-column body. */
+.pcard-banner {
+  display: flex; gap: 1.2rem; align-items: center;
+  background: var(--bg); border: 1px solid var(--rule); border-radius: var(--radius-md);
+  padding: 1.1rem 1.2rem; margin-bottom: 1rem;
 }
-@media (max-width: 60rem) { .pcard-cols { grid-template-columns: 1fr 1fr; } }
-@media (max-width: 42rem) { .pcard-cols { grid-template-columns: 1fr; } }
+.pcard-banner-photo {
+  width: 128px; height: 160px; flex: none;
+  object-fit: cover; object-position: center 12%;
+  border-radius: var(--radius-md); border: 1px solid var(--rule);
+}
+.pcard-identity { min-width: 0; }
+.pcard-role { margin: 0 0 .25rem; color: var(--ink-muted); font-size: .95rem; }
+.pcard-role strong { color: var(--ink); }
+.pcard-meta-line { margin: 0 0 .6rem; font-size: .84rem; color: var(--ink-muted); }
+/* All the fact boxes flow into as many ~19rem columns as the wide card allows,
+   so a whole persona reads across the screen instead of down it. Each box stays
+   intact (never split across a column break). */
+.pcard-body { columns: 19rem; column-gap: 1rem; }
+.pcard-body .pbox { break-inside: avoid; margin: 0 0 1rem; }
+@media (max-width: 46rem) {
+  .pcard-banner { flex-direction: column; text-align: center; }
+}
 .pcol { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
 
 .pbox {
@@ -1456,22 +1486,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .pbox p { margin: 0; color: var(--ink-muted); }
 
-.pbox--profile { text-align: center; }
-.pcard-name { font-family: var(--font-display); font-size: 1.5rem; margin: 0 0 .7rem; color: var(--ink); }
-.pcard-photo {
-  display: block; width: 100%; max-height: 240px; object-fit: cover;
-  border-radius: var(--radius-md); border: 1px solid var(--rule);
-}
+.pcard-name { font-family: var(--font-display); font-size: 1.5rem; margin: 0 0 .2rem; color: var(--ink); }
 .pcard-quote {
-  margin: .8rem 0 0; padding: .55rem .85rem; border: 0;
+  margin: 0; padding: .55rem .85rem; border: 0; max-width: 64ch;
   background: var(--accent-wash); border-radius: 10px;
   font-style: italic; color: var(--ink); font-size: .9rem;
 }
-.pcard-meta { margin: 0; display: grid; gap: .35rem; }
-.pcard-meta > div { display: flex; gap: .4rem; font-size: .9rem; }
-.pcard-meta dt { color: var(--ink-muted); min-width: 5.5rem; }
-.pcard-meta dt::after { content: ":"; }
-.pcard-meta dd { margin: 0; color: var(--ink); font-weight: 600; }
 .pcard-list { margin: 0; padding-left: 1.1rem; }
 .pcard-list li { margin-bottom: .3rem; font-size: .92rem; color: var(--ink-muted); }
 
@@ -1621,6 +1641,33 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .delta-num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .delta-num.up   { color: var(--accent-strong); }
 .delta-num.down { color: var(--outcome); }
+
+/* 3A slope chart: each country is a line from its start-year coverage (left
+   axis) to its end-year coverage (right axis). An upward slope reads instantly
+   as improvement; colour, the +/- gain label and the table all carry it too. */
+.slope-viz {
+  margin: 1rem 0 1.6rem; background: var(--bg);
+  border: 1px solid var(--rule); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md); padding: 1.2rem 1.3rem 1.4rem;
+}
+.slope-cap { margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted); max-width: 72ch; }
+.slope-legend { display: flex; gap: 1.2rem; margin: 0 0 .6rem; font-size: .78rem; color: var(--ink-muted); }
+.slope-key { display: inline-flex; align-items: center; gap: .4rem; }
+.slope-key::before { content: ""; width: 1.1rem; height: 3px; border-radius: 2px; }
+.slope-key--up::before { background: var(--accent); }
+.slope-key--down::before { background: var(--outcome); }
+.slope-scroll { overflow-x: auto; }
+.slope-svg { width: 100%; min-width: 34rem; height: auto; display: block; font-family: var(--font-body); }
+.slope-grid { stroke: var(--rule); stroke-width: 1; }
+.slope-axis { stroke: var(--rule); stroke-width: 1.5; }
+.slope-year { fill: var(--ink-muted); font-size: 13px; font-weight: 700; }
+.slope-line { fill: none; stroke-width: 2.5; }
+.slope-item.up   .slope-line, .slope-item.up   .slope-dot { stroke: var(--accent); fill: var(--accent); }
+.slope-item.down .slope-line, .slope-item.down .slope-dot { stroke: var(--outcome); fill: var(--outcome); }
+.slope-name { fill: var(--ink); font-size: 12px; }
+.slope-gain { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
+.slope-item.up   .slope-gain { fill: var(--accent-strong); }
+.slope-item.down .slope-gain { fill: var(--outcome); }
 
 /* 3A ranking table, redesigned: 8 columns collapsed to 5. Paired years live in
    one "start -> end" cell, the country carries its region as a muted sub-line,
