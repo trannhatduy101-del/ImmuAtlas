@@ -91,6 +91,7 @@ def index():
 
     results = []
     summary = None
+    all_economies_summary = []
 
     # NEW:
     # These results will be used for the visualisation/chart.
@@ -141,6 +142,18 @@ def index():
             summary = summary_results[0]
 
         # -----------------------------------------------------
+        # All economic phases side by side, for the selected disease/year --
+        # independent of which single economy is selected above (brief
+        # example: total cases of a disease per economic phase, all phases
+        # shown at once).
+        # -----------------------------------------------------
+
+        all_economies_summary = db.query(
+            db.load_query("infections_all_economies_summary"),
+            params,
+        )
+
+        # -----------------------------------------------------
         # NEW: Data for the visualisation
         # -----------------------------------------------------
         #
@@ -181,6 +194,7 @@ def index():
         # Main page data
         results=results,
         summary=summary,
+        all_economies_summary=all_economies_summary,
 
         # NEW:
         # Send Top 10 chart data to the HTML template.

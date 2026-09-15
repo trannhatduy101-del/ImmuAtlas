@@ -33,6 +33,14 @@
         {% endfor %}
       </select>
     </div>
+    <div class="field">
+      <label for="f-sort">Sort by</label>
+      <select id="f-sort" name="sort">
+        {% for key, label in sort_labels %}
+          <option value="{{ key }}" {% if key == selected_sort %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="field field-actions">
       <button type="submit">Compare rates</button>
       <a class="reset" href="{{ url_for('above_average.index') }}">Reset</a>
@@ -139,7 +147,7 @@
           </tbody>
         </table>
       </div>
-      <div class="vx-table-foot">Ordered from the highest rate down &middot; every row is above the {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k global rate</div>
+      <div class="vx-table-foot">Sorted by {{ (sort_labels | selectattr('0','equalto',selected_sort) | first)[1] | lower }} &middot; every row is above the {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k global rate</div>
     </div>
   {% else %}
     <div class="empty-state">

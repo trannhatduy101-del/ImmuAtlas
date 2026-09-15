@@ -99,28 +99,49 @@ CREATE TABLE IF NOT EXISTS persona_need (
     FOREIGN KEY (source_id)  REFERENCES research_source(source_id)
 );
 
--- source_id is NOT NULL here by design: the checklist requires every
--- pain point to trace to the study behind it.
-CREATE TABLE IF NOT EXISTS persona_pain (
+-- source_id is optional. It was NOT NULL while every pain point in the seed
+-- came from a cited study; the persona sheets the team signed off on also
+-- carry plainer pain points that are not tied to one paper, and a pain point
+-- that cannot be stored is worse than one stored without a citation. Where a
+-- study does back the claim, evidence + source_id still record it.
+--
+-- DROP first (not CREATE IF NOT EXISTS): SQLite cannot drop a NOT NULL
+-- constraint in place, and this table holds seed data only, so re-running
+-- schema then seed rebuilds it exactly.
+DROP TABLE IF EXISTS persona_pain;
+CREATE TABLE persona_pain (
     pain_id     INTEGER PRIMARY KEY,
     persona_id  INTEGER NOT NULL,
     pain_point  TEXT NOT NULL,
     evidence    TEXT,                 -- the specific figure, in words
-    source_id   TEXT NOT NULL,
+    source_id   TEXT,
     FOREIGN KEY (persona_id) REFERENCES persona(persona_id),
     FOREIGN KEY (source_id)  REFERENCES research_source(source_id)
 );
 
--- One generic table for every 0-100 scale: working profile axes,
--- where their figures come from, trust criteria, motivations.
--- Three categories share one shape, so one table keeps this in 3NF and
--- lets a new category be added with no schema change.
-CREATE TABLE IF NOT EXISTS persona_attribute (
+-- One generic table for every 0-100 scale: personality axes, working profile
+-- axes, where their figures come from, trust criteria, motivations.
+-- The categories share one shape, so one table keeps this in 3NF and lets a
+-- new category be added with no schema change.
+--
+-- label_right is what makes a two-ENDED scale possible without breaking 1NF:
+-- a personality axis runs between two opposing words ("Analytical" at 0,
+-- "Intuitive" at 100), so the right-hand anchor gets its own column rather
+-- than being packed into `label` with a separator. It stays NULL for the
+-- one-ended categories (motivation, source_used ...), where the bar simply
+-- fills to `value`.
+--
+-- DROP first (not CREATE IF NOT EXISTS) so re-running this file picks up the
+-- column; the table holds seed data only, and seed_immuatlas.sql rebuilds it.
+DROP TABLE IF EXISTS persona_attribute;
+CREATE TABLE persona_attribute (
     attribute_id  INTEGER PRIMARY KEY,
     persona_id    INTEGER NOT NULL,
     category      TEXT NOT NULL
-        CHECK (category IN ('profile','source_used','trust_criterion','motivation')),
-    label         TEXT NOT NULL,
+        CHECK (category IN ('personality','profile','source_used',
+                            'trust_criterion','motivation')),
+    label         TEXT NOT NULL,      -- left-hand anchor for a two-ended scale
+    label_right   TEXT,               -- right-hand anchor, NULL for a plain bar
     value         INTEGER NOT NULL CHECK (value BETWEEN 0 AND 100),
     anchor_note   TEXT,
     source_id     TEXT,

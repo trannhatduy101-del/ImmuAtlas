@@ -44,6 +44,18 @@
   --bg-sunk:     #e4f0fa;
   --bg-flag:     #fdead9;
   --bg-deep:     #082f49;   /* deep ocean footer, high contrast with inverted ink */
+  --bg-card:     #ffffff;   /* pure white card surface, to stand out against the light-blue page */
+
+  /* One colour per persona, warm against cool so the two cards are told apart
+     at a glance rather than by reading the name, and both stand clear of the
+     ocean blue everything else on the site is painted in. Each clears WCAG AA
+     on white and carries a matching wash for the boxes inside the card.
+     These appear only on the Mission page, so they never sit beside the
+     status badges (which use their own green and amber) on the data pages. */
+  --persona-a:      #b45309;   /* Grace Achieng - amber */
+  --persona-a-wash: #fdf2e2;
+  --persona-b:      #15803d;   /* Daniel Nguyen - soft green */
+  --persona-b-wash: #e8f5ec;
 
   --ink:         #0c2a42;   /* dark navy body text, ~12:1 on paper */
   --ink-muted:   #4a5a68;
@@ -119,7 +131,7 @@ html, body { overflow-x: clip; }
 
 body {
   margin: 0;
-  background: var(--bg);
+  background: var(--bg-sunk);
   color: var(--ink);
   font: var(--text-base)/1.65 var(--font-body);
   -webkit-font-smoothing: antialiased;
@@ -312,13 +324,15 @@ summary:focus-visible {
 
 .hero {
   position: relative;
-  /* Layered water wash: a faint cyan bloom in the top-right corner over a soft
-     sky diagonal. Enough depth to feel designed; light enough that --ink keeps
-     its AA contrast on top. */
+  /* Deep-ocean band, the same surface as the footer, so the page opens and
+     closes on the same colour and the title reads as a landmark instead of
+     text on tinted paper. The cyan bloom in the top-right keeps the navy from
+     reading as a flat slab. The landing page replaces this band entirely
+     (vaxvision-landing.css), so this is the other five pages. */
   background:
-    radial-gradient(120% 90% at 88% -20%, rgba(6, 182, 212, .16) 0%, transparent 55%),
-    linear-gradient(155deg, var(--bg-sunk) 0%, var(--accent-wash) 55%, var(--bg) 100%);
-  border-bottom: 1px solid var(--rule);
+    radial-gradient(120% 90% at 88% -20%, rgba(6, 182, 212, .22) 0%, transparent 55%),
+    var(--bg-deep);
+  border-bottom: 1px solid var(--rule-deep);
   padding: 3rem 0 2.6rem;
 }
 /* The same signature water accent as the section marks, drawn as a hairline
@@ -346,6 +360,7 @@ html { scroll-behavior: smooth; }
   line-height: 1.15;
   letter-spacing: -.02em;
   max-width: 26ch;
+  color: var(--ink-invert);
   /* Long single words (place names, antigen codes) wrap rather than overflow
      the viewport at 320px. */
   overflow-wrap: anywhere;
@@ -353,7 +368,7 @@ html { scroll-behavior: smooth; }
 .hero-sub {
   margin: 0;
   font-size: 1.05rem;
-  color: var(--ink-muted);
+  color: var(--ink-invert-muted);
   max-width: 62ch;
 }
 .hero-quote {
@@ -464,26 +479,23 @@ h3 {
   margin-bottom: 2rem;
 }
 
+/* A filled dark-blue heading band (same ocean as the footer/outcome banner),
+   so a section title reads as a landmark against the light-blue page instead
+   of blending into it. The cyan accent survives as a left edge inside the
+   band rather than a hairline above it, since there is no page rule to sit on
+   once the heading is a solid box. */
 .section-head {
   position: relative;
   font-size: var(--text-2xl);
   line-height: 1.15;
   font-weight: 600;
   letter-spacing: -.02em;
-  color: var(--ink);
-  border-top: 1px solid var(--rule);
-  padding-top: var(--space-4);
+  color: #ffffff;
+  background: var(--bg-deep);
+  border-left: 4px solid var(--accent-lift);
+  border-radius: var(--radius-sm);
+  padding: .7rem 1.1rem;
   margin-top: var(--space-6);
-}
-/* The signature: a short cyan segment sitting on the hairline rule above every
-   section heading. One repeated water mark ties every page's headings together
-   without a templated coloured left-stripe on the cards themselves. */
-.section-head::before {
-  content: "";
-  position: absolute;
-  top: -1px; left: 0;
-  width: 2.75rem; height: 2px;
-  background: var(--accent-lift);
 }
 
 /* Facts ------------------------------------------------------------------- */
@@ -773,7 +785,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: .9rem 1rem;
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
-  background: var(--bg);
+  background: var(--bg-card);
   box-shadow: var(--shadow-md);
 }
 .filter-bar .field { flex: 1 1 9rem; min-width: 8rem; }
@@ -785,7 +797,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    the title and a download pill, an uppercase muted head, and roomy rows. */
 .vx-table-block {
   margin: 1rem 0 1.4rem;
-  background: var(--bg);
+  background: var(--bg-card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-md);
   overflow: hidden;
@@ -827,6 +839,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-table thead th.num, .vx-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-table tbody tr:last-child td, .vx-table tbody tr:last-child th { border-bottom: 0; }
 .vx-table tbody tr:hover { background: var(--bg-sunk); }
+.vx-table tbody tr.is-current { background: var(--accent-wash); }
+.vx-table tbody tr.is-current th { color: var(--accent-strong); }
 .vx-table-foot {
   padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
   border-top: 1px solid var(--rule);
@@ -837,7 +851,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--accent-wash);
   border-radius: var(--radius);
   padding: .6rem .9rem;
-  max-width: 46rem;
   font-size: .95rem;
 }
 
@@ -907,7 +920,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: var(--radius);
   padding: 1rem 1.2rem;
   max-width: 48rem;
-  background: var(--bg-sunk);
+  background: var(--bg-card);
 }
 .method-note h2 {
   margin-top: 0;
@@ -1232,7 +1245,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    the meaning, so colour is never the only signal. Geometry from _dumbbell(). */
 .imp-viz {
   margin: 1rem 0 1.6rem;
-  background: var(--bg);
+  background: var(--bg-card);
   border: 1px solid var(--rule);
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
@@ -1431,10 +1444,13 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   transition: background .15s ease, border-color .15s ease, color .15s ease;
 }
 .persona-btn-ava { width: 2rem; height: 2rem; border-radius: 50%; object-fit: cover; object-position: center 12%; flex: none; }
-/* Active + focused button (enumerated for the two personas). */
-#persona-grace:checked ~ .persona-tabs label[for="persona-grace"],
+/* Active + focused button, in that persona's own colour (enumerated, because
+   there are exactly two personas and CSS cannot read the name). */
+#persona-grace:checked ~ .persona-tabs label[for="persona-grace"] {
+  background: var(--persona-a); border-color: var(--persona-a); color: #fff;
+}
 #persona-daniel:checked ~ .persona-tabs label[for="persona-daniel"] {
-  background: var(--accent); border-color: var(--accent); color: var(--accent-ink);
+  background: var(--persona-b); border-color: var(--persona-b); color: #fff;
 }
 #persona-grace:focus-visible ~ .persona-tabs label[for="persona-grace"],
 #persona-daniel:focus-visible ~ .persona-tabs label[for="persona-daniel"] {
@@ -1445,80 +1461,114 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .persona-panel { display: none; }
 #persona-grace:checked ~ .persona-panels #ppanel-grace,
 #persona-daniel:checked ~ .persona-panels #ppanel-daniel { display: block; }
-/* Persona card, rebuilt from the persona sheet: a coloured board holding white
-   boxes in three columns (identity | bio/personality/pains | goals/needs/...). */
+
+/* Each panel sets its own accent once; everything inside the card -- the top
+   edge, the identity banner, the box headings, the bars and the slider dots --
+   reads it from here, so a persona is recoloured by changing two values. */
+#ppanel-grace  { --pc-accent: var(--persona-a); --pc-wash: var(--persona-a-wash); }
+#ppanel-daniel { --pc-accent: var(--persona-b); --pc-wash: var(--persona-b-wash); }
+
+/* Persona card: a white board carrying washed boxes, lifted off the page by a
+   solid accent top edge and a deeper shadow. */
 .persona-panel.pcard {
-  border: 1px solid var(--rule); border-radius: var(--radius-lg); background: var(--bg-sunk);
-  padding: 1rem; box-shadow: var(--shadow-md);
+  border: 1px solid var(--rule);
+  border-top: 5px solid var(--pc-accent);
+  border-radius: var(--radius-lg); background: var(--bg-card);
+  padding: .85rem; box-shadow: var(--shadow-lg);
 }
-/* Identity banner across the top, then a two-column body. */
+/* Identity banner across the top, then the three-column body.
+   Everything from here down is deliberately dense: the whole point of a
+   persona card is to be taken in at once, so the card is tuned to fit a
+   laptop viewport in one look rather than to be scrolled through. */
 .pcard-banner {
-  display: flex; gap: 1.2rem; align-items: center;
-  background: var(--bg); border: 1px solid var(--rule); border-radius: var(--radius-md);
-  padding: 1.1rem 1.2rem; margin-bottom: 1rem;
+  display: flex; gap: 1rem; align-items: center;
+  background: var(--pc-wash); border: 1px solid var(--rule);
+  border-left: 4px solid var(--pc-accent); border-radius: var(--radius-md);
+  padding: .8rem 1rem; margin-bottom: .75rem;
 }
 .pcard-banner-photo {
-  width: 128px; height: 160px; flex: none;
+  width: 104px; height: 130px; flex: none;
   object-fit: cover; object-position: center 12%;
   border-radius: var(--radius-md); border: 1px solid var(--rule);
 }
 .pcard-identity { min-width: 0; }
-.pcard-role { margin: 0 0 .25rem; color: var(--ink-muted); font-size: .95rem; }
+.pcard-role { margin: 0 0 .2rem; color: var(--ink-muted); font-size: .9rem; line-height: 1.3; }
 .pcard-role strong { color: var(--ink); }
-.pcard-meta-line { margin: 0 0 .6rem; font-size: .84rem; color: var(--ink-muted); }
-/* All the fact boxes flow into as many ~19rem columns as the wide card allows,
-   so a whole persona reads across the screen instead of down it. Each box stays
-   intact (never split across a column break). */
-.pcard-body { columns: 19rem; column-gap: 1rem; }
-.pcard-body .pbox { break-inside: avoid; margin: 0 0 1rem; }
+.pcard-meta-line { margin: 0 0 .45rem; font-size: .82rem; line-height: 1.3; color: var(--ink-muted); }
+/* Three explicit columns, not a masonry flow: the persona sheet groups the
+   boxes deliberately (who they are | what they are trying to do | how they
+   work), and a `columns:` flow would reshuffle that grouping at every width.
+   The template supplies one .pcol per group, so the grouping is what wraps. */
+.pcard-body {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .75rem;
+  align-items: start;
+}
+@media (max-width: 64rem) { .pcard-body { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 40rem) { .pcard-body { grid-template-columns: 1fr; } }
+.pcard-body .pbox { margin: 0; }
 @media (max-width: 46rem) {
   .pcard-banner { flex-direction: column; text-align: center; }
 }
-.pcol { display: flex; flex-direction: column; gap: 1rem; min-width: 0; }
+.pcol { display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
 
 .pbox {
-  background: var(--bg); border: 1px solid var(--rule); border-radius: var(--radius-md);
-  padding: 1.05rem 1.15rem;
+  background: var(--pc-wash, var(--bg-sunk)); border: 1px solid var(--rule);
+  border-radius: var(--radius-md);
+  padding: .75rem .9rem;
 }
 .pbox h4 {
-  margin: 0 0 .55rem; font-size: .74rem; font-weight: 700; text-transform: uppercase;
-  letter-spacing: .06em; color: var(--accent);
+  margin: 0 0 .45rem; font-size: .72rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--pc-accent, var(--accent));
 }
-.pbox p { margin: 0; color: var(--ink-muted); }
+/* Body copy inside the card runs tighter than the site's 1.65 line-height:
+   these are short scannable facts, not prose to read line by line. */
+.pbox p { margin: 0; color: var(--ink-muted); font-size: .88rem; line-height: 1.45; }
 
-.pcard-name { font-family: var(--font-display); font-size: 1.5rem; margin: 0 0 .2rem; color: var(--ink); }
+.pcard-name { font-family: var(--font-display); font-size: 1.3rem; margin: 0 0 .15rem; color: var(--ink); }
 .pcard-quote {
-  margin: 0; padding: .55rem .85rem; border: 0; max-width: 64ch;
-  background: var(--accent-wash); border-radius: 10px;
-  font-style: italic; color: var(--ink); font-size: .9rem;
+  margin: 0; padding: .45rem .75rem; border: 0; max-width: 64ch;
+  background: var(--bg-card); border-radius: 10px;
+  font-style: italic; color: var(--ink); font-size: .85rem; line-height: 1.45;
 }
-.pcard-list { margin: 0; padding-left: 1.1rem; }
-.pcard-list li { margin-bottom: .3rem; font-size: .92rem; color: var(--ink-muted); }
+.pcard-list { margin: 0; padding-left: 1.05rem; }
+.pcard-list li {
+  margin-bottom: .22rem; font-size: .86rem; line-height: 1.4; color: var(--ink-muted);
+}
 
 /* Personality spectrums: labels on top (left / right justified), track below
    with a dot at the trait position -- fits comfortably in a narrow column. */
-.pcard-sliders { list-style: none; margin: 0; padding: 0; display: grid; gap: .7rem; }
+.pcard-sliders { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
 .pcard-slider {
-  display: grid; grid-template-columns: 1fr auto; gap: .2rem .5rem; align-items: baseline;
-  font-size: .8rem; color: var(--ink-muted);
+  display: grid; grid-template-columns: 1fr auto; gap: .15rem .5rem; align-items: baseline;
+  font-size: .75rem; line-height: 1.25; color: var(--ink-muted);
 }
 .pcard-slider-l { grid-column: 1; grid-row: 1; text-align: left; }
 .pcard-slider-r { grid-column: 2; grid-row: 1; text-align: right; }
 .pcard-track {
   grid-column: 1 / -1; grid-row: 2;
-  position: relative; height: 6px; border-radius: 999px; background: var(--bg-sunk);
+  position: relative; height: 6px; border-radius: 999px; background: var(--bg-card);
   border: 1px solid var(--rule);
 }
 .pcard-dot {
   position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%;
-  background: var(--accent); transform: translate(-50%, -50%); box-shadow: 0 1px 3px rgba(12,42,66,.3);
+  background: var(--pc-accent, var(--accent)); transform: translate(-50%, -50%);
+  box-shadow: 0 1px 3px rgba(12,42,66,.3);
 }
 
 /* Motivation / channel bars. */
-.pcard-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: .55rem; }
-.pcard-bar-label { display: block; font-size: .88rem; color: var(--ink); margin-bottom: .2rem; }
-.pcard-bar-track { display: block; height: 8px; border-radius: 999px; background: var(--bg-sunk); border: 1px solid var(--rule); overflow: hidden; }
-.pcard-bar-fill { display: block; height: 100%; background: var(--accent); border-radius: 999px; }
+.pcard-bars { list-style: none; margin: 0; padding: 0; display: grid; gap: .42rem; }
+/* Label beside the bar rather than stacked above it. A five-row block halves
+   in height, and the result reads as a ranked list -- which is what it is,
+   since the rows are ordered strongest first. */
+.pcard-bar {
+  display: grid; grid-template-columns: minmax(0, 1fr) 42%;
+  align-items: center; gap: .55rem;
+}
+.pcard-bar-label { font-size: .82rem; line-height: 1.3; color: var(--ink); }
+.pcard-bar-track { display: block; height: 8px; border-radius: 999px; background: var(--bg-card); border: 1px solid var(--rule); overflow: hidden; }
+.pcard-bar-fill { display: block; height: 100%; background: var(--pc-accent, var(--accent)); border-radius: 999px; }
 
 @media (prefers-reduced-motion: reduce) { .persona-btn { transition: none; } }
 
@@ -1528,7 +1578,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
 }
 .team-member {
-  border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--bg);
+  border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--bg-card);
   padding: 1.1rem 1.2rem; box-shadow: var(--shadow-md);
 }
 .team-member h3 { font-size: 1rem; margin: 0 0 .2rem; color: var(--accent); }
@@ -1538,7 +1588,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* 2A outcome verdict: one bold, defensible headline for the current selection. */
 .outcome-verdict {
   margin: 1.2rem 0 1.6rem;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--bg-deep) 100%);
+  background: var(--bg-deep);
   color: #ffffff; border-radius: var(--radius-lg); padding: 1.4rem 1.6rem;
   box-shadow: var(--shadow-lg);
 }
@@ -1563,32 +1613,44 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ov-verdict--muted { color: rgba(255, 255, 255, .85); font-size: .92rem; }
 .ov-note { margin: .9rem 0 0; font-size: .8rem; color: rgba(255, 255, 255, .75); }
 
-/* 2A regional summary as a vertical bar chart (VaxVision-style dashboard, but
-   coloured by whether each region clears the threshold). Pure CSS + data. */
+/* 3A result chart: a vertical bar chart in VaxVision's dashboard grammar
+   (fixed-width columns, a light card, value labels sat on the bars), recoloured
+   onto the shared ImmuAtlas tokens and type. Diverging around a zero line since
+   a coverage change can be a gain (up, accent) or a decline (down, outcome). */
 .vbar-chart {
-  margin: 1rem 0 1.2rem; padding: 1.4rem 1.2rem 0;
-  background: var(--bg-sunk); border: 1px solid var(--rule); border-radius: var(--radius-md);
+  margin: 1rem 0 1.6rem; padding: 1.2rem 1.3rem 1.4rem;
+  background: var(--bg-card); border: 1px solid var(--rule); border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
 }
-.vbar-plot { position: relative; height: 220px; }
-.vbar-cols { list-style: none; margin: 0; padding: 0; height: 100%; display: flex; gap: .7rem; align-items: flex-end; }
-.vbar-col { flex: 1 1 0; min-width: 0; height: 100%; display: flex; align-items: flex-end; justify-content: center; }
+.vbar-cap { margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted); max-width: 72ch; }
+.vbar-legend { display: flex; gap: 1.2rem; margin: 0 0 1rem; font-size: .78rem; color: var(--ink-muted); }
+.vbar-key { display: inline-flex; align-items: center; gap: .4rem; }
+.vbar-key::before { content: ""; width: .9rem; height: .6rem; border-radius: 2px; }
+.vbar-key--up::before { background: var(--accent); }
+.vbar-key--down::before { background: var(--outcome); }
+.vbar-scroll { overflow-x: auto; padding: 1.6rem 0; }
+.vbar-plot { position: relative; height: 17.5rem; }
+.vbar-zero { position: absolute; left: 0; right: 0; border-top: 1px solid var(--ink-muted); opacity: .45; z-index: 1; }
+.vbar-cols { list-style: none; margin: 0; padding: 0; position: relative; height: 100%; display: flex; gap: .6rem; }
+.vbar-col { flex: 1 0 3.6rem; position: relative; height: 100%; }
 .vbar-fill {
-  position: relative; width: min(3.2rem, 90%); border-radius: 8px 8px 0 0; min-height: 3px;
+  position: absolute; left: 50%; transform: translateX(-50%);
+  width: min(2.4rem, 100%); min-height: 3px;
 }
-.vbar-fill.is-met { background: var(--accent); }
-.vbar-fill.is-below { background: var(--outcome); }
+.vbar-fill.is-up   { background: var(--accent);  border-radius: 6px 6px 2px 2px; }
+.vbar-fill.is-down { background: var(--outcome); border-radius: 2px 2px 6px 6px; }
 .vbar-val {
-  position: absolute; top: -1.25rem; left: 50%; transform: translateX(-50%);
-  font-size: .74rem; font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap;
+  position: absolute; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-display); font-size: .78rem; font-weight: 700;
+  color: var(--ink); font-variant-numeric: tabular-nums; white-space: nowrap;
 }
-.vbar-nodata { margin: auto auto 0; font-size: .72rem; color: var(--ink-muted); }
-.vbar-threshold { position: absolute; left: 0; right: 0; border-top: 2px dashed var(--accent-strong); z-index: 1; }
-.vbar-threshold span {
-  position: absolute; right: 0; top: -1.05rem; font-size: .7rem; font-weight: 700;
-  color: var(--accent-strong); background: var(--bg-sunk); padding: 0 .3rem;
+.vbar-fill.is-up .vbar-val   { top: -1.35rem; }
+.vbar-fill.is-down .vbar-val { bottom: -1.35rem; }
+.vbar-names { list-style: none; margin: .7rem 0 0; padding: 0; display: flex; gap: .6rem; }
+.vbar-names li {
+  flex: 1 0 3.6rem; min-width: 0; text-align: center;
+  font-size: .76rem; color: var(--ink-muted); overflow-wrap: anywhere;
 }
-.vbar-names { list-style: none; margin: .55rem 0 0; padding: 0; display: flex; gap: .7rem; }
-.vbar-names li { flex: 1 1 0; min-width: 0; text-align: center; font-size: .76rem; color: var(--ink-muted); overflow-wrap: anywhere; }
 
 /* 2A country table footer + pager (server-side pagination, GET links, no JS). */
 .vx-table-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
@@ -1641,33 +1703,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .delta-num { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .delta-num.up   { color: var(--accent-strong); }
 .delta-num.down { color: var(--outcome); }
-
-/* 3A slope chart: each country is a line from its start-year coverage (left
-   axis) to its end-year coverage (right axis). An upward slope reads instantly
-   as improvement; colour, the +/- gain label and the table all carry it too. */
-.slope-viz {
-  margin: 1rem 0 1.6rem; background: var(--bg);
-  border: 1px solid var(--rule); border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-md); padding: 1.2rem 1.3rem 1.4rem;
-}
-.slope-cap { margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted); max-width: 72ch; }
-.slope-legend { display: flex; gap: 1.2rem; margin: 0 0 .6rem; font-size: .78rem; color: var(--ink-muted); }
-.slope-key { display: inline-flex; align-items: center; gap: .4rem; }
-.slope-key::before { content: ""; width: 1.1rem; height: 3px; border-radius: 2px; }
-.slope-key--up::before { background: var(--accent); }
-.slope-key--down::before { background: var(--outcome); }
-.slope-scroll { overflow-x: auto; }
-.slope-svg { width: 100%; min-width: 34rem; height: auto; display: block; font-family: var(--font-body); }
-.slope-grid { stroke: var(--rule); stroke-width: 1; }
-.slope-axis { stroke: var(--rule); stroke-width: 1.5; }
-.slope-year { fill: var(--ink-muted); font-size: 13px; font-weight: 700; }
-.slope-line { fill: none; stroke-width: 2.5; }
-.slope-item.up   .slope-line, .slope-item.up   .slope-dot { stroke: var(--accent); fill: var(--accent); }
-.slope-item.down .slope-line, .slope-item.down .slope-dot { stroke: var(--outcome); fill: var(--outcome); }
-.slope-name { fill: var(--ink); font-size: 12px; }
-.slope-gain { font-size: 12px; font-weight: 700; font-variant-numeric: tabular-nums; }
-.slope-item.up   .slope-gain { fill: var(--accent-strong); }
-.slope-item.down .slope-gain { fill: var(--outcome); }
 
 /* 3A ranking table, redesigned: 8 columns collapsed to 5. Paired years live in
    one "start -> end" cell, the country carries its region as a muted sub-line,

@@ -1,6 +1,6 @@
 -- 1A landing page: the four facts.
 --
--- the project spec section 8 fixes the count at exactly four, and rule 7.2 says every
+-- The project spec fixes the count at exactly four, and requires that every
 -- number on the page comes from a query. Nothing here is typed into a template,
 -- so deleting year 2024 from the database moves the range and changes the
 -- figures. That is the mutation test.

@@ -53,7 +53,7 @@ def main():
     got = db.safe_order_by("; DROP TABLE x", {"rate": "cases_per_100k"}, "rate")
     results.append(report("rejects '; DROP TABLE x'", got, "cases_per_100k"))
 
-    print("\ndatabase figures (the project spec section 4)")
+    print("\ndatabase figures")
     try:
         db.connect().close()
     except db.DatabaseMissing as exc:
@@ -67,7 +67,7 @@ def main():
         except Exception as exc:
             results.append(report(label, "error: %s" % exc, expected))
 
-    print("\nv_infection.value_status (the project spec 4.3)")
+    print("\nv_infection.value_status")
     try:
         rows = db.query("SELECT value_status, COUNT(*) FROM v_infection GROUP BY 1")
         seen = {row[0]: row[1] for row in rows}

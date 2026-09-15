@@ -2,8 +2,8 @@
 -- ImmuAtlas - seed data
 --   research_source          8 verified sources
 --   user_group               2 groups from the research
---   persona                  Grace Achieng (complete), Daniel Nguyen (STUB)
---   team_member              2 (EDIT REQUIRED)
+--   persona                  Grace Achieng, Daniel Nguyen
+--   team_member              2
 --   herd_immunity_threshold  3, WHO position papers
 --
 -- Figures come from the team's source register, which records a second
@@ -33,9 +33,9 @@ DELETE FROM herd_immunity_threshold;
 -- =====================================================================
 
 INSERT INTO team_member (student_number, full_name, sub_task, responsibility, display_order) VALUES
-  ('sXXXXXXX', 'YOUR NAME HERE',     'A',
+  ('s4160446', 'TRAN NHAT DUY',  'A',
    'Landing page, vaccination rates by country and region, biggest improvement analysis', 1),
-  ('sYYYYYYY', 'TEAMMATE NAME HERE', 'B',
+  ('s4138996', 'TRAN MINH HUY', 'B',
    'Mission statement, infection data by economic status, above-average infection analysis', 2);
 
 
@@ -116,10 +116,13 @@ VALUES
 -- USER GROUPS
 -- =====================================================================
 
+-- The `name` is what prints on the persona card's meta line, so it carries the
+-- wording the team's persona sheets use; `description` keeps the research
+-- definition of the group behind it.
 INSERT INTO user_group (group_id, name, description) VALUES
- (1,'The General Public',
+ (1,'General Public',
   'Individuals and parents with no medical or data background who are making a personal health decision and want to check the situation for themselves.'),
- (2,'Evidence Intermediaries',
+ (2,'Health Communicators',
   'Professionals who must use public health data to inform other people - colleagues, committees, communities - but who are not data specialists and have neither the tools nor the access of a researcher. Includes immunisation programme officers, county and district health staff, health communicators, NGO advocacy officers and health journalists.');
 
 
@@ -135,103 +138,71 @@ VALUES
 (1, 2, 'Grace Achieng', 'The Accountable Advocate', 41,
  'Health Promotion and Immunisation Officer',
  'County Health Management Team - no informatics unit, no data analyst, no paid analytics tools',
- 'Kisumu County, Kenya',
+ 'Kisumu, Kenya',
  'MPH, Health Policy',
  '14 years in immunisation programmes',
- 'I need one number I can defend in a room - and I need to know how it was calculated before I put my name next to it.',
- 'Grace runs immunisation communication and reporting for her county. She is the person who has to stand in front of the county health committee and say which areas are falling behind, what is achievable, and what it would cost. She reads coverage figures fluently, but she writes no SQL, has no analyst to delegate to, and her office has no licence for any analytics platform. Her own county data tells her what her coverage is; it cannot tell her whether that is good. For that she needs to see how her country sits against the rest of the world, and which comparable countries have moved fastest. She was challenged in public once on a figure she could not explain, and has been careful ever since.',
+ 'I need one number I can defend in a room, and I need to know how it was calculated before I put my name next to it.',
+ 'Grace manages immunisation communication and reporting for a county health office in Kisumu, Kenya. She relies on credible data to explain performance and support public-health decisions, and needs figures that are transparent, well-supported and easy to defend.',
  'She is preparing a briefing for the county health committee next week, arguing for resources for the next measles campaign. She needs two things: where her country actually stands against the threshold needed to stop transmission, and which comparable countries have improved the fastest, so she can point to what is achievable rather than simply asking for money. She has about ten minutes before her next meeting.',
  'Within ten minutes, Grace leaves with one country-level coverage-gain figure, the method used to calculate it, the denominator it rests on, and a citation, ready to defend in a committee room.',
  'Her county figures would stay uncontextualised. She would know her own coverage but not whether it is good, and she would have no evidence of what other countries have achieved. The alternative is quoting a secondary figure from another organisation report that she cannot verify, and risking being challenged again.',
- 'static/img/persona-grace.jpg',
+ 'img/grace-photo.png',
  'EDIT: add photo credit and licence before submission',
- 'sXXXXXXX', 1);
+ 's4160446', 1);
 
+-- Goals, needs and pain points as they appear on the signed-off persona sheet.
+-- Where a study backs the claim it is still cited (evidence + source_id), so
+-- the research trail behind the sheet is not lost.
 INSERT INTO persona_goal (persona_id, goal, page_code, priority, source_id) VALUES
- (1,'Identify which countries achieved the largest coverage gain for a chosen antigen over a chosen period','3A',1,'S5'),
- (1,'See which regions still sit below the herd immunity threshold, and by how much','2A',2,'S5'),
- (1,'Understand which countries genuinely improved, rather than simply reported better','3A',3,'S2'),
- (1,'Know how each figure was calculated before quoting it anywhere','2A',4,'S4'),
- (1,'Confirm the scope and authority of the dataset before using anything from it','1A',5,'S6'),
- (1,'Leave with one figure plus a citation she can defend in a committee room',NULL,6,'S6');
+ (1,'Identify countries and regions with the greatest vaccination improvements.','3A',1,'S5'),
+ (1,'Confirm figures and calculations before presenting them to decision-makers.',NULL,2,'S4');
 
 INSERT INTO persona_need (persona_id, need, priority, source_id) VALUES
- (1,'Speed with an audit trail - both, not a trade-off between them',1,'S1'),
- (1,'The denominator stated, every time',2,'S2'),
- (1,'Published data limitations, not hidden ones',3,'S4'),
- (1,'A threshold beside every coverage figure, because her own county number means nothing without a benchmark',4,'S5'),
- (1,'Ranked, sorted output rather than a raw table, because she cannot compute a ranking herself',5,'S3'),
- (1,'To know which antigen figures are more reliable than others',6,'S2');
+ (1,'Visible calculation methods, stated denominators and published limitations.',1,'S2'),
+ (1,'Clear benchmarks, ranked results and citations attached to every figure.',2,'S5');
 
 INSERT INTO persona_pain (persona_id, pain_point, evidence, source_id) VALUES
- (1,'Will not quote a figure whose method she cannot see',
-    'Professionals distrusted figures they could not trace; the cause given was unfamiliarity with how they were produced. 23 participants across nine agencies. Note: the paper separates this from poor forecast accuracy, which is a distinct second cause.','S4'),
- (1,'Knows the coverage data is imperfect but cannot tell where',
-    'Anomalies in 47 percent of expected data points (26,390 of 55,836), involving all reporting countries but one.','S2'),
- (1,'Her own region data is among the least reliable in the series',
-    'Modelled probability of a data quality flag: Africa 23.2 percent against South-East Asia 6.3 percent. Her scepticism is regionally specific, not generic.','S2'),
- (1,'Her office has no analyst and no analytics licence, and staff carry competing priorities',
-    'Local health departments lack the computing power to run analysis internally and staff report competing priorities; resource constraints prevent skill-building even where there is appetite.','S4'),
- (1,'The tools that do exist do not say who they are for',
-    '85 percent of 210 federal and state public health dashboards fail to identify their intended users; only 9 percent provide a user manual; only 11 percent support multivariate analysis.','S3'),
- (1,'Her audience discards anything long or unsourced',
-    'Policymakers spend on average 30 to 60 minutes reading about an issue, and pay attention to who authored a brief when deciding whether to accept its evidence.','S6');
+ (1,'Cannot confidently use a figure when its calculation method is unclear.',
+    'Professionals distrusted figures they could not trace; the cause given was unfamiliarity with how they were produced. 23 participants across nine agencies.','S4'),
+ (1,'Imperfect or missing data can make reported improvements difficult to trust.',
+    'Anomalies in 47 percent of expected data points (26,390 of 55,836), involving all reporting countries but one.','S2');
 
-INSERT INTO persona_attribute (persona_id, category, label, value, anchor_note, source_id, display_order) VALUES
- (1,'profile','Data literacy (low to high)',85,
-   'In this sample epidemiologists were a minority of professionals doing data-driven work, and the paper states that interpreting data is not the core task of nurses or policy officers.','S1',1),
- (1,'profile','Time pressure (low to high)',88,
+-- 'personality' axes run between two opposing words: `label` is the left
+-- anchor at 0, `label_right` the right anchor at 100, and `value` is where
+-- this persona sits. 'motivation' and 'source_used' are one-ended, so
+-- label_right stays NULL and the bar simply fills to `value`.
+INSERT INTO persona_attribute (persona_id, category, label, label_right, value, anchor_note, source_id, display_order) VALUES
+ (1,'personality','Analytical','Intuitive',22,NULL,'S1',1),
+ (1,'personality','Cautious','Risk-taking',58,NULL,'S4',2),
+ (1,'personality','Independent','Team-oriented',28,NULL,NULL,3),
+ (1,'personality','Methodical','Spontaneous',42,NULL,NULL,4),
+ (1,'personality','Accountable','Flexible',35,NULL,'S6',5),
+
+ -- display_order ranks these strongest first, so the card reads as an order.
+ (1,'motivation','Credible Communication',NULL,90,NULL,'S6',1),
+ (1,'motivation','Time Efficiency',NULL,72,
    'Participation in data work was influenced by role, interest, workload, time, knowledge and willingness to change.','S1',2),
- (1,'profile','Trust threshold (low to high)',92,
-   'One component of distrust was unfamiliarity with how figures were produced, which design can address by printing the method.','S4',3),
- (1,'profile','Depth needed (Level 1 to Level 3)',95,
-   'Graded entry - short interpretation first, detail underneath - was associated with higher clarity and accessibility.','S6',4),
+ (1,'motivation','Public Health Impact',NULL,40,NULL,NULL,3),
+ (1,'motivation','Evidence-Based Decisions',NULL,20,NULL,'S4',4),
+ (1,'motivation','Professional Accountability',NULL,16,NULL,'S6',5),
 
- (1,'source_used','WHO and UNICEF coverage estimates',90,NULL,'S2',1),
- (1,'source_used','Internal county and national programme reporting',78,
-   'County Health Management Teams report basing budgeting and planning on routine data.','S8',2),
- (1,'source_used','Institutional reports and policy briefs',74,NULL,'S6',3),
- (1,'source_used','Public health dashboards and data portals',60,NULL,'S3',4),
- (1,'source_used','Academic literature',35,NULL,NULL,5),
-
- (1,'trust_criterion','Named data source shown on the page',96,'Policymakers pay attention to authorship when accepting evidence.','S6',1),
- (1,'trust_criterion','The calculation method stated openly',94,NULL,'S4',2),
- (1,'trust_criterion','Data limitations published rather than hidden',90,NULL,'S2',3),
- (1,'trust_criterion','Denominator, year and antigen labelled on every column',88,
-   'Denominators were the least reliable element: 91 percent (12,568 of 13,744) returned abnormal data-quality checks.','S2',4),
- (1,'trust_criterion','A benchmark or threshold shown beside the figure',80,NULL,'S5',5);
+ (1,'source_used','Data Dashboards',NULL,75,NULL,'S3',1),
+ (1,'source_used','Professional Email',NULL,68,NULL,NULL,2),
+ (1,'source_used','Social Media',NULL,30,NULL,NULL,3),
+ (1,'source_used','Research & Reports',NULL,16,NULL,'S6',4),
+ (1,'source_used','Official Health Websites',NULL,12,NULL,'S2',5);
 
 INSERT INTO persona_note (persona_id, category, note, source_id, display_order) VALUES
- (1,'tag','EVIDENCE-LED',NULL,1),
- (1,'tag','TIME-POOR',NULL,2),
- (1,'tag','NO-CODE',NULL,3),
- (1,'tag','PUBLICLY ACCOUNTABLE',NULL,4),
-
- (1,'skill_tag','TECH: ADVANCED',NULL,1),
- (1,'skill_tag','DATA LITERATE',NULL,2),
- (1,'skill_tag','NO SQL',NULL,3),
- (1,'skill_tag','NO PYTHON',NULL,4),
- (1,'skill_tag','READS FOOTNOTES',NULL,5),
-
- (1,'behaviour','Comfortable with rates, denominators, time series and methodology notes; works in Excel, not in code.','S1',1),
- (1,'behaviour','Arrives knowing roughly what she wants and skips introductory content.','S1',2),
- (1,'behaviour','Reads the footnote before the chart.','S4',3),
- (1,'behaviour','Copies figures into a document with the source beside them.','S6',4),
- (1,'behaviour','Checks a suspicious figure against a second source before using it, and abandons a tool that makes that impossible.','S4',5),
-
- (1,'anti_goal','A visually impressive dashboard with no methodology note.','S4',1),
- (1,'anti_goal','An onboarding tour - she knows what she wants; make Level 3 reachable from the nav bar.','S1',2),
- (1,'anti_goal','Creating an account or downloading a file before seeing a number.','S3',3),
- (1,'anti_goal','Data presented as advocacy - she writes the advocacy; she needs the source neutral.','S6',4);
+ (1,'skill_tag','14 years of experience in immunisation programmes.',NULL,1),
+ (1,'skill_tag','Confident interpreting coverage rates, denominators and time series.','S1',2),
+ (1,'skill_tag','Experienced with Excel but does not use SQL or Python.','S1',3);
 
 
 -- =====================================================================
--- PERSONA 2  DANIEL NGUYEN   (Sub-Task B)      <<< STUB, TEAMMATE FILLS
+-- PERSONA 2  DANIEL NGUYEN   (Sub-Task B)
 --
--- Group 1, The General Public. The group-level needs, goals and pain
--- points below are already established in the team's persona sheet
--- Part 1 and are safe to keep. Everything marked EDIT is the
--- teammate's to supply, and every row still needs a source_id.
+-- Group 1, the general public. Content follows the team's persona sheet;
+-- what is still outstanding is the citation trail, not the copy.
 --
 -- Sources available for Group 1:
 --   Harmsen, I.A. et al. (2013) BMC Public Health 13:1219
@@ -245,40 +216,70 @@ INSERT INTO persona
   education, experience, quote, bio, trigger_context, success_criterion,
   counterfactual, image_path, image_credit, owner_student, display_order)
 VALUES
-(2, 1, 'Daniel Nguyen', 'EDIT: archetype', NULL,
- 'EDIT: role', 'EDIT: organisation or household', 'EDIT: location',
- 'EDIT: education', 'EDIT: experience',
- 'EDIT: quote',
- 'EDIT: bio',
- 'EDIT: what brings him to the site today - the trigger. Note: teammate feedback recorded in next-steps.md says this was missing and that the persona reads too idealised.',
- 'EDIT: what success looks like for him',
- 'EDIT: what happens if this site does not exist',
- 'static/img/persona-daniel.jpg',
- 'EDIT: photo credit and licence',
- 'sYYYYYYY', 2);
+(2, 1, 'Daniel Nguyen', 'The Curious Checker', 46,
+ 'Operations Coordinator', 'Household - general public', 'Melbourne, Australia',
+ 'Diploma-level; comfortable online but not a data specialist',
+ 'No formal background in public health or statistics',
+ 'I don''t need to be a health expert. I just want enough reliable evidence to understand what the numbers actually mean.',
+ 'Daniel is interested in understanding vaccination and preventable-disease trends. He checks reliable evidence and compares information before forming his own opinion, and prefers trustworthy sources with clear explanations of health data.',
+ 'A news headline or a conversation with a friend raises a question about whether a disease is coming back, or whether vaccination rates are falling in his own country. He wants to check it himself rather than take either side''s word for it.',
+ 'Within a few minutes, Daniel finds a plain-language answer backed by a real figure, understands roughly what the number means, and has a link he trusts enough to share.',
+ 'He falls back on the first search result or a social media post, with no way to judge whether it is accurate, dated or cherry-picked.',
+ 'img/daniel-photo.png',
+ 'Add photo credit and licence before submission',
+ 's4138996', 2);
 
--- Group-level content, already research-backed. Keep or refine.
+-- Goals, needs and pain points from the signed-off persona sheet. Group 1's
+-- sources (Harmsen 2013; Frontiers in Public Health 2025) are not in
+-- research_source yet, so these carry no source_id until the teammate adds
+-- them as S9/S10 and says which claim rests on which paper.
 INSERT INTO persona_goal (persona_id, goal, page_code, priority, source_id) VALUES
- (2,'Establish whether a disease is genuinely increasing, from a source more reliable than social media','1A',1,NULL),
- (2,'Find out whether his own country coverage is high enough to stop transmission','2A',2,NULL),
- (2,'Leave with a single link he is willing to send to other people','1A',3,NULL);
+ (2,'Understand how vaccination and infection rates change over time.','1A',1,NULL),
+ (2,'Compare countries and economic groups using reliable evidence.','2B',2,NULL);
 
 INSERT INTO persona_need (persona_id, need, priority, source_id) VALUES
- (2,'Vaccination information in plain language before any figure is shown',1,NULL),
- (2,'Visible provenance, so he can judge whether to trust what he is reading',2,NULL),
- (2,'A benchmark beside every number, since a percentage on its own carries no meaning for him',3,NULL),
- (2,'A first screen that reads on a phone',4,NULL);
+ (2,'Reliable evidence with clear context about countries, years and rates.',1,NULL),
+ (2,'Easy comparison and independent exploration to answer his own questions.',2,NULL);
 
--- NOTE: persona_pain.source_id is NOT NULL by design. These rows will
--- FAIL to insert until the teammate supplies the source for each one.
--- That is deliberate - the checklist requires every pain point to trace
--- to a study. Uncomment and fill source_id to insert them.
+INSERT INTO persona_pain (persona_id, pain_point, evidence, source_id) VALUES
+ (2,'Health statistics can be difficult to interpret without context.',NULL,NULL),
+ (2,'Online health information can vary in reliability.',NULL,NULL);
+
+-- Further pain points drawn from the Group 1 literature, held back until the
+-- teammate adds S9/S10 to research_source and confirms which paper supports
+-- which claim. Uncomment once the evidence column can be filled in honestly.
 --
 -- INSERT INTO persona_pain (persona_id, pain_point, evidence, source_id) VALUES
 --  (2,'Cannot tell which search results are trustworthy','EDIT','S9'),
 --  (2,'The safety information he wants exists in official material but he cannot find it','EDIT','S9'),
 --  (2,'Dense data pages lose him','EDIT','S3'),
 --  (2,'Anything that reads as persuasion makes him disengage','EDIT','S9');
+
+-- Same shape as Grace's: two-ended personality axes, then one-ended
+-- motivation and channel bars.
+INSERT INTO persona_attribute (persona_id, category, label, label_right, value, anchor_note, source_id, display_order) VALUES
+ (2,'personality','Analytical','Intuitive',20,NULL,NULL,1),
+ (2,'personality','Cautious','Risk-taking',52,NULL,NULL,2),
+ (2,'personality','Independent','Team-oriented',35,NULL,NULL,3),
+ (2,'personality','Patient','Impatient',55,NULL,NULL,4),
+ (2,'personality','Fact-driven','Emotion-driven',30,NULL,NULL,5),
+
+ (2,'motivation','Helping Family & Community',NULL,72,NULL,NULL,1),
+ (2,'motivation','Personal Curiosity',NULL,68,NULL,NULL,2),
+ (2,'motivation','Staying Updated',NULL,40,NULL,NULL,3),
+ (2,'motivation','Making Informed Decisions',NULL,30,NULL,NULL,4),
+ (2,'motivation','Understanding & Learning',NULL,15,NULL,NULL,5),
+
+ (2,'source_used','News & Online Articles',NULL,72,NULL,NULL,1),
+ (2,'source_used','Email Newsletters',NULL,68,NULL,NULL,2),
+ (2,'source_used','Social Media',NULL,45,NULL,NULL,3),
+ (2,'source_used','Search Engines',NULL,20,NULL,NULL,4),
+ (2,'source_used','Websites',NULL,10,NULL,NULL,5);
+
+INSERT INTO persona_note (persona_id, category, note, source_id, display_order) VALUES
+ (2,'skill_tag','Comfortable using websites and search engines.',NULL,1),
+ (2,'skill_tag','Understands basic rates, percentages and comparisons.',NULL,2),
+ (2,'skill_tag','Can evaluate information from different sources.',NULL,3);
 
 
 -- =====================================================================

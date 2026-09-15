@@ -24,7 +24,10 @@ SITE_TAGLINE = "Investigating preventable infectious diseases"
 SOURCE_NAME = "World Health Organization Immunization Data"
 SOURCE_URL = "https://immunizationdata.who.int/"
 
-# Social links for the footer. Empty on purpose: this project has no accounts,
-# and a footer full of links that go nowhere is worse than a footer without
-# them. Add real ones here as ("Label", "https://...") and the block fills in.
-SOCIAL_LINKS = []
+# Links for the footer, as ("Label", "https://..."). No social accounts exist
+# for this project, and a footer full of links that go nowhere is worse than a
+# footer without them -- so this holds only the one link that does go
+# somewhere: the source for the site itself.
+SOCIAL_LINKS = [
+    ("Project repository", "https://github.com/trannhatduy101-del/ImmuAtlas"),
+]
