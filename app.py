@@ -47,7 +47,7 @@ def create_app():
 
     @app.context_processor
     def inject_shell():
-        """Everything base.html and the unbuilt component need, in one place.
+        """Everything base.html needs, in one place.
 
         Deriving task / page_title / owner from NAV means the nav bar and the
         page heading can never disagree, and adding a page is a one-line change

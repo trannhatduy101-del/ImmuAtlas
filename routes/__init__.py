@@ -46,6 +46,5 @@ ALL_PAGES = [
     ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", True),
 ]
 
-# Kept under the old name so the unbuilt-page component and any existing import
-# keep working.
+# Kept under the old name so existing imports keep working.
 NAV = ALL_PAGES
