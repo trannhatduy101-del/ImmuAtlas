@@ -6,6 +6,7 @@ data. Flask app backed by SQLite; no JavaScript framework, no build step.
 ## Prerequisites
 
 - Python 3.10+
+- Bash, to run `rebuild_db.sh` (Git Bash, WSL, or any Unix shell)
 
 ## Setup
 
@@ -27,18 +28,13 @@ pip install -r requirements.txt
 views and seed data applied on top. Rebuild it any time `sql/` changes.
 
 ```bash
-cp immunisation2.db immuatlas.db
-sqlite3 immuatlas.db < sql/schema_immuatlas.sql
-sqlite3 immuatlas.db < sql/seed_immuatlas.sql
-sqlite3 immuatlas.db < sql/data_source_who.sql
+./rebuild_db.sh
 ```
 
-The three scripts must run in that order, and each is safe to re-run.
-Without the `sqlite3` CLI, Python's built-in module does the same job:
-
-```bash
-python -c "import sqlite3, shutil; shutil.copy('immunisation2.db', 'immuatlas.db'); c = sqlite3.connect('immuatlas.db'); [c.executescript(open(f, encoding='utf-8').read()) for f in ('sql/schema_immuatlas.sql', 'sql/seed_immuatlas.sql', 'sql/data_source_who.sql')]; c.commit()"
-```
+The script applies `sql/schema_immuatlas.sql`, `sql/seed_immuatlas.sql`
+and `sql/data_source_who.sql` in that order — the order matters — and
+uses Python's `sqlite3` module, so no `sqlite3` CLI is needed. It needs
+Bash (Git Bash, WSL, or any Unix shell).
 
 ## Run
 
@@ -60,6 +56,7 @@ queries/        one .sql file per named query, loaded by db.load_query()
 sql/            schema, seed, and provenance scripts
 templates/      Jinja templates (base layout + one file per page)
 static/         CSS, fonts and images
+rebuild_db.sh   rebuilds immuatlas.db from immunisation2.db + sql/
 ```
 
 ## Pages
