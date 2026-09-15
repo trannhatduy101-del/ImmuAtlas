@@ -16,8 +16,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-# Local editor/tooling caches. Never part of the app, and never committed --
-# listed here rather than only in .git/info/exclude, which is local to one clone.
 
 # Local reference material and one-off exports (not part of the app)
 /Personas.pdf
