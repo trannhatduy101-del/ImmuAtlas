@@ -1036,6 +1036,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   height: 100%;
   object-fit: contain;
   object-position: center;
+  image-rendering: auto;
+  backface-visibility: hidden;
+  transform: translateZ(0);
 }
 
 
@@ -1296,7 +1299,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   align-items: center;
   gap: .7rem;
   margin: 0 auto 1rem;
-  width: min(100%, 56rem);
+  width: min(100%, 65rem);
 }
 
 
@@ -1419,6 +1422,190 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 
 /* Mobile */
+@media (max-width: 42rem) {
+
+  .persona-selector {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .persona-selector-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .persona-image-stage {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+  }
+}
+/* ==========================================================================
+   1B HOW TO USE
+   ========================================================================== */
+
+.how-to-intro {
+  margin: 0 0 1.2rem;
+  color: var(--ink-muted);
+  max-width: 46rem;
+}
+
+.how-to-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+  margin-top: 1.2rem;
+}
+
+.how-to-card {
+  position: relative;
+  min-height: 10rem;
+  padding: 1.2rem 1.2rem 1.1rem;
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+
+.how-to-number {
+  display: block;
+  margin-bottom: .8rem;
+  color: var(--accent);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .1em;
+}
+
+.how-to-card h3 {
+  margin-bottom: .45rem;
+  font-size: 1rem;
+}
+
+.how-to-card p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: .9rem;
+  line-height: 1.55;
+}
+
+.how-to-tip {
+  margin: 1.1rem 0 0;
+  padding: .8rem 1rem;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-sunk);
+  color: var(--ink-muted);
+  font-size: .88rem;
+}
+
+.how-to-tip strong {
+  color: var(--ink);
+}
+
+@media (max-width: 42rem) {
+  .how-to-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .how-to-card {
+    min-height: auto;
+  }
+}
+/* ==========================================================================
+   1B PERSONA - FINAL LAYOUT
+   ========================================================================== */
+
+.persona-showcase {
+  max-width: 58rem;
+  margin: 0 auto;
+}
+
+.persona-selector {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: .7rem;
+  margin: 0 auto 1rem;
+  width: min(100%, 65rem);
+}
+
+.persona-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+  min-height: 2.7rem;
+  padding: .55rem .95rem;
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--ink);
+  font-size: .86rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    color .2s ease,
+    transform .2s ease;
+}
+
+.persona-selector-button:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+#persona-1:checked ~ .persona-selector label[for="persona-1"],
+#persona-2:checked ~ .persona-selector label[for="persona-2"] {
+  border-color: var(--accent);
+  background: var(--accent-lift);
+  color: var(--accent);
+}
+
+.persona-number {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+
+.persona-image-stage {
+  position: relative;
+  width: min(100%, 60rem);
+  margin: 0 auto;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow:
+    0 2px 5px rgba(22, 25, 29, .06),
+    0 14px 35px rgba(22, 25, 29, .10);
+}
+
+.persona-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+.persona-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateX(3rem);
+  transition:
+    opacity .55s ease,
+    transform .55s ease;
+  pointer-events: none;
+}
+
+#persona-1:checked ~ .persona-image-stage .persona-slide-1,
+#persona-2:checked ~ .persona-image-stage .persona-slide-2 {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
 @media (max-width: 42rem) {
 
   .persona-selector {

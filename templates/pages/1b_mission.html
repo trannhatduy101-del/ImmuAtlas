@@ -3,47 +3,85 @@
 {% block title %}Mission &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
-  <p class="mission-eyebrow">OUR PURPOSE</p>
   <h1 class="hero-title">Mission</h1>
   <p class="hero-sub">
-    Connecting people with reliable vaccination and infectious disease information.
+    Who this site is for, and what each of them needs from it.
   </p>
 {% endblock %}
 
 {% block main %}
 
-<section class="mission-intro">
-  <div class="mission-intro-content">
-    <p class="section-eyebrow">OUR MISSION</p>
+<section class="mission-section">
+  <h2>Our Mission</h2>
 
-    <h2>Making health data easier to understand.</h2>
-
-    <p>
-      ImmuAtlas helps the public explore reliable information about
-      vaccination and preventable infectious diseases.
-    </p>
-
-    <p>
-      Our goal is to make health data clearer, easier to compare,
-      and more useful for informed understanding.
-    </p>
-  </div>
+  <p>
+    ImmuAtlas helps the public explore reliable information about
+    vaccination and preventable infectious diseases.
+  </p>
 </section>
 
 
-<section class="mission-personas">
+<!-- ==========================================================================
+     HOW TO USE IMMUTLAS
+     ========================================================================== -->
 
-  <div class="persona-heading">
-    <p class="section-eyebrow">WHO WE SERVE</p>
+<section class="mission-section">
+  <h2>How to Use ImmuAtlas</h2>
 
-    <h2>Designed for people who use health information.</h2>
+  <p class="how-to-intro">
+    Explore immunisation data in three simple steps.
+  </p>
 
-    <p>
-      ImmuAtlas supports different users who need trustworthy,
-      understandable evidence to explore vaccination and infection trends.
-    </p>
+  <div class="how-to-grid">
+
+    <article class="how-to-card">
+      <span class="how-to-number">01</span>
+
+      <h3>Choose a View</h3>
+
+      <p>
+        Select a data page based on the question you want to explore.
+      </p>
+    </article>
+
+
+    <article class="how-to-card">
+      <span class="how-to-number">02</span>
+
+      <h3>Apply Filters</h3>
+
+      <p>
+        Select relevant years, countries, infection types or economic groups.
+      </p>
+    </article>
+
+
+    <article class="how-to-card">
+      <span class="how-to-number">03</span>
+
+      <h3>Explore &amp; Compare</h3>
+
+      <p>
+        Review the results, rates and summaries to identify useful patterns.
+      </p>
+    </article>
+
   </div>
 
+  <p class="how-to-tip">
+    <strong>Tip:</strong>
+    Start with the data pages to explore vaccination and infection
+    information at different levels of detail.
+  </p>
+</section>
+
+
+<!-- ==========================================================================
+     WHO WE SERVE
+     ========================================================================== -->
+
+<section class="mission-section">
+  <h2>Who We Serve</h2>
 
   <div class="persona-showcase">
 
@@ -58,7 +96,6 @@
       >
 
     {% endfor %}
-
 
     <!-- PERSONA SELECTOR -->
     <div class="persona-selector">
@@ -76,7 +113,6 @@
       {% endfor %}
 
     </div>
-
 
     <!-- PERSONA IMAGE -->
     <div class="persona-image-stage">
@@ -97,52 +133,35 @@
     </div>
 
   </div>
+</section>
 
 </section>
 
 
-<section class="mission-team">
+<!-- ==========================================================================
+     OUR TEAM
+     ========================================================================== -->
 
-  <div class="persona-heading">
-    <p class="section-eyebrow">OUR TEAM</p>
-
-    <h2>The people behind ImmuAtlas.</h2>
-  </div>
+<section class="mission-section">
+  <h2>Our Team</h2>
 
   <div class="team-list">
 
     {% for member in team_members %}
+    <div class="team-member">
 
-      <article class="team-member">
+      <h3>{{ member["full_name"] }}</h3>
 
-        <div class="team-member-number">
-          0{{ loop.index }}
-        </div>
+      <p>{{ member["student_number"] }}</p>
 
-        <div class="team-member-content">
+      <p>{{ member["sub_task"] }}</p>
 
-          <h3>{{ member["full_name"] }}</h3>
+      <p>{{ member["responsibility"] }}</p>
 
-          <p class="team-student-number">
-            {{ member["student_number"] }}
-          </p>
-
-          <p class="team-role">
-            Sub-Task {{ member["sub_task"] }}
-          </p>
-
-          <p>
-            {{ member["responsibility"] }}
-          </p>
-
-        </div>
-
-      </article>
-
+    </div>
     {% endfor %}
 
   </div>
-
 </section>
 
-{% endblock %}
+{% endblock %} 
