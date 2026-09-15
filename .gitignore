@@ -16,7 +16,6 @@ Thumbs.db
 .vscode/
 .idea/
 
-
 # Local reference material and one-off exports (not part of the app)
 /Personas.pdf
 /improvement_*.csv
