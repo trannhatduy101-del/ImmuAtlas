@@ -27,24 +27,27 @@
   {# All controls on one line, like a search bar. #}
   <div class="filter-bar">
     <div class="field">
-      <label for="f-antigen">Antigen</label>
-      <select id="f-antigen" name="antigen">
+      <label for="f-antigen">Antigen <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-antigen" name="antigen" required>
+        <option value="">Select an antigen</option>
         {% for a in antigens %}
           <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>{{ a.antigen_name }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="field">
-      <label for="f-start">Start year</label>
-      <select id="f-start" name="start">
+      <label for="f-start">Start year <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-start" name="start" required>
+        <option value="">Select a year</option>
         {% for y in years %}
           <option value="{{ y.year }}" {% if y.year == start_year %}selected{% endif %}>{{ y.year }}</option>
         {% endfor %}
       </select>
     </div>
     <div class="field">
-      <label for="f-end">End year</label>
-      <select id="f-end" name="end">
+      <label for="f-end">End year <span class="req" aria-hidden="true">*</span></label>
+      <select id="f-end" name="end" required>
+        <option value="">Select a year</option>
         {% for y in years %}
           <option value="{{ y.year }}" {% if y.year == end_year %}selected{% endif %}>{{ y.year }}</option>
         {% endfor %}
@@ -71,6 +74,7 @@
       <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
     </div>
   </div>
+  <p class="filter-note">Fields marked <span class="req">*</span> are required &mdash; pick an antigen and both years to rank.</p>
 </form>
 
 {% if not submitted %}
@@ -147,56 +151,46 @@
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
 
-  {# ---- Ranked bar chart (the result as one readable picture): each country is
-         a bar on the coverage scale. The pale part is the {{start_year}} level;
-         the solid part is the change to {{end_year}}, so the longer the solid
-         bar, the bigger the improvement (a decline is drawn coral). Every figure
-         is printed beside its bar, and the full table + CSV carry everything, so
-         the chart is a reading aid rather than the only way to get a number. ---- #}
-  <figure class="imp-viz">
-    <figcaption class="imp-viz-cap">
-      Each bar sits on the coverage scale. The pale part is where the country was
-      in <strong>{{ start_year }}</strong>; the solid part is the change to
-      <strong>{{ end_year }}</strong> &mdash; the longer the solid bar, the bigger
-      the improvement.
+  {# ---- Slope chart: each country's coverage in the start year (left axis)
+         joined to its end year (right axis). An upward slope is an improvement,
+         the steeper the bigger; a downward line is a decline. The exact figures
+         live in the table + CSV below, so the chart is a reading aid. ---- #}
+  <figure class="slope-viz">
+    <figcaption class="slope-cap">
+      Each line is a country: it starts at its <strong>{{ start_year }}</strong> coverage on the left
+      and ends at its <strong>{{ end_year }}</strong> coverage on the right. The steeper the upward
+      slope, the bigger the improvement; a line sloping down is a decline.
     </figcaption>
-    <div class="imp-viz-legend" aria-hidden="true">
-      <span class="imp-viz-key imp-viz-key--base">{{ start_year }} level</span>
-      <span class="imp-viz-key imp-viz-key--gain">gain to {{ end_year }}</span>
-      <span class="imp-viz-key imp-viz-key--loss">decline</span>
+    <div class="slope-legend" aria-hidden="true">
+      <span class="slope-key slope-key--up">improved</span>
+      <span class="slope-key slope-key--down">declined</span>
     </div>
-    <div class="imp-viz-scale" aria-hidden="true">
-      <span></span>
-      <div class="imp-viz-ruler">
-        {% for k in range(0, 5) %}
-          <span class="imp-viz-tick" style="left: {{ k * 25 }}%">{{ (axis_max * k / 4) | round | int }}%</span>
+    <div class="slope-scroll">
+      {% set LX = 250 %}{% set RX = 690 %}{% set TOP = 28 %}{% set BOT = 410 %}{% set PH = 382 %}
+      <svg class="slope-svg" viewBox="0 0 820 452" role="img"
+           aria-label="Slope chart of reported coverage from {{ start_year }} to {{ end_year }} for the ranked countries.">
+        {% for g in [0, 50, 100] %}
+          {% set gy = (TOP + PH * (1 - g / 100)) | round(1) %}
+          <line class="slope-grid" x1="{{ LX }}" y1="{{ gy }}" x2="{{ RX }}" y2="{{ gy }}"/>
         {% endfor %}
-      </div>
+        <line class="slope-axis" x1="{{ LX }}" y1="{{ TOP }}" x2="{{ LX }}" y2="{{ BOT }}"/>
+        <line class="slope-axis" x1="{{ RX }}" y1="{{ TOP }}" x2="{{ RX }}" y2="{{ BOT }}"/>
+        <text class="slope-year" x="{{ LX }}" y="{{ BOT + 28 }}" text-anchor="middle">{{ start_year }}</text>
+        <text class="slope-year" x="{{ RX }}" y="{{ BOT + 28 }}" text-anchor="middle">{{ end_year }}</text>
+        {% for item in view %}
+          {% set r = item.row %}
+          {% set ys = (TOP + PH * (1 - item.p_start / 100)) | round(1) %}
+          {% set ye = (TOP + PH * (1 - item.p_end / 100)) | round(1) %}
+          <g class="slope-item {{ 'up' if item.up else 'down' }}">
+            <line class="slope-line" x1="{{ LX }}" y1="{{ ys }}" x2="{{ RX }}" y2="{{ ye }}"/>
+            <circle class="slope-dot" cx="{{ LX }}" cy="{{ ys }}" r="3.4"/>
+            <circle class="slope-dot" cx="{{ RX }}" cy="{{ ye }}" r="3.4"/>
+            <text class="slope-name" x="{{ LX - 12 }}" y="{{ ys + 4 }}" text-anchor="end">{{ r.country_name }}</text>
+            <text class="slope-gain" x="{{ RX + 12 }}" y="{{ ye + 4 }}" text-anchor="start">{{ '%+.1f'|format(r.coverage_change) }} pp</text>
+          </g>
+        {% endfor %}
+      </svg>
     </div>
-    <ol class="imp-ranks">
-      {% for item in view %}
-        {% set r = item.row %}
-        <li class="imp-rank {{ 'is-down' if not item.up }}">
-          <span class="imp-rank-n">{{ loop.index }}</span>
-          <div class="imp-rank-main">
-            <div class="imp-rank-head">
-              <span class="imp-rank-country">{{ r.country_name }}</span>
-              <span class="imp-rank-region">{{ r.region_name }}</span>
-            </div>
-            <div class="imp-rank-track" role="img"
-                 aria-label="{{ r.country_name }}: {{ fmt_pct(r.coverage_start) }} in {{ start_year }} rising to {{ fmt_pct(r.coverage_end) }} in {{ end_year }}, a change of {{ '%+.1f'|format(r.coverage_change) }} percentage points.">
-              <span class="imp-rank-base" style="width: {{ item.p_start }}%"></span>
-              <span class="imp-rank-seg {{ 'up' if item.up else 'down' }}"
-                    style="left: {{ item.bar_left }}%; width: {{ item.bar_width }}%"></span>
-            </div>
-            <div class="imp-rank-nums">
-              <span>{{ fmt_pct(r.coverage_start) }} <span aria-hidden="true">&rarr;</span> {{ fmt_pct(r.coverage_end) }}</span>
-              <span class="imp-rank-badge {{ 'up' if item.up else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</span>
-            </div>
-          </div>
-        </li>
-      {% endfor %}
-    </ol>
   </figure>
 
   {# ---- Full ranking table (VaxVision-style block: gradient header with title

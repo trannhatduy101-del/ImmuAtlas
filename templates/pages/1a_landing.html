@@ -65,28 +65,13 @@
         </p>
         <a href="#snapshot-data" class="explore-btn">Explore the figures</a>
 
-        {# Hero illustration: an abstract "water" motif -- layered waves rising
-           to the right. Deliberately NOT a chart: no axis, no bars, no data, so
-           it reads as decoration and never as a figure the reader could mistake
-           for a sourced number. The real 25-year trend is shown lower down. #}
-        <svg class="explore-image lp-hero-art" viewBox="0 0 900 320" role="img"
-             aria-label="An abstract motif of layered water waves rising toward the right.">
-          <defs>
-            <linearGradient id="wv" x1="0" y1="0" x2="1" y2="0">
-              <stop offset="0" stop-color="#7dd3fc"/><stop offset="1" stop-color="#06b6d4"/>
-            </linearGradient>
-            <linearGradient id="wvfill" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0" stop-color="#06b6d4" stop-opacity=".34"/><stop offset="1" stop-color="#06b6d4" stop-opacity="0"/>
-            </linearGradient>
-          </defs>
-          <path d="M0,222 C150,184 300,252 450,214 S760,156 900,192 L900,320 L0,320 Z" fill="rgba(255,255,255,0.06)"/>
-          <path d="M0,252 C160,218 320,276 470,238 S770,196 900,228 L900,320 L0,320 Z" fill="rgba(255,255,255,0.05)"/>
-          <path d="M0,236 C140,206 280,256 430,202 C580,150 720,124 900,100 L900,320 L0,320 Z" fill="url(#wvfill)"/>
-          <path d="M0,236 C140,206 280,256 430,202 C580,150 720,124 900,100"
-                fill="none" stroke="url(#wv)" stroke-width="4" stroke-linecap="round"/>
-          <circle cx="430" cy="202" r="5" fill="#7dd3fc"/>
-          <circle cx="140" cy="206" r="4" fill="#7dd3fc" opacity=".8"/>
-          <circle cx="884" cy="103" r="6" fill="#e0f2fe"/>
+        {# Hero graphic: a shield + pulse motif -- "protection", drawn abstractly
+           so it never reads as a sourced chart. Kept distinct from the vaccine
+           vial photos used in Vaccine information further down, and from the
+           region rings used in Global impact, so no image repeats on the page. #}
+        <svg class="lp-hero-shield" viewBox="0 0 220 220" role="img" aria-hidden="true">
+          <path class="lp-shield-outline" d="M110 14 L192 44 V104 C192 152 156 186 110 206 C64 186 28 152 28 104 V44 Z"/>
+          <polyline class="lp-shield-pulse" points="52,116 82,116 94,86 112,146 126,102 138,116 168,116"/>
         </svg>
       </div>
     </section>
@@ -103,9 +88,9 @@
   <nav class="lp-jump" aria-label="On this page">
     <span class="lp-jump-label">On this page</span>
     <a href="#snapshot-data">Figures</a>
-    <a href="#vaccines">Vaccines</a>
-    <a href="#the-data">The question</a>
     <a href="#trend">25-year trend</a>
+    <a href="#vaccines">Vaccines</a>
+    <a href="#impact">Global impact</a>
     <a href="#explore">Explore</a>
   </nav>
 
@@ -154,6 +139,93 @@
       </article>
     </div>
   </section>
+
+  {# ---- The 25-year trajectory: the effort-vs-outcome thesis shown as real
+         movement rather than restated. Coverage climbs while reported cases
+         barely fall. The y-axis is truncated on purpose (an 82->89 rise is
+         invisible on a full 0-100 scale) and the caption says so, along with
+         the honest caveat that part of the rise is simply wider reporting.
+         Geometry comes from routes/landing.py (chart); every number is real. ---- #}
+  {% if chart %}
+  {% set cov_up = (chart.last.avg_coverage - chart.first.avg_coverage) | round | int %}
+  <section class="lp-trend-band" id="trend">
+    <div class="lp-trend-inner">
+      <span class="lp-trend-eyebrow">{{ chart.first.year }} &rarr; {{ chart.last.year }} &middot; twenty-five years</span>
+      <h2>Coverage keeps climbing. The cases haven&rsquo;t stopped.</h2>
+
+      {# The contrast, as two metrics in the same grammar so the tension is
+         instant: effort up on the left, outcome still high on the right. Every
+         figure is computed from the real trend, never typed in. #}
+      <div class="lp-twin">
+        <div class="lp-twin-card lp-twin-up">
+          <span class="lp-twin-label">Reported coverage</span>
+          <span class="lp-twin-move">
+            <span class="lp-twin-from">{{ fmt_pct(chart.first.avg_coverage, 0) }}</span>
+            <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
+            <span class="lp-twin-to">{{ fmt_pct(chart.last.avg_coverage, 0) }}</span>
+          </span>
+          <span class="lp-twin-verdict">&uarr; up {{ cov_up }} points</span>
+        </div>
+        {% if chart.first.total_cases and chart.last.total_cases %}
+          {% set cases_down = ((chart.first.total_cases - chart.last.total_cases) / chart.first.total_cases * 100) | round | int %}
+          <div class="lp-twin-card lp-twin-flat">
+            <span class="lp-twin-label">Reported cases a year</span>
+            <span class="lp-twin-move">
+              <span class="lp-twin-from">{{ fmt_big(chart.first.total_cases) }}</span>
+              <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
+              <span class="lp-twin-to">{{ fmt_big(chart.last.total_cases) }}</span>
+            </span>
+            <span class="lp-twin-verdict">&darr; down {{ cases_down }}% &mdash; still millions</span>
+          </div>
+        {% endif %}
+      </div>
+
+      <p class="lp-trend-takeaway">
+        Twenty-five years of effort lifted coverage by <strong>{{ cov_up }} points</strong> &mdash;
+        yet preventable cases are <strong>still counted in the millions</strong> every year. That gap
+        is the whole reason this site holds both numbers side by side.
+      </p>
+
+      {# The chart is now support, not the headline: one short label, and the
+         methodology caveats tucked into a toggle so they don't block the point. #}
+      <figure class="lp-trend-chart">
+        <figcaption class="lp-trend-cap-top">Average reported coverage, year by year ({{ chart.first.year }}&ndash;{{ chart.last.year }})</figcaption>
+        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" role="img"
+             aria-label="Average reported coverage from {{ fmt_pct(chart.first.avg_coverage, 0) }} in {{ chart.first.year }} to {{ fmt_pct(chart.last.avg_coverage, 0) }} in {{ chart.last.year }}, on a Y axis of coverage percent and an X axis of year.">
+          {# Y axis: coverage % gridlines + labels. #}
+          {% for t in chart.y_ticks %}
+            <line class="lp-trend-grid" x1="{{ chart.plot_left }}" y1="{{ t.y }}" x2="{{ chart.plot_right }}" y2="{{ t.y }}"/>
+            <text class="lp-trend-axislabel" x="{{ chart.plot_left - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ t.label }}%</text>
+          {% endfor %}
+          {# X axis: year labels. #}
+          {% for t in chart.x_ticks %}
+            <text class="lp-trend-axislabel" x="{{ t.x }}" y="{{ chart.plot_bottom + 22 }}" text-anchor="middle">{{ t.label }}</text>
+          {% endfor %}
+          {# The two axis lines. #}
+          <line class="lp-trend-axis" x1="{{ chart.plot_left }}" y1="{{ chart.plot_top }}" x2="{{ chart.plot_left }}" y2="{{ chart.plot_bottom }}"/>
+          <line class="lp-trend-axis" x1="{{ chart.plot_left }}" y1="{{ chart.plot_bottom }}" x2="{{ chart.plot_right }}" y2="{{ chart.plot_bottom }}"/>
+          {# Axis titles. #}
+          <text class="lp-trend-axistitle" transform="translate(14 {{ (chart.plot_top + chart.plot_bottom) / 2 }}) rotate(-90)" text-anchor="middle">Coverage %</text>
+          <text class="lp-trend-axistitle" x="{{ (chart.plot_left + chart.plot_right) / 2 }}" y="{{ chart_h - 6 }}" text-anchor="middle">Year</text>
+          {# The data: soft area, the line, and a dot per year. #}
+          <polygon class="lp-trend-area" points="{{ chart.coords[0][0] }},{{ chart.plot_bottom }} {{ chart.polyline }} {{ chart.coords[-1][0] }},{{ chart.plot_bottom }}"/>
+          <polyline class="trend-line" points="{{ chart.polyline }}"/>
+          {% for x, y, row in chart.coords %}<circle class="trend-dot" cx="{{ x }}" cy="{{ y }}" r="2.4"/>{% endfor %}
+        </svg>
+        <details class="lp-trend-note">
+          <summary>How to read this chart</summary>
+          <p>
+            The line uses a {{ chart.y_min }}&ndash;{{ chart.y_max }}% scale, not 0&ndash;100 &mdash; on a
+            full scale a {{ cov_up }}-point rise would look almost flat, so the axis is zoomed to make the
+            movement visible. Part of the rise is also wider reporting: {{ fmt_int(chart.first.n_reporting) }}
+            reported figures went into the {{ chart.first.year }} average, {{ fmt_int(chart.last.n_reporting) }}
+            into {{ chart.last.year }}&rsquo;s.
+          </p>
+        </details>
+      </figure>
+    </div>
+  </section>
+  {% endif %}
 
   {# ---- Vaccine information (was "Immunization Portfolio") ---- #}
   <section class="vaccine-cards-section" id="vaccines">
@@ -231,105 +303,72 @@
     </div>
   </section>
 
-  {# ---- The data: a hook that opens with a question and lets the reader
-         reveal the honest answer. Native <details> = interactive, keyboard
-         accessible, and works with no JavaScript at all. ---- #}
-  <section class="spotlight" id="the-data">
-    <div class="spotlight-inner">
-      <span class="spotlight-eyebrow">Before you dive in</span>
-      <h2 class="spotlight-q">If coverage is this high, why do the cases keep coming?</h2>
-      <p class="spotlight-lead">
-        {{ fmt_pct(facts.coverage_last) }} average reported coverage across
-        {{ fmt_int(facts.n_countries) }} countries &mdash; and still,
-        {{ fmt_big(facts.total_cases) }} cases on record.
+  {# ---- Impact by region: a different lens from "Four figures" (which is a
+         single global aggregate) -- how coverage splits across the world's
+         regions. Each card is a ring (percentage as an arc, not just a number)
+         so no image repeats: the hero is a shield motif, Vaccine info uses vial
+         photos, and this is the only place rings appear. Every figure comes
+         from coverage_by_region, weighted by birth cohort like 2A. ---- #}
+  {% if impact_regions %}
+  <section class="lp-impact" id="impact">
+    <div class="lp-impact-inner">
+      <span class="spotlight-eyebrow">Impact by region</span>
+      <h2 class="lp-impact-head">One global average hides a real gap.</h2>
+      <p class="lp-impact-lead">
+        {{ impact_regions.n_regions }} world regions, each averaged the same way as
+        the country figures &mdash; weighted by the birth cohort each rate applies to.
       </p>
-      <details class="spotlight-reveal">
-        <summary>
-          <span class="spotlight-summary-open">Reveal the answer</span>
-          <span class="spotlight-summary-close">Hide the answer</span>
-        </summary>
-        <div class="spotlight-answer">
-          <p>Because an <strong>average hides where it fails</strong>. A country can sit near the top and
-             still miss whole communities; a global mean can climb while outbreaks flare in the gaps. High
-             coverage and persistent cases are not a contradiction &mdash; they are the same data read at
-             two scales.</p>
-          <p class="spotlight-kicker">That gap between effort and outcome is what every page here is built
-             to show &mdash; with the denominator behind each number always named.</p>
-        </div>
-      </details>
-    </div>
-  </section>
 
-  {# ---- The 25-year trajectory: the effort-vs-outcome thesis shown as real
-         movement rather than restated. Coverage climbs while reported cases
-         barely fall. The y-axis is truncated on purpose (an 82->89 rise is
-         invisible on a full 0-100 scale) and the caption says so, along with
-         the honest caveat that part of the rise is simply wider reporting.
-         Geometry comes from routes/landing.py (chart); every number is real. ---- #}
-  {% if chart %}
-  {% set cov_up = (chart.last.avg_coverage - chart.first.avg_coverage) | round | int %}
-  <section class="lp-trend-band" id="trend">
-    <div class="lp-trend-inner">
-      <span class="lp-trend-eyebrow">{{ chart.first.year }} &rarr; {{ chart.last.year }} &middot; twenty-five years</span>
-      <h2>Coverage keeps climbing. The cases haven&rsquo;t stopped.</h2>
+      <div class="impact-cards">
+        {% macro ring(r, cls) %}
+          <svg class="impact-ring {{ cls }}" viewBox="0 0 100 100" aria-hidden="true">
+            <circle class="impact-ring-track" cx="50" cy="50" r="{{ r.r }}"/>
+            <circle class="impact-ring-fill" cx="50" cy="50" r="{{ r.r }}"
+                    stroke-dasharray="{{ r.filled }} {{ r.circumference }}"/>
+          </svg>
+        {% endmacro %}
 
-      {# The contrast, as two metrics in the same grammar so the tension is
-         instant: effort up on the left, outcome still high on the right. Every
-         figure is computed from the real trend, never typed in. #}
-      <div class="lp-twin">
-        <div class="lp-twin-card lp-twin-up">
-          <span class="lp-twin-label">Reported coverage</span>
-          <span class="lp-twin-move">
-            <span class="lp-twin-from">{{ fmt_pct(chart.first.avg_coverage, 0) }}</span>
-            <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
-            <span class="lp-twin-to">{{ fmt_pct(chart.last.avg_coverage, 0) }}</span>
-          </span>
-          <span class="lp-twin-verdict">&uarr; up {{ cov_up }} points</span>
-        </div>
-        {% if chart.first.total_cases and chart.last.total_cases %}
-          {% set cases_down = ((chart.first.total_cases - chart.last.total_cases) / chart.first.total_cases * 100) | round | int %}
-          <div class="lp-twin-card lp-twin-flat">
-            <span class="lp-twin-label">Reported cases a year</span>
-            <span class="lp-twin-move">
-              <span class="lp-twin-from">{{ fmt_big(chart.first.total_cases) }}</span>
-              <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
-              <span class="lp-twin-to">{{ fmt_big(chart.last.total_cases) }}</span>
-            </span>
-            <span class="lp-twin-verdict">&darr; down {{ cases_down }}% &mdash; still millions</span>
+        <article class="impact-card impact-card--ring">
+          <div class="impact-card-media">
+            {{ ring(impact_regions.leading_ring, 'is-up') }}
+            <span class="impact-ring-num">{{ fmt_pct(impact_regions.leading.avg_weighted, 0) }}</span>
           </div>
-        {% endif %}
+          <div class="impact-card-body">
+            <span class="impact-card-eyebrow">Leading region</span>
+            <span class="impact-card-fig">{{ impact_regions.leading_name }}</span>
+            <span class="impact-card-label">{{ fmt_pct(impact_regions.leading.avg_weighted) }} average coverage</span>
+            <p>{{ fmt_int(impact_regions.leading.n_countries) }} countries, weighted by birth cohort.</p>
+          </div>
+        </article>
+
+        <article class="impact-card impact-card--ring">
+          <div class="impact-card-media">
+            {{ ring(impact_regions.behind_ring, 'is-down') }}
+            <span class="impact-ring-num">{{ fmt_pct(impact_regions.behind.avg_weighted, 0) }}</span>
+          </div>
+          <div class="impact-card-body">
+            <span class="impact-card-eyebrow">Needs the most support</span>
+            <span class="impact-card-fig">{{ impact_regions.behind_name }}</span>
+            <span class="impact-card-label">{{ fmt_pct(impact_regions.behind.avg_weighted) }} average coverage</span>
+            <p>{{ fmt_int(impact_regions.behind.n_countries) }} countries, weighted by birth cohort.</p>
+          </div>
+        </article>
+
+        <article class="impact-card impact-card--ring">
+          <div class="impact-card-media">
+            {{ ring(impact_regions.gap_ring, 'is-gap') }}
+            <span class="impact-ring-num">{{ '%.0f'|format(impact_regions.gap) }}<small>pp</small></span>
+          </div>
+          <div class="impact-card-body">
+            <span class="impact-card-eyebrow">Regional gap</span>
+            <span class="impact-card-fig">{{ '%.1f'|format(impact_regions.gap) }} points</span>
+            <span class="impact-card-label">between the leading and the lagging region</span>
+            <p>The same reason a global average can climb while whole regions fall behind.</p>
+          </div>
+        </article>
       </div>
 
-      <p class="lp-trend-takeaway">
-        Twenty-five years of effort lifted coverage by <strong>{{ cov_up }} points</strong> &mdash;
-        yet preventable cases are <strong>still counted in the millions</strong> every year. That gap
-        is the whole reason this site holds both numbers side by side.
-      </p>
-
-      {# The chart is now support, not the headline: one short label, and the
-         methodology caveats tucked into a toggle so they don't block the point. #}
-      <figure class="lp-trend-chart">
-        <figcaption class="lp-trend-cap-top">Average reported coverage, year by year ({{ chart.first.year }}&ndash;{{ chart.last.year }})</figcaption>
-        <svg viewBox="0 0 {{ chart_w }} {{ chart_h }}" role="img"
-             aria-label="A line rising gently from {{ fmt_pct(chart.first.avg_coverage, 0) }} in {{ chart.first.year }} to {{ fmt_pct(chart.last.avg_coverage, 0) }} in {{ chart.last.year }}.">
-          {# baseline y = CHART_H(200) - PAD_B(26) = 174, kept in step with landing.py #}
-          <polygon class="lp-trend-area" points="{{ chart.coords[0][0] }},174 {{ chart.polyline }} {{ chart.coords[-1][0] }},174"/>
-          <polyline class="trend-line" points="{{ chart.polyline }}"/>
-          {% for x, y, row in chart.coords %}<circle class="trend-dot" cx="{{ x }}" cy="{{ y }}" r="2.2"/>{% endfor %}
-          <text class="lp-trend-yr" x="{{ chart.coords[0][0] }}" y="194" text-anchor="start">{{ chart.first.year }}</text>
-          <text class="lp-trend-yr" x="{{ chart.coords[-1][0] }}" y="194" text-anchor="end">{{ chart.last.year }}</text>
-        </svg>
-        <details class="lp-trend-note">
-          <summary>How to read this chart</summary>
-          <p>
-            The line uses a {{ chart.y_min }}&ndash;{{ chart.y_max }}% scale, not 0&ndash;100 &mdash; on a
-            full scale a {{ cov_up }}-point rise would look almost flat, so the axis is zoomed to make the
-            movement visible. Part of the rise is also wider reporting: {{ fmt_int(chart.first.n_reporting) }}
-            reported figures went into the {{ chart.first.year }} average, {{ fmt_int(chart.last.n_reporting) }}
-            into {{ chart.last.year }}&rsquo;s.
-          </p>
-        </details>
-      </figure>
+      <a class="explore-btn lp-impact-cta" href="{{ url_for('coverage.index') }}">See every region and country</a>
     </div>
   </section>
   {% endif %}

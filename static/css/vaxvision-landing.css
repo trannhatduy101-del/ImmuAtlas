@@ -380,14 +380,14 @@ VACCINE CARDS SECTION
 
 .vc-inner h2 {
     font-family: var(--font-body);
-    color: #ffffff;
+    color: var(--accent-strong);
     margin-bottom: 10px;
 }
 
 .vc-subtitle {
     font-family: var(--font-body);
     font-size: 17px;
-    color: #ffffffaa;
+    color: var(--ink-muted);
     margin-bottom: 44px;
 }
 
@@ -1290,3 +1290,125 @@ RESPONSIVE - INDEX ONLY
 .spotlight-answer p:last-child { margin-bottom: 0; }
 .spotlight-kicker { color: var(--accent-strong) !important; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .spotlight-reveal summary { transition: none; } }
+
+/* ============================================
+   1A: solid water-blue page, vaccine hero image, trend axes, impact cards
+   ============================================ */
+
+/* Solid water-blue background for the whole 1A page; the content bands sit
+   transparent on top so the page reads as one water surface with white cards. */
+body.lp-vax { background: var(--bg-sunk); }
+body.lp-vax .snapshot-section,
+body.lp-vax .vaccine-cards-section,
+body.lp-vax .lp-impact,
+body.lp-vax .cta-band { background: transparent; }
+
+/* Trend band: a dark ocean background like the hero, so it reads as a feature
+   band on the water-blue page. Its text goes light; the chart itself stays a
+   light panel (its own background) for contrast. */
+body.lp-vax .lp-trend-band {
+  background: linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 60%, #0891b2 100%);
+}
+body.lp-vax .lp-trend-band h2 { color: #ffffff; }
+body.lp-vax .lp-trend-eyebrow { color: #7dd3fc; }
+body.lp-vax .lp-trend-takeaway { color: rgba(255, 255, 255, .88); }
+body.lp-vax .lp-trend-takeaway strong { color: #ffffff; }
+body.lp-vax .lp-trend-cap-top { color: rgba(255, 255, 255, .82); }
+body.lp-vax .lp-trend-note summary { color: #7dd3fc; }
+body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
+
+/* Hero graphic: an abstract shield + pulse line -- "protection", drawn on the
+   dark hero. Deliberately not a photo and not a data chart, and deliberately
+   NOT vaccine vials (Vaccine information below already uses those photos), so
+   no image on the page repeats its subject. Static (no animation). */
+.lp-hero-shield {
+  width: min(220px, 46vw); height: auto;
+  margin: clamp(28px, 6vw, 50px) auto 0; display: block;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .22));
+}
+.lp-shield-outline { fill: rgba(255, 255, 255, .08); stroke: #ffffff; stroke-width: 3; stroke-linejoin: round; }
+.lp-shield-pulse { fill: none; stroke: #7dd3fc; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+
+/* Trend chart axes (Y = coverage %, X = year). */
+.lp-trend-grid { stroke: var(--rule); stroke-width: 1; }
+.lp-trend-axis { stroke: var(--ink-muted); stroke-width: 1.2; opacity: .55; }
+.lp-trend-axislabel { fill: var(--ink-muted); font-size: 12px; font-family: var(--font-body); }
+.lp-trend-axistitle {
+  fill: var(--ink-muted); font-size: 11px; font-weight: 700; font-family: var(--font-body);
+  text-transform: uppercase; letter-spacing: .06em;
+}
+
+/* Impact by region: three image cards stacked vertically, each a ring (percent
+   as an arc) + a real headline figure for one region-level finding. A
+   different lens from "Four figures" (a single global aggregate) and a
+   different graphic from the hero (shield) and Vaccine info (vial photos). */
+.lp-impact { padding: clamp(52px, 8vw, 92px) 20px; }
+.lp-impact-inner { max-width: 1000px; margin: 0 auto; }
+.lp-impact-head {
+  font-family: var(--font-display); color: var(--accent-strong); line-height: 1.12;
+  font-size: clamp(1.7rem, 1.2rem + 2vw, 2.6rem); margin: .35rem 0 .6rem;
+}
+.lp-impact-lead { color: var(--ink-muted); max-width: 62ch; margin: 0 0 1.4rem; }
+.lp-impact-cta { margin-top: 1.4rem; }
+.impact-cards { display: grid; gap: 1.1rem; }
+.impact-card {
+  display: grid; grid-template-columns: minmax(0, 200px) 1fr; gap: 1.3rem; align-items: stretch;
+  background: #fff; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden;
+  box-shadow: 0 2px 6px rgba(8, 47, 73, .06), 0 12px 26px rgba(8, 47, 73, .09);
+  transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), border-color .18s var(--ease-out);
+}
+.impact-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--accent);
+  box-shadow: 0 10px 22px rgba(8, 47, 73, .12), 0 26px 50px rgba(8, 47, 73, .18);
+}
+.impact-card-media {
+  position: relative;
+  min-height: 168px; background: var(--bg-sunk);
+  display: grid; place-items: center; color: var(--accent);
+}
+.impact-card-media .snap-ico { width: clamp(56px, 8vw, 84px); height: auto; }
+
+/* Ring: a circle track + an arc sized to the percentage, drawn with
+   stroke-dasharray computed in landing.py. Rotated -90deg so the arc starts at
+   12 o'clock, which is how a "percent complete" ring is conventionally read. */
+.impact-ring {
+  width: clamp(84px, 11vw, 116px); height: auto;
+  transform: rotate(-90deg);
+}
+.impact-ring-track { fill: none; stroke: var(--rule); stroke-width: 9; }
+.impact-ring-fill { fill: none; stroke-width: 9; stroke-linecap: round; }
+.impact-ring.is-up .impact-ring-fill   { stroke: var(--accent); }
+.impact-ring.is-down .impact-ring-fill { stroke: var(--outcome); }
+.impact-ring.is-gap .impact-ring-fill  { stroke: var(--accent-lift); }
+.impact-ring-num {
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+  font-family: var(--font-display); font-weight: 800; color: var(--ink);
+  font-size: clamp(1.1rem, 1vw + .8rem, 1.5rem); font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.impact-ring-num small { font-size: .55em; font-weight: 700; margin-left: 1px; }
+@media (prefers-reduced-motion: reduce) {
+  .impact-card { transition: none; }
+  .impact-card:hover { transform: none; }
+}
+.impact-card-body { padding: 22px 26px 22px 0; align-self: center; }
+.impact-card-eyebrow {
+  display: block; text-transform: uppercase; letter-spacing: .1em;
+  font-size: .72rem; font-weight: 700; color: var(--accent);
+}
+.impact-card-fig {
+  display: block; font-family: var(--font-display); font-weight: 800; line-height: 1;
+  font-size: clamp(2rem, 1.5rem + 2vw, 2.9rem); color: var(--accent-strong);
+  font-variant-numeric: tabular-nums; margin: .3rem 0 .15rem;
+}
+.impact-card-label {
+  display: block; text-transform: uppercase; letter-spacing: .05em;
+  font-size: .78rem; color: var(--ink-muted);
+}
+.impact-card-body p { margin: .6rem 0 0; color: var(--ink-muted); font-size: .95rem; max-width: 60ch; }
+@media (max-width: 40rem) {
+  .impact-card { grid-template-columns: 1fr; }
+  .impact-card-media { min-height: 200px; }
+  .impact-card-body { padding: 0 22px 22px; }
+}

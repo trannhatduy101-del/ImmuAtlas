@@ -21,7 +21,12 @@ Thumbs.db
 /Personas.pdf
 /improvement_*.csv
 
-# Source vaccine images kept locally; the app uses the copies in static/img/
+# Source images kept locally; the app uses the copies in static/img/
 /Mealses.webp
 /Pertussis.png
 /Rubella.webp
+/Grace.png
+/Daniel.png
+/Personas.png
+/Personas - Brainstorm_files/
+/Personas - Brainstorm.html
