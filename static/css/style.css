@@ -907,3 +907,533 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     grid-column: auto;
   }
 }
+/* ========================================================================
+   1B MISSION PAGE
+   ======================================================================== */
+
+/* Mission hero ----------------------------------------------------------- */
+
+.mission-eyebrow,
+.section-eyebrow {
+  margin: 0 0 .55rem;
+  font-size: .72rem;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+
+.mission-eyebrow {
+  margin-bottom: .7rem;
+}
+
+
+/* Mission introduction -------------------------------------------------- */
+
+.mission-intro {
+  max-width: 54rem;
+  margin: 0 auto;
+  padding: 1rem 0 3.8rem;
+}
+
+.mission-intro-content {
+  max-width: 47rem;
+}
+
+.mission-intro h2 {
+  margin: 0 0 1rem;
+  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  line-height: 1.15;
+  letter-spacing: -.025em;
+  color: var(--ink);
+}
+
+.mission-intro p:not(.section-eyebrow) {
+  max-width: 48rem;
+  margin: 0 0 .85rem;
+  font-size: 1rem;
+  line-height: 1.75;
+  color: var(--ink-muted);
+}
+
+
+/* Who We Serve ---------------------------------------------------------- */
+
+.mission-personas {
+  padding: 3.4rem 0 4.5rem;
+  border-top: 1px solid var(--rule);
+}
+
+.persona-heading {
+  max-width: 54rem;
+  margin: 0 auto 2rem;
+}
+
+.persona-heading h2 {
+  margin: 0 0 .7rem;
+  font-size: clamp(1.5rem, 2.8vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -.02em;
+}
+
+.persona-heading > p:last-child {
+  max-width: 43rem;
+  margin: 0;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+
+
+/* Persona showcase ------------------------------------------------------ */
+
+.persona-showcase {
+  position: relative;
+  max-width: 54rem;
+  margin: 0 auto;
+}
+
+.persona-radio {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+
+/* Main image area */
+
+.persona-image-stage {
+  position: relative;
+  width: min(100%, 46rem);
+  margin: 0 auto;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--bg-sunk);
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+  box-shadow:
+    0 2px 5px rgba(22, 25, 29, .06),
+    0 14px 35px rgba(22, 25, 29, .10);
+}
+
+
+/* Persona images */
+
+.persona-slide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transform: translateX(3rem);
+  transition:
+    opacity .55s ease,
+    transform .55s ease;
+  pointer-events: none;
+}
+
+.persona-slide img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+}
+
+
+/* Dark gradient behind the name */
+
+.persona-slide::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 7rem;
+  background: linear-gradient(
+    to bottom,
+    rgba(15, 25, 35, .55),
+    rgba(15, 25, 35, 0)
+  );
+  pointer-events: none;
+}
+
+
+/* Name button on image */
+
+.persona-name-button {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 2;
+
+  display: inline-flex;
+  align-items: center;
+
+  min-height: 2.5rem;
+  padding: .65rem 1rem;
+
+  border: 1px solid rgba(255, 255, 255, .65);
+  border-radius: 4px;
+
+  background: rgba(255, 255, 255, .94);
+  color: var(--ink);
+
+  font-size: .88rem;
+  font-weight: 700;
+  letter-spacing: .01em;
+
+  cursor: pointer;
+
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .12);
+
+  transition:
+    background .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.persona-name-button:hover {
+  background: white;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, .16);
+}
+
+
+/* Show selected persona */
+
+#persona-1:checked ~ .persona-image-stage .persona-slide-1,
+#persona-2:checked ~ .persona-image-stage .persona-slide-2 {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+
+/* Persona selector ------------------------------------------------------ */
+
+.persona-selector {
+  display: flex;
+  justify-content: center;
+  gap: .7rem;
+  margin-top: 1rem;
+}
+
+.persona-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+
+  min-height: 2.75rem;
+  padding: .55rem .9rem;
+
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+
+  background: var(--bg);
+  color: var(--ink);
+
+  font-size: .86rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    transform .2s ease;
+}
+
+.persona-selector-button:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.persona-number {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+
+
+/* Highlight active persona button */
+
+#persona-1:checked ~ .persona-selector label[for="persona-1"],
+#persona-2:checked ~ .persona-selector label[for="persona-2"] {
+  border-color: var(--accent);
+  background: var(--accent-lift);
+  color: var(--accent);
+}
+
+
+/* Team ------------------------------------------------------------------ */
+
+.mission-team {
+  padding: 3.5rem 0 1rem;
+  border-top: 1px solid var(--rule);
+}
+
+.team-list {
+  max-width: 54rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.team-member {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1rem;
+
+  padding: 1.3rem;
+
+  border: 1px solid var(--rule);
+  border-radius: 5px;
+
+  background: var(--bg);
+
+  transition:
+    border-color .2s ease,
+    transform .2s ease,
+    box-shadow .2s ease;
+}
+
+.team-member:hover {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 22px rgba(22, 25, 29, .08);
+}
+
+.team-member-number {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+
+  min-width: 2.2rem;
+  padding-top: .1rem;
+
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--accent);
+}
+
+.team-member-content h3 {
+  margin: 0 0 .25rem;
+  font-size: 1rem;
+}
+
+.team-student-number {
+  margin: 0 0 .65rem;
+  font-size: .8rem;
+  color: var(--ink-muted);
+}
+
+.team-role {
+  margin: 0 0 .45rem;
+  font-size: .78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--accent);
+}
+
+.team-member-content > p:last-child {
+  margin: 0;
+  font-size: .88rem;
+  line-height: 1.55;
+  color: var(--ink-muted);
+}
+
+
+/* Responsive ------------------------------------------------------------ */
+
+@media (max-width: 42rem) {
+
+  .mission-intro,
+  .mission-personas,
+  .mission-team {
+    padding-top: 2.5rem;
+  }
+
+  .persona-image-stage {
+    aspect-ratio: 4 / 3;
+  }
+
+  .persona-selector {
+    flex-direction: column;
+  }
+
+  .persona-selector-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .team-list {
+    grid-template-columns: 1fr;
+  }
+
+  .persona-name-button {
+    top: .75rem;
+    left: .75rem;
+  }
+} 
+/* ==========================================================================
+   1B PERSONA - FINAL LAYOUT ADJUSTMENTS
+   ========================================================================== */
+
+/* Keep the persona area centred */
+.persona-showcase {
+  max-width: 58rem;
+  margin: 0 auto;
+}
+
+
+/* Persona buttons sit ABOVE the image, outside the image */
+.persona-selector {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: .7rem;
+  margin: 0 auto 1rem;
+  width: min(100%, 56rem);
+}
+
+
+/* Button styling */
+.persona-selector-button {
+  display: inline-flex;
+  align-items: center;
+  gap: .65rem;
+
+  min-height: 2.7rem;
+  padding: .55rem .95rem;
+
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+
+  background: var(--bg);
+  color: var(--ink);
+
+  font-size: .86rem;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    border-color .2s ease,
+    background .2s ease,
+    color .2s ease,
+    transform .2s ease;
+}
+
+
+.persona-selector-button:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+
+/* Active persona button */
+#persona-1:checked ~ .persona-selector label[for="persona-1"],
+#persona-2:checked ~ .persona-selector label[for="persona-2"] {
+  border-color: var(--accent);
+  background: var(--accent-lift);
+  color: var(--accent);
+}
+
+
+/* Persona number */
+.persona-number {
+  font-size: .68rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+  color: var(--ink-muted);
+}
+
+
+/* Larger persona image */
+.persona-image-stage {
+  position: relative;
+
+  width: min(100%, 56rem);
+
+  margin: 0 auto;
+
+  aspect-ratio: 16 / 10;
+
+  overflow: hidden;
+
+  background: var(--bg-sunk);
+
+  border: 1px solid var(--rule);
+  border-radius: 8px;
+
+  box-shadow:
+    0 2px 5px rgba(22, 25, 29, .06),
+    0 14px 35px rgba(22, 25, 29, .10);
+}
+
+
+/* Persona image */
+.persona-slide img {
+  display: block;
+
+  width: 100%;
+  height: 100%;
+
+  object-fit: contain;
+  object-position: center;
+}
+
+
+/* Remove the old name overlay completely */
+.persona-name-button,
+.persona-slide::after {
+  display: none;
+}
+
+
+/* Smooth persona transition */
+.persona-slide {
+  position: absolute;
+  inset: 0;
+
+  opacity: 0;
+  transform: translateX(3rem);
+
+  transition:
+    opacity .55s ease,
+    transform .55s ease;
+
+  pointer-events: none;
+}
+
+
+#persona-1:checked ~ .persona-image-stage .persona-slide-1,
+#persona-2:checked ~ .persona-image-stage .persona-slide-2 {
+  opacity: 1;
+  transform: translateX(0);
+  pointer-events: auto;
+}
+
+
+/* Mobile */
+@media (max-width: 42rem) {
+
+  .persona-selector {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .persona-selector-button {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .persona-image-stage {
+    width: 100%;
+    aspect-ratio: 4 / 3;
+  }
+}

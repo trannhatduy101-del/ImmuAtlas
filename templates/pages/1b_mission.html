@@ -3,65 +3,146 @@
 {% block title %}Mission &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
+  <p class="mission-eyebrow">OUR PURPOSE</p>
   <h1 class="hero-title">Mission</h1>
   <p class="hero-sub">
-    Who this site is for, and what each of them needs from it.
+    Connecting people with reliable vaccination and infectious disease information.
   </p>
 {% endblock %}
 
 {% block main %}
 
-<section class="mission-section">
-  <h2>Our Mission</h2>
+<section class="mission-intro">
+  <div class="mission-intro-content">
+    <p class="section-eyebrow">OUR MISSION</p>
 
-  <p>
-    ImmuAtlas helps the public explore reliable information about
-    vaccination and preventable infectious diseases.
-  </p>
-</section>
+    <h2>Making health data easier to understand.</h2>
 
-<section class="mission-section">
-  <h2>Who We Serve</h2>
+    <p>
+      ImmuAtlas helps the public explore reliable information about
+      vaccination and preventable infectious diseases.
+    </p>
 
-  <div class="persona-grid">
-
-    {% for persona in personas %}
-    <article class="persona-card">
-
-      <img
-        src="{{ url_for('static', filename=persona.image) }}"
-        alt="{{ persona.name }}"
-        class="persona-image"
-      >
-
-      <h3>{{ persona.name }}</h3>
-
-    </article>
-    {% endfor %}
-
+    <p>
+      Our goal is to make health data clearer, easier to compare,
+      and more useful for informed understanding.
+    </p>
   </div>
 </section>
 
-<section class="mission-section">
-  <h2>Our Team</h2>
+
+<section class="mission-personas">
+
+  <div class="persona-heading">
+    <p class="section-eyebrow">WHO WE SERVE</p>
+
+    <h2>Designed for people who use health information.</h2>
+
+    <p>
+      ImmuAtlas supports different users who need trustworthy,
+      understandable evidence to explore vaccination and infection trends.
+    </p>
+  </div>
+
+
+  <div class="persona-showcase">
+
+    {% for persona in personas %}
+
+      <input
+        type="radio"
+        name="persona"
+        id="persona-{{ loop.index }}"
+        class="persona-radio"
+        {% if loop.first %}checked{% endif %}
+      >
+
+    {% endfor %}
+
+
+    <!-- PERSONA SELECTOR -->
+    <div class="persona-selector">
+
+      {% for persona in personas %}
+
+        <label
+          for="persona-{{ loop.index }}"
+          class="persona-selector-button"
+        >
+          <span class="persona-number">0{{ loop.index }}</span>
+          <span>{{ persona.name }}</span>
+        </label>
+
+      {% endfor %}
+
+    </div>
+
+
+    <!-- PERSONA IMAGE -->
+    <div class="persona-image-stage">
+
+      {% for persona in personas %}
+
+        <div class="persona-slide persona-slide-{{ loop.index }}">
+
+          <img
+            src="{{ url_for('static', filename=persona.image) }}"
+            alt="{{ persona.name }} persona"
+          >
+
+        </div>
+
+      {% endfor %}
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<section class="mission-team">
+
+  <div class="persona-heading">
+    <p class="section-eyebrow">OUR TEAM</p>
+
+    <h2>The people behind ImmuAtlas.</h2>
+  </div>
 
   <div class="team-list">
 
     {% for member in team_members %}
-    <div class="team-member">
 
-      <h3>{{ member["full_name"] }}</h3>
+      <article class="team-member">
 
-      <p>{{ member["student_number"] }}</p>
+        <div class="team-member-number">
+          0{{ loop.index }}
+        </div>
 
-      <p>{{ member["sub_task"] }}</p>
+        <div class="team-member-content">
 
-      <p>{{ member["responsibility"] }}</p>
+          <h3>{{ member["full_name"] }}</h3>
 
-    </div>
+          <p class="team-student-number">
+            {{ member["student_number"] }}
+          </p>
+
+          <p class="team-role">
+            Sub-Task {{ member["sub_task"] }}
+          </p>
+
+          <p>
+            {{ member["responsibility"] }}
+          </p>
+
+        </div>
+
+      </article>
+
     {% endfor %}
 
   </div>
+
 </section>
 
 {% endblock %}
