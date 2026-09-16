@@ -9,6 +9,12 @@
 {% endblock %}
 
 {% block main %}
+{% if db_missing %}
+  <div class="empty-state">
+    <h2>No data loaded</h2>
+    <p>{{ db_missing }}</p>
+  </div>
+{% else %}
 
 <section class="mission-section">
   <h2 class="section-head">Our mission</h2>
@@ -17,6 +23,79 @@
     preventable infectious diseases &mdash; with the context and denominators
     needed to read every figure honestly.
   </p>
+</section>
+
+{# Brief 1B, third bullet: "Describe how your site can be used." Written as an
+   ordered walkthrough rather than a feature list, because the thing a first-time
+   visitor is missing is the ORDER -- which page to open, what to choose on it,
+   and what the result means. Every destination is url_for'd, so a renamed
+   endpoint breaks the build instead of silently shipping a dead link. #}
+<section class="mission-section">
+  <h2 class="section-head">How to use this site</h2>
+  <p class="section-intro">
+    Six pages, three levels of depth. Follow them in order the first time; after
+    that, jump straight to the one that answers your question.
+  </p>
+
+  <ol class="guide-steps">
+    <li>
+      <h3>Start on <a href="{{ url_for('landing.index') }}">Home</a></h3>
+      <p>
+        Four figures set the scope before you read anything else: how many
+        countries report, which years the data covers, how many doses were
+        given, and how many cases were recorded.
+      </p>
+    </li>
+
+    <li>
+      <h3>Open <a href="{{ url_for('coverage.index') }}">Explore &rarr; Vaccination rates</a></h3>
+      <p>
+        Choose an antigen and a year, and narrow to a country and/or a region.
+        Read the regional table first for context, then the country table below
+        it for the detail. Picking a single antigen also brings in that
+        disease&rsquo;s herd immunity threshold, so each figure can be read
+        against a target instead of on its own.
+      </p>
+    </li>
+
+    <li>
+      <h3>Open <a href="{{ url_for('infections.index') }}">Explore &rarr; Infections by economic status</a></h3>
+      <p>
+        Choose one economic group, one disease and one year. The
+        <strong>Flagged</strong> count shows how many countries in the group
+        reported zero in every year &mdash; those stay in the totals, but you
+        can see how many there are.
+      </p>
+    </li>
+
+    <li>
+      <h3>Open <a href="{{ url_for('improvement.index') }}">Compare &rarr; Biggest improvement</a></h3>
+      <p>
+        Choose an antigen plus a start year and an end year. The
+        <strong>#</strong> column ranks countries by how much coverage rose, and
+        that rank is fixed &mdash; re-sorting the table moves the rows around
+        but never renumbers them.
+      </p>
+    </li>
+
+    <li>
+      <h3>Open <a href="{{ url_for('above_average.index') }}">Compare &rarr; Above the global rate</a></h3>
+      <p>
+        Choose a year and a disease. The <strong>Global</strong> row sits at the
+        top of the table; every row beneath it reported a higher rate than that
+        single global figure.
+      </p>
+    </li>
+
+    <li>
+      <h3>Take the data with you</h3>
+      <p>
+        Every result table has CSV and PDF buttons in its header. A download
+        always contains the whole filtered result, never just the page you are
+        looking at.
+      </p>
+    </li>
+  </ol>
 </section>
 
 <section class="mission-section">
@@ -174,5 +253,5 @@
     {% endfor %}
   </div>
 </section>
-
+{% endif %}
 {% endblock %}

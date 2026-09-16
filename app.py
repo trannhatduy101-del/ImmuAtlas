@@ -11,7 +11,9 @@ Run:
     flask --app app run --debug
 """
 
-from flask import Flask, render_template
+import os
+
+from flask import Flask, render_template, url_for
 
 import db
 
@@ -44,6 +46,25 @@ def create_app():
         above_average_bp,  # 3B
     ):
         app.register_blueprint(blueprint)
+
+    def static_v(filename):
+        """url_for('static') plus ?v=<mtime>, so a changed file gets a new URL.
+
+        Without it an edited stylesheet can keep serving from the browser cache
+        even though Flask sends Cache-Control: no-cache -- the reader reloads,
+        sees the old design, and reports the fix as not working. A version in
+        the URL makes that impossible: a different file is a different address.
+
+        Falls back to the plain URL if the file cannot be stat'd, so a missing
+        asset is still a missing asset and never a 500.
+        """
+        try:
+            stamp = int(os.stat(os.path.join(app.static_folder, filename)).st_mtime)
+        except OSError:
+            return url_for("static", filename=filename)
+        return url_for("static", filename=filename, v=stamp)
+
+    app.jinja_env.globals["static_v"] = static_v
 
     @app.context_processor
     def inject_shell():

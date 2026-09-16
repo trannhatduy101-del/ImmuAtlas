@@ -34,6 +34,11 @@ def _ring(pct):
 CHART_W, CHART_H = 720, 300
 PAD_L, PAD_R, PAD_T, PAD_B = 52, 18, 18, 46
 
+# Hover tooltip box, in the same user units as everything else above. The
+# template draws a rect of exactly this size, so the two must agree or the text
+# will sit outside its own background.
+TIP_W, TIP_H = 76, 34
+
 
 def _trend_geometry(rows):
     """Turn the trend rows into SVG coordinates, axis bounds, and labelled ticks.
@@ -62,8 +67,29 @@ def _trend_geometry(rows):
     def ypix(v):
         return PAD_T + plot_h * (1 - (v - y_min) / span)
 
-    coords = [(round(xpix(i), 1), round(ypix(float(r["avg_coverage"])), 1), r)
-              for i, r in enumerate(points)]
+    # Each point carries its own tooltip anchor, worked out here rather than in
+    # the template. An SVG clips to its viewBox, so a tip centred on the first
+    # or last dot would be sliced in half by the edge; and one sitting above the
+    # highest dot would be cut off by the top. Both are decided from the point's
+    # position, which is a layout calculation and belongs in Python.
+    coords = []
+    left_limit = PAD_L
+    right_limit = CHART_W - PAD_R - TIP_W
+    for i, r in enumerate(points):
+        x = round(xpix(i), 1)
+        y = round(ypix(float(r["avg_coverage"])), 1)
+        # The tooltip box, positioned by its LEFT edge and clamped inside the
+        # plot. Centring it on the dot and letting it fall where it may would
+        # slice the first and last tips in half: an SVG clips to its viewBox.
+        # The text is then centred inside the box, so box and text cannot
+        # disagree about where the tip sits.
+        tip_x = min(max(x - TIP_W / 2, left_limit), right_limit)
+        # Above the dot by default, below it when the dot is too near the top.
+        tip_y = y + 12 if y - TIP_H - 10 < PAD_T else y - TIP_H - 10
+        coords.append({"x": x, "y": y, "row": r,
+                       "tip_x": round(tip_x, 1),
+                       "tip_y": round(tip_y, 1),
+                       "tip_mid": round(tip_x + TIP_W / 2, 1)})
 
     # Y ticks: five evenly spaced coverage values from y_min to y_max (100).
     y_ticks = [{"y": round(ypix(y_min + span * k / 4), 1),
@@ -78,7 +104,7 @@ def _trend_geometry(rows):
         x_ticks.append({"x": round(xpix(idx), 1), "label": points[idx]["year"]})
 
     return {
-        "polyline": " ".join("%s,%s" % (x, y) for x, y, _ in coords),
+        "polyline": " ".join("%s,%s" % (c["x"], c["y"]) for c in coords),
         "coords": coords,
         "y_min": y_min,
         "y_max": y_max,
@@ -86,6 +112,8 @@ def _trend_geometry(rows):
         "last": points[-1],
         "x_ticks": x_ticks,
         "y_ticks": y_ticks,
+        "tip_w": TIP_W,
+        "tip_h": TIP_H,
         "plot_left": PAD_L,
         "plot_right": CHART_W - PAD_R,
         "plot_top": PAD_T,
@@ -105,8 +133,12 @@ def index():
         # global aggregate in "Four figures" and the year-by-year trend.
         region_base = db.load_query("coverage_by_region").rstrip().rstrip(";")
         region_sql = "SELECT * FROM (" + region_base + ") ORDER BY avg_weighted DESC"
+        # threshold is None here on purpose: a threshold belongs to one disease,
+        # and this call deliberately spans every antigen, so there is no single
+        # bar to measure against. n_met_threshold comes back 0 and is not shown.
         regions = db.query(region_sql, {"antigen": None, "year": None,
-                                        "country": None, "region": None})
+                                        "country": None, "region": None,
+                                        "threshold": None})
     except db.DatabaseMissing as exc:
         # An honest empty state, never a blank page and never a stale number.
         return render_template("pages/1a_landing.html", db_missing=str(exc)), 503

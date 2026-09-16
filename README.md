@@ -36,6 +36,18 @@ and `sql/data_source_who.sql` in that order — the order matters — and
 uses Python's `sqlite3` module, so no `sqlite3` CLI is needed. It needs
 Bash (Git Bash, WSL, or any Unix shell).
 
+If your clone reports `Permission denied`, the executable bit did not
+survive the checkout. Run it through Bash instead — the script itself is
+unchanged:
+
+```bash
+bash rebuild_db.sh
+```
+
+Until the database exists, every page says so and returns 503 rather
+than erroring, so a fresh clone tells you what to do instead of
+crashing.
+
 ## Run
 
 ```bash
@@ -69,6 +81,16 @@ rebuild_db.sh   rebuilds immuatlas.db from immunisation2.db + sql/
 | `/infections`    | Infections by economic status   | B        |
 | `/improvement`   | Biggest improvement             | A        |
 | `/above-average` | Countries above the global rate | B        |
+
+## Exports
+
+Every result table exports the **whole filtered result**, not the page on
+screen, as CSV or PDF. The CSV carries a UTF-8 byte-order mark so Excel
+renders names like `Côte d'Ivoire` correctly, and missing values read
+`no data` in the file exactly as they do on the page.
+
+PDF export needs `fpdf2` (in `requirements.txt`). Without it the site and
+the CSV export still work — the PDF link simply does not appear.
 
 ## Notes
 

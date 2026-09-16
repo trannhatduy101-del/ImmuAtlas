@@ -86,15 +86,6 @@ def query_one(sql, params=()):
         conn.close()
 
 
-def scalar(sql, params=()):
-    """Return the first column of the first row, or None if there are no rows.
-
-    For COUNT(*), AVG(), MAX() and friends, where one number is the answer.
-    """
-    row = query_one(sql, params)
-    return None if row is None else row[0]
-
-
 # ---------------------------------------------------------------------------
 # Named queries
 # ---------------------------------------------------------------------------
@@ -174,6 +165,120 @@ def safe_order_by(requested, allowed, default):
     return allowed[default]
 
 
+def validate(raw, allowed, cast=str):
+    """Resolve a request value against the set of values we actually offer.
+
+    Returns (value, rejected). This is the safety boundary the project spec
+    puts in Python: a value that is not on the list never reaches the database.
+
+    Dropping an unrecognised filter WIDENS the selection, so the fact that it
+    was dropped is returned too and the page says so. Silently ignoring a
+    filter is how someone reads a figure for "all years" believing they asked
+    for one year.
+
+    An absent or empty value is not an error -- it means "no filter" -- so it
+    returns (None, False), while a value that is present but not on the list
+    returns (None, True).
+    """
+    if raw is None or raw == "":
+        return None, False
+    try:
+        value = cast(raw)
+    except (TypeError, ValueError):
+        return None, True
+    if value in allowed:
+        return value, False
+    return None, True
+
+
+# ---------------------------------------------------------------------------
+# Pagination
+#
+# Slicing an ALREADY-SORTED list is not sorting and not aggregating, so it does
+# not cross the SQL/Python line the project spec draws: SQL decided the order
+# and the membership, this only decides which slice is on screen.
+# ---------------------------------------------------------------------------
+
+PAGE_SIZES = (8, 15, 25, 50)
+DEFAULT_PAGE_SIZE = 8
+
+
+def page_window(page, pages, span=2):
+    """Page numbers to offer as links, with None where numbers were skipped.
+
+        page_window(14, 27) -> [1, None, 12, 13, 14, 15, 16, None, 27]
+
+    Twenty-seven numbered links is a wall, and hiding the first and last leaves
+    no way to reach either end in one click. So: always both ends, `span` on
+    each side of where the reader is, and a None wherever a run was cut -- the
+    template draws that as an ellipsis, not as a link to nowhere.
+
+    A None is only inserted for a real gap. With pages=5 the window already
+    covers everything, and an ellipsis standing in for a single missing number
+    is wider than the number it replaces.
+    """
+    wanted = {1, pages}
+    wanted.update(range(max(1, page - span), min(pages, page + span) + 1))
+
+    out = []
+    previous = 0
+    for n in sorted(wanted):
+        skipped = n - previous - 1
+        if skipped == 1:
+            # Exactly one number missing: print it. An ellipsis is wider than
+            # the digit it would hide, and it costs the reader a click.
+            out.append(n - 1)
+        elif skipped > 1:
+            out.append(None)
+        out.append(n)
+        previous = n
+    return out
+
+
+def paginate(rows, page_raw, size_raw=None, sizes=PAGE_SIZES,
+             default_size=DEFAULT_PAGE_SIZE):
+    """Cut one page out of a list of rows for display.
+
+    A bad PAGE number is clamped into range rather than 404'd: asking for page
+    999 of a 3-page table is a stale bookmark, not an error, and clamping never
+    widens a selection. A bad page SIZE falls back to the default. Either one
+    sets `rejected` so the page can tell the reader a control was ignored.
+
+    Returns a dict rather than a tuple because the template reads it by name
+    (page.rows, page.total, ...) and a 9-tuple at the call site is unreadable.
+    """
+    # ponytail: whole result set held in memory and sliced here. The largest
+    # table in this dataset is ~212 rows; move to SQL LIMIT/OFFSET past ~5k.
+    size, rejected = validate(size_raw, set(sizes), int)
+    if size is None:
+        size = default_size
+
+    total = len(rows)
+    pages = max(1, -(-total // size))       # ceiling division
+
+    page = 1
+    if page_raw not in (None, ""):
+        try:
+            page = int(page_raw)
+        except (TypeError, ValueError):
+            rejected = True
+    page = max(1, min(page, pages))
+
+    start = (page - 1) * size
+    return {
+        "rows": rows[start:start + size],
+        "page": page,
+        "pages": pages,
+        "size": size,
+        "sizes": list(sizes),
+        "total": total,
+        "window": page_window(page, pages),
+        "first": start + 1 if total else 0,
+        "last": min(start + size, total),
+        "rejected": rejected,
+    }
+
+
 # ---------------------------------------------------------------------------
 # Display formatting
 #
@@ -225,5 +330,20 @@ def fmt_pct(value, digits=1):
     """
     try:
         return "%.*f%%" % (digits, float(value))
+    except (TypeError, ValueError):
+        return BLANK
+
+
+def fmt_num(value, digits=2):
+    """12.3456 -> '12.35'. None or non-numeric -> 'no data'.
+
+    Deliberately WITHOUT a thousands separator, unlike fmt_int. This is the
+    formatter the exports share with the screen, and "1,234.5" lands in a
+    spreadsheet as text, which defeats the point of exporting a number. The
+    screen keeps fmt_int where grouping helps a reader; a cell that has to be
+    summed uses this.
+    """
+    try:
+        return "%.*f" % (digits, float(value))
     except (TypeError, ValueError):
         return BLANK

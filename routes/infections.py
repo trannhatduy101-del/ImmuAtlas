@@ -3,206 +3,181 @@
 from flask import Blueprint, render_template, request
 
 import db
+import exports
 
 bp = Blueprint("infections", __name__)
 
 
-def _validate(value, allowed_values):
-    """Return the value if it is in the allowed list; otherwise return None."""
-    if value is None:
-        return None
-
-    value = str(value).strip()
-    allowed = {str(item) for item in allowed_values}
-
-    return value if value in allowed else None
-
-
-# Safe sorting options.
-# The user selects a label, but only these predefined SQL fragments
-# are allowed to reach the ORDER BY clause.
+# Safe sorting options for the by-country table. The user picks a label; only
+# these fixed SQL fragments can ever reach ORDER BY.
 SORT_KEYS = {
-    "rate_desc": "cases_per_100k DESC",
-    "rate_asc": "cases_per_100k ASC",
-    "cases_desc": "cases DESC",
-    "cases_asc": "cases ASC",
+    "rate_desc": "cases_per_100k IS NULL, cases_per_100k DESC, country_name ASC",
+    "rate_asc": "cases_per_100k IS NULL, cases_per_100k ASC,  country_name ASC",
+    "cases_desc": "cases DESC, country_name ASC",
+    "cases_asc": "cases ASC,  country_name ASC",
     "country_asc": "country_name ASC",
 }
-
-SORT_LABELS = {
-    "rate_desc": "Infection rate: highest first",
-    "rate_asc": "Infection rate: lowest first",
-    "cases_desc": "Cases: highest first",
-    "cases_asc": "Cases: lowest first",
-    "country_asc": "Country name",
-}
-
+SORT_LABELS = [
+    ("rate_desc", "Infection rate: highest first"),
+    ("rate_asc", "Infection rate: lowest first"),
+    ("cases_desc", "Cases: highest first"),
+    ("cases_asc", "Cases: lowest first"),
+    ("country_asc", "Country name"),
+]
 DEFAULT_SORT = "rate_desc"
+
+# The all-phases table is five rows, so it gets a sort but no pager.
+PHASE_SORT_KEYS = {
+    "cases_desc": "total_cases DESC",
+    "rate_desc": "infection_rate_per_100k IS NULL, infection_rate_per_100k DESC",
+    "rate_asc": "infection_rate_per_100k IS NULL, infection_rate_per_100k ASC",
+    "phase": "economy_phase ASC",
+}
+PHASE_SORT_LABELS = [
+    ("cases_desc", "Total cases: highest first"),
+    ("rate_desc", "Rate: highest first"),
+    ("rate_asc", "Rate: lowest first"),
+    ("phase", "Economic phase"),
+]
+DEFAULT_PHASE_SORT = "cases_desc"
+
+# Export columns. The formatter is the same one the template uses, so the file
+# and the screen cannot disagree, and each one turns None into "no data".
+COLUMNS = [
+    ("Country", "country_name", str),
+    ("Economic phase", "economy_phase", str),
+    ("Disease", "disease_name", str),
+    ("Year", "year", db.fmt_int),
+    ("Reported cases", "cases", db.fmt_int),
+    ("Population", "national_population", db.fmt_int),
+    ("Cases per 100k", "cases_per_100k", db.fmt_num),
+    ("Data status", "value_status", str),
+]
 
 
 @bp.route("/infections")
 def index():
-    # ---------------------------------------------------------
-    # 1. Load filter options from the database
-    # ---------------------------------------------------------
+    try:
+        economies = db.query(db.load_query("filter_economies"))
+        infection_types = db.query(db.load_query("filter_infection_types"))
+        years = db.query(db.load_query("filter_years"))
+    except db.DatabaseMissing as exc:
+        return render_template("pages/2b_infections.html", db_missing=str(exc)), 503
 
-    economies = db.query(
-        db.load_query("filter_economies")
-    )
+    valid_economies = {row["economy_phase"] for row in economies}
+    valid_infections = {row["inf_type"] for row in infection_types}
+    valid_years = {row["year"] for row in years}
 
-    infection_types = db.query(
-        db.load_query("filter_infection_types")
-    )
+    # A value that is not on the list never reaches the database, and the fact
+    # that it was dropped is reported rather than silently widening the view.
+    rejected = []
+    selected_economy, bad = db.validate(request.args.get("economy"), valid_economies)
+    if bad:
+        rejected.append("economic status")
+    selected_infection, bad = db.validate(
+        request.args.get("infection_type"), valid_infections)
+    if bad:
+        rejected.append("infection type")
+    selected_year, bad = db.validate(request.args.get("year"), valid_years, int)
+    if bad:
+        rejected.append("year")
 
-    years = db.query(
-        db.load_query("filter_years")
-    )
+    sort = request.args.get("sort")
+    order_by = db.safe_order_by(sort, SORT_KEYS, DEFAULT_SORT)
+    selected_sort = sort if sort in SORT_KEYS else DEFAULT_SORT
+    if sort is not None and sort not in SORT_KEYS:
+        rejected.append("sort order")
 
-    # ---------------------------------------------------------
-    # 2. Get the values submitted by the user
-    # ---------------------------------------------------------
-
-    selected_economy = _validate(
-        request.args.get("economy"),
-        [row["economy_phase"] for row in economies],
-    )
-
-    selected_infection = _validate(
-        request.args.get("infection_type"),
-        [row["inf_type"] for row in infection_types],
-    )
-
-    selected_year = _validate(
-        request.args.get("year"),
-        [row["year"] for row in years],
-    )
-
-    selected_sort = _validate(
-        request.args.get("sort"),
-        SORT_KEYS.keys(),
-    )
-
-    if selected_sort is None:
-        selected_sort = DEFAULT_SORT
-
-    # ---------------------------------------------------------
-    # 3. Prepare empty results
-    # ---------------------------------------------------------
+    phase_sort = request.args.get("esort")
+    phase_order_by = db.safe_order_by(phase_sort, PHASE_SORT_KEYS, DEFAULT_PHASE_SORT)
+    selected_phase_sort = (phase_sort if phase_sort in PHASE_SORT_KEYS
+                           else DEFAULT_PHASE_SORT)
+    if phase_sort is not None and phase_sort not in PHASE_SORT_KEYS:
+        rejected.append("phase sort order")
 
     results = []
     summary = None
     all_economies_summary = []
-
-    # NEW:
-    # These results will be used for the visualisation/chart.
     chart_results = []
+    page = db.paginate([], None)
 
-    # ---------------------------------------------------------
-    # 4. Only query the main data when all filters are valid
-    # ---------------------------------------------------------
+    # Every link and form on the page is built from this dict, so the pager,
+    # the table controls and the export links can never disagree about the
+    # current selection.
+    table_args = {
+        "economy": selected_economy,
+        "infection_type": selected_infection,
+        "year": selected_year,
+        "sort": selected_sort,
+        "per_page": request.args.get("per_page"),
+        "esort": selected_phase_sort,
+    }
 
-    if (
-        selected_economy
-        and selected_infection
-        and selected_year
-    ):
+    if selected_economy and selected_infection and selected_year:
         params = {
             "economy": selected_economy,
             "infection_type": selected_infection,
             "year": int(selected_year),
         }
 
-        # -----------------------------------------------------
-        # Main result table
-        # -----------------------------------------------------
-
-        order_by = SORT_KEYS[selected_sort]
-
-        sql = (
-            db.load_query("infections_by_economy")
-            + " ORDER BY "
-            + order_by
-        )
-
+        # order_by can only be one of the literal strings in SORT_KEYS.
         results = db.query(
-            sql,
+            db.load_query("infections_by_economy") + " ORDER BY " + order_by,
             params,
         )
 
-        # -----------------------------------------------------
-        # Summary information
-        # -----------------------------------------------------
-
-        summary_results = db.query(
-            db.load_query("infections_economy_summary"),
-            params,
+        # The export always gets the full filtered result, never one page.
+        response = exports.send(
+            request.args.get("format"),
+            "infections_%s_%s_%s" % (
+                selected_economy.replace(" ", "-").lower(),
+                selected_infection, selected_year),
+            "Infections by economic status",
+            "%s - %s - %s" % (selected_economy, selected_infection, selected_year),
+            COLUMNS, results,
         )
+        if response is not None:
+            return response
 
-        if summary_results:
-            summary = summary_results[0]
-
-        # -----------------------------------------------------
-        # All economic phases side by side, for the selected disease/year --
-        # independent of which single economy is selected above (brief
-        # example: total cases of a disease per economic phase, all phases
-        # shown at once).
-        # -----------------------------------------------------
+        summary = db.query_one(db.load_query("infections_economy_summary"), params)
 
         all_economies_summary = db.query(
-            db.load_query("infections_all_economies_summary"),
+            db.load_query("infections_all_economies_summary")
+            + " ORDER BY " + phase_order_by,
             params,
         )
 
-        # -----------------------------------------------------
-        # NEW: Data for the visualisation
-        # -----------------------------------------------------
-        #
-        # This query gets the Top 10 countries with the
-        # highest infection rate for the selected filters.
-        #
-        # IMPORTANT:
-        # This is separate from the main table so the user can
-        # still choose any sorting method for the table.
-        # -----------------------------------------------------
+        chart_results = db.query(db.load_query("infections_economy_chart"), params)
 
-        chart_results = db.query(
-            db.load_query("infections_economy_chart"),
-            params,
-        )
-
-    # ---------------------------------------------------------
-    # 5. Render the page
-    # ---------------------------------------------------------
+        page = db.paginate(results, request.args.get("page"),
+                           request.args.get("per_page"))
+        if page["rejected"]:
+            rejected.append("page or rows-per-page")
+        table_args["per_page"] = page["size"]
 
     return render_template(
         "pages/2b_infections.html",
-
-        # Filter options
+        db_missing=None,
         economies=economies,
         infection_types=infection_types,
         years=years,
-
-        # Selected filters
         selected_economy=selected_economy,
         selected_infection=selected_infection,
         selected_year=selected_year,
-
-        # Sorting
         selected_sort=selected_sort,
         sort_options=SORT_LABELS,
-
-        # Main page data
+        selected_phase_sort=selected_phase_sort,
+        phase_sort_options=PHASE_SORT_LABELS,
+        rejected=rejected,
         results=results,
         summary=summary,
         all_economies_summary=all_economies_summary,
-
-        # NEW:
-        # Send Top 10 chart data to the HTML template.
         chart_results=chart_results,
-
-        # Display formatters, shared with the Sub-Task A pages so the whole
-        # site formats numbers the same way.
+        page=page,
+        table_args=table_args,
+        pdf_ok=exports.pdf_available(),
         fmt_int=db.fmt_int,
         fmt_big=db.fmt_big,
         fmt_pct=db.fmt_pct,
+        fmt_num=db.fmt_num,
     )

@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_controls.html" import hidden_args, table_controls, pager, page_count, export_links %}
 {% block title %}Infections by economic status &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
@@ -10,6 +11,12 @@
 {% endblock %}
 
 {% block main %}
+{% if db_missing %}
+  <div class="empty-state">
+    <h2>No data loaded</h2>
+    <p>{{ db_missing }}</p>
+  </div>
+{% else %}
 
 {# ---- Filters. GET, so the selection lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Filter</h2>
@@ -42,24 +49,30 @@
         {% endfor %}
       </select>
     </div>
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_options.items() %}
-          <option value="{{ key }}" {% if selected_sort == key %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
     <div class="field field-actions">
       <button type="submit">Apply</button>
       <a class="reset" href="{{ url_for('infections.index') }}">Reset</a>
     </div>
   </div>
+  {# Sort and rows-per-page belong to a table, so they live in that table's
+     header. They ride along as hidden inputs; `page` deliberately does not,
+     because page 4 of the old result means nothing in the new one. #}
+  {{ hidden_args(table_args, omit=['economy', 'infection_type', 'year', 'page']) }}
   <p class="filter-note">
     All three of economic status, infection type and year are needed &mdash; the
     rate for a group has no meaning without a single disease and year.
   </p>
 </form>
+
+{% if rejected %}
+  <div class="rejected-note" role="status">
+    <strong>Filter ignored.</strong>
+    The value supplied for
+    {% for r in rejected %}{{ r }}{% if not loop.last %}{% if loop.revindex0 == 1 %} and {% else %}, {% endif %}{% endif %}{% endfor %}
+    is not one this page offers, so it was dropped. The filters now in force are
+    the ones shown selected above.
+  </div>
+{% endif %}
 
 {% if not (selected_economy and selected_infection and selected_year) %}
   <div class="empty-state prompt-state">
@@ -83,7 +96,7 @@
       &middot; {{ fmt_int(summary.country_count) }} countries
     </p>
     <div class="ov-main">
-      <span class="ov-fig">{{ '%.1f'|format(summary.infection_rate_per_100k) }}</span>
+      <span class="ov-fig">{{ fmt_num(summary.infection_rate_per_100k, 1) }}</span>
       <div class="ov-detail">
         <span class="ov-label">reported cases per 100,000 people in this income group</span>
         <p class="ov-verdict">
@@ -93,6 +106,15 @@
         </p>
       </div>
     </div>
+    {% if summary.n_suspicious_zero %}
+      <p class="ov-verdict ov-verdict--muted">
+        <strong>{{ fmt_int(summary.n_suspicious_zero) }}</strong> of these countries
+        reported zero for this disease in <em>every</em> year of the series. They are
+        counted in the total above and flagged &ldquo;0 &mdash; check&rdquo; in the
+        table below: a reported zero and an unreported year look identical in the
+        source data, so this is our inference, not WHO's.
+      </p>
+    {% endif %}
     <p class="ov-note">Rate = total reported cases &divide; total population &times; 100,000 &mdash; population-weighted, so a large country counts more than a small one; never an average of country rates.</p>
   </section>
 
@@ -100,9 +122,14 @@
          independent of which single phase is selected above. ---- #}
   {% if all_economies_summary %}
     <h2 class="section-head">Result &middot; every economic phase</h2>
-    <div class="vx-table-block">
+    <div class="vx-table-block" id="phase-table">
       <div class="vx-table-header">
         <span class="vx-table-title">{{ summary.disease_name }} &middot; {{ selected_year }} &middot; all phases</span>
+        {# Five rows, so a sort but no pager. Its own parameter `esort`, so
+           sorting phases never disturbs the country table below. #}
+        {{ table_controls('infections.index', table_args, 'esort',
+                          phase_sort_options, selected_phase_sort,
+                          anchor='#phase-table') }}
       </div>
       <div class="vx-table-wrap">
         <table class="vx-table">
@@ -112,6 +139,7 @@
               <th scope="col" class="num">Countries</th>
               <th scope="col" class="num">Total cases</th>
               <th scope="col" class="num">Rate / 100k</th>
+              <th scope="col" class="num">Flagged</th>
             </tr>
           </thead>
           <tbody>
@@ -120,13 +148,24 @@
                 <th scope="row" class="vx-cell-key">{{ row.economy_phase }}</th>
                 <td class="num">{{ fmt_int(row.country_count) }}</td>
                 <td class="num">{{ fmt_int(row.total_cases) }}</td>
-                <td class="num"><strong>{% if row.infection_rate_per_100k is not none %}{{ '%.2f'|format(row.infection_rate_per_100k) }}{% else %}&mdash;{% endif %}</strong></td>
+                <td class="num"><strong>{{ fmt_num(row.infection_rate_per_100k) }}</strong></td>
+                <td class="num">
+                  {% if row.n_suspicious_zero %}
+                    <span class="vx-pill vx-pill--down"
+                          title="Countries reporting zero in every year of the series. Counted in the total.">{{ fmt_int(row.n_suspicious_zero) }}</span>
+                  {% else %}&mdash;{% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="vx-table-foot">Combines InfectionData, Country and CountryPopulation across every economic phase for {{ summary.disease_name }} in {{ selected_year }}.</div>
+      <div class="vx-table-foot">
+        Combines InfectionData, Country and CountryPopulation across every economic
+        phase for {{ summary.disease_name }} in {{ selected_year }}.
+        &ldquo;Flagged&rdquo; counts countries reporting zero in every year &mdash;
+        included in the totals, not removed from them.
+      </div>
     </div>
   {% endif %}
 
@@ -137,7 +176,9 @@
     <figure class="imp-viz">
       <figcaption class="imp-viz-cap">
         The ten countries with the highest reported infection rate in this group.
-        The longer the bar, the higher the rate (cases per 100,000).
+        The longer the bar, the higher the rate (cases per 100,000). A rate needs
+        a population figure, so any country without one is absent from this chart
+        while still appearing in the table below.
       </figcaption>
       <ol class="imp-ranks">
         {% for row in chart_results %}
@@ -163,9 +204,13 @@
 
   {# ---- Full country table ---- #}
   <h2 class="section-head">Result &middot; by country</h2>
-  <div class="vx-table-block">
+  <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">{{ selected_economy }} &middot; {{ summary.disease_name }} &middot; {{ selected_year }}</span>
+      {{ table_controls('infections.index', table_args, 'sort', sort_options,
+                        selected_sort, anchor='#country-table', page_key='page',
+                        size_key='per_page', sizes=page.sizes, size_active=page.size) }}
+      {{ export_links('infections.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
       <table class="vx-table">
@@ -179,12 +224,12 @@
           </tr>
         </thead>
         <tbody>
-          {% for row in results %}
+          {% for row in page.rows %}
             <tr>
               <th scope="row" class="vx-cell-key">{{ row.country_name }}</th>
               <td class="num">{{ fmt_int(row.cases) }}</td>
-              <td class="num">{% if row.national_population is not none %}{{ fmt_int(row.national_population) }}{% else %}&mdash;{% endif %}</td>
-              <td class="num"><strong>{% if row.cases_per_100k is not none %}{{ '%.2f'|format(row.cases_per_100k) }}{% else %}&mdash;{% endif %}</strong></td>
+              <td class="num">{{ fmt_int(row.national_population) }}</td>
+              <td class="num"><strong>{{ fmt_num(row.cases_per_100k) }}</strong></td>
               <td>
                 {% if row.value_status == 'suspicious_zero' %}
                   <span class="vx-pill vx-pill--down">0 &mdash; check</span>
@@ -200,8 +245,11 @@
       </table>
     </div>
     <div class="vx-table-foot">
-      {{ fmt_int(results | length) }} countries &middot; sorted by
-      {{ sort_options[selected_sort] | lower }}
+      <span class="vx-foot-count">
+        {{ page_count(page, 'countries') }} &middot; sorted by
+        {{ (sort_options | selectattr('0','equalto',selected_sort) | first)[1] | lower }}
+      </span>
+      {{ pager(page, 'infections.index', table_args, anchor='#country-table') }}
     </div>
   </div>
 
@@ -220,7 +268,15 @@
       <dt>Data status</dt>
       <dd>&ldquo;reported&rdquo; is a normal figure; &ldquo;reported 0&rdquo; is a
         genuine zero; &ldquo;0 &mdash; check&rdquo; is a zero that looks
-        suspicious in context &mdash; it is flagged rather than dropped or trusted.</dd>
+        suspicious in context &mdash; it is flagged rather than dropped or trusted.
+        A flagged row is still counted in every total on this page: the source
+        cannot tell a true zero from a year nobody reported, so removing those
+        rows would move each figure on the strength of our own guess.</dd>
+      <dt>&ldquo;Not classified&rdquo;</dt>
+      <dd>Countries with no World-Bank income group in the supplied data. They
+        are kept as a group of their own rather than dropped, for the same
+        reason page 2A keeps territories it cannot match to a region: a country
+        that vanishes from a comparison is worse than one shown as unclassified.</dd>
       <dt>SQL and Python</dt>
       <dd>SQL does the filtering, the rate calculation and the sorting; Python
         validates every selection against the values the page offers before it
@@ -228,5 +284,6 @@
     </dl>
   </div>
 
+{% endif %}
 {% endif %}
 {% endblock %}

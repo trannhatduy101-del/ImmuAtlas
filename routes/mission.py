@@ -41,9 +41,14 @@ def _group_by_persona_and_category(rows, categories, field):
 
 @bp.route("/mission")
 def index():
-    team_members = db.query(db.load_query("team_members"))
+    try:
+        team_members = db.query(db.load_query("team_members"))
+        persona_rows = db.query(db.load_query("persona_list"))
+    except db.DatabaseMissing as exc:
+        # A fresh clone has no immuatlas.db until rebuild_db.sh has run. Say so
+        # rather than letting the page 500 with nothing a reader can act on.
+        return render_template("pages/1b_mission.html", db_missing=str(exc)), 503
 
-    persona_rows = db.query(db.load_query("persona_list"))
     goals = _group_by_persona(db.query(db.load_query("persona_goals")), "goal")
     needs = _group_by_persona(db.query(db.load_query("persona_needs")), "need")
     pains = _group_by_persona(db.query(db.load_query("persona_pains")), "pain_point")
@@ -76,6 +81,7 @@ def index():
 
     return render_template(
         "pages/1b_mission.html",
+        db_missing=None,
         team_members=team_members,
         personas=personas,
     )

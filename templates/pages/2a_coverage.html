@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_controls.html" import hidden_args, table_controls, pager, page_count, export_links %}
 {% block title %}Vaccination rates &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
@@ -61,19 +62,17 @@
         {% endfor %}
       </select>
     </div>
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_labels %}
-          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
     <div class="field field-actions">
       <button type="submit">Apply</button>
       <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
     </div>
   </div>
+  {# Sort and rows-per-page are NOT here: they belong to a specific table and
+     live in that table's header, so the control is next to what it changes.
+     They ride along as hidden inputs so re-filtering keeps them -- but `page`
+     is deliberately dropped, because page 4 of the old result means nothing in
+     the new one. #}
+  {{ hidden_args(table_args, omit=['antigen', 'year', 'region', 'country', 'page', 'submitted']) }}
   <p class="filter-note">
     Region and country apply together &mdash; selecting both narrows to that
     country within that region.
@@ -149,7 +148,11 @@
         <span class="ov-fig">{{ fmt_pct(outcome.avg_coverage) }}</span>
         <div class="ov-detail">
           <span class="ov-label">average of reporting national figures</span>
-          {% if single_threshold %}
+          {# avg_coverage is an AVG() and is NULL when nothing in the selection
+             reported. n_thresholds is then 0, so single_threshold already
+             excludes that case -- but only by accident, and the arithmetic on
+             the next line would raise rather than degrade. Test it directly. #}
+          {% if single_threshold and outcome.avg_coverage is not none %}
             {% set gap = outcome.avg_coverage - threshold.threshold_pct %}
             <div class="ov-bar" aria-hidden="true">
               <span class="ov-bar-fill" style="width: {{ [outcome.avg_coverage, 100]|min }}%"></span>
@@ -182,15 +185,22 @@
   </p>
 
   {% set has_t = threshold and threshold.threshold_pct is not none %}
-  <div class="vx-table-block">
-    <div class="vx-table-header"><span class="vx-table-title">Region table</span></div>
+  <div class="vx-table-block" id="region-table">
+    <div class="vx-table-header">
+      <span class="vx-table-title">Region table</span>
+      {# Seven rows, so this table gets a sort but no pager. Its parameter is
+         `rsort`, so sorting regions never disturbs the country table below. #}
+      {{ table_controls('coverage.index', table_args, 'rsort',
+                        region_sort_labels, rsort_active, anchor='#region-table') }}
+    </div>
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
           <tr>
             <th scope="col">Region</th>
             <th scope="col" class="num">Avg coverage</th>
-            {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target</th>{% endif %}
+            {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target</th>
+            <th scope="col" class="num">Met target</th>{% endif %}
             <th scope="col" class="num">Countries</th>
             <th scope="col" class="num">Reporting</th>
           </tr>
@@ -215,6 +225,10 @@
                     <span class="vx-pill vx-pill--{{ 'up' if met else 'down' }}">{{ '%+.1f'|format(v - threshold.threshold_pct) }} pp</span>
                   {% else %}&mdash;{% endif %}
                 </td>
+                {# Brief 2A, Table 2: how many of this region's countries met at
+                   least the threshold. Shown over the region's total so the
+                   count is read as a proportion, not as a bare number. #}
+                <td class="num">{{ fmt_int(item.row.n_met_threshold) }} <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span></td>
               {% endif %}
               <td class="num">{{ fmt_int(item.row.n_countries) }}</td>
               <td class="num">{{ fmt_int(item.row.n_reporting) }}</td>
@@ -233,16 +247,16 @@
          note rather than crowding the table. ---- #}
   <h2 class="section-head">Result &middot; by country</h2>
   <p class="section-intro">
-    Every country in the selection, one per row. The <strong>Sort by</strong>
-    control in the filter above reorders this table; the pages below step through it.
+    Every country in the selection, one per row. Sort and page size sit in the
+    table header; a download always contains every row, not just this page.
   </p>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">Country table</span>
-      <a class="vx-download" href="{{ url_for('coverage.index', antigen=antigen, year=year,
-                        region=region, country=country, sort=sort_active, submitted='1', format='csv') }}">
-        Download CSV
-      </a>
+      {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
+                        anchor='#country-table', page_key='page',
+                        size_key='per_page', sizes=page.sizes, size_active=page.size) }}
+      {{ export_links('coverage.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
       <table class="vx-table">
@@ -255,7 +269,7 @@
           </tr>
         </thead>
         <tbody>
-          {% for r in page_rows %}
+          {% for r in page.rows %}
             <tr>
               <th scope="row" class="vx-cell-key">
                 {{ r.country_name }}
@@ -287,28 +301,10 @@
     </div>
     <div class="vx-table-foot">
       <span class="vx-foot-count">
-        {% if total_rows %}Showing {{ page_from }}&ndash;{{ page_to }} of {{ fmt_int(total_rows) }}{% else %}No records{% endif %}
+        {{ page_count(page, 'countries') }}
         &middot; sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}
       </span>
-      {% if total_pages > 1 %}
-        <nav class="pager" aria-label="Country table pages">
-          {% if page > 1 %}
-            <a class="pager-btn" rel="prev"
-               href="{{ url_for('coverage.index', antigen=antigen, year=year, region=region,
-                        country=country, sort=sort_active, submitted='1', page=page-1) }}#country-table">&lsaquo; Prev</a>
-          {% else %}
-            <span class="pager-btn is-disabled">&lsaquo; Prev</span>
-          {% endif %}
-          <span class="pager-info">Page {{ page }} of {{ total_pages }}</span>
-          {% if page < total_pages %}
-            <a class="pager-btn" rel="next"
-               href="{{ url_for('coverage.index', antigen=antigen, year=year, region=region,
-                        country=country, sort=sort_active, submitted='1', page=page+1) }}#country-table">Next &rsaquo;</a>
-          {% else %}
-            <span class="pager-btn is-disabled">Next &rsaquo;</span>
-          {% endif %}
-        </nav>
-      {% endif %}
+      {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>
   </div>
 
@@ -351,6 +347,16 @@
         {% else %}
           Select a single antigen to see the threshold that applies to it.
         {% endif %}
+      </dd>
+
+      <dt>Met target</dt>
+      <dd>
+        Counts the countries in a region whose reported coverage reached the
+        threshold, out of the countries that region has in this selection.
+        Countries are counted once each, not once per row &mdash; so with no
+        year chosen, a country counts as having met the target if it did so in
+        at least one year of the selection. The column only appears once a
+        single antigen is chosen, because the threshold belongs to the disease.
       </dd>
 
       <dt>Exclusions</dt>

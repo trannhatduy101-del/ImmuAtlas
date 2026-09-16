@@ -18,11 +18,11 @@ sibling page in its level, so Explore reads as current on both 2A and 2B.
 
 # label, endpoint, endpoints this item is "current" for, children
 #
-# A header item with children carries BOTH a link and a separate expand button.
-# The label itself always goes straight to the Sub-Task A page, so Compare
-# reaches Level 3 in one click; the button beside it opens the pair. Grace's
+# A header item with children is still a plain link: the label goes straight to
+# the Sub-Task A page, so Compare reaches Level 3 in one click, and the children
+# appear beside it as a CSS-only submenu on hover or keyboard focus. Grace's
 # anti-goals rule out a funnel, and a parent that only opens a menu is exactly
-# that. The expander adds the B pages without taking the direct route away.
+# that. The submenu adds the B pages without taking the direct route away.
 PRIMARY_NAV = [
     ("Home", "landing.index", ["landing.index"], []),
     ("Mission", "mission.index", ["mission.index"], []),

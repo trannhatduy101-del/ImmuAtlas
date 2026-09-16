@@ -11,7 +11,7 @@
 
 {% block body_class %}lp-vax{% endblock %}
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/vaxvision-landing.css') }}">
+  <link rel="stylesheet" href="{{ static_v('css/vaxvision-landing.css') }}">
 {% endblock %}
 
 {# ---- Small inline SVG icons for the four stat cards (decorative). ---- #}
@@ -208,9 +208,25 @@
           <text class="lp-trend-axistitle" transform="translate(14 {{ (chart.plot_top + chart.plot_bottom) / 2 }}) rotate(-90)" text-anchor="middle">Coverage %</text>
           <text class="lp-trend-axistitle" x="{{ (chart.plot_left + chart.plot_right) / 2 }}" y="{{ chart_h - 6 }}" text-anchor="middle">Year</text>
           {# The data: soft area, the line, and a dot per year. #}
-          <polygon class="lp-trend-area" points="{{ chart.coords[0][0] }},{{ chart.plot_bottom }} {{ chart.polyline }} {{ chart.coords[-1][0] }},{{ chart.plot_bottom }}"/>
+          <polygon class="lp-trend-area" points="{{ chart.coords[0].x }},{{ chart.plot_bottom }} {{ chart.polyline }} {{ chart.coords[-1].x }},{{ chart.plot_bottom }}"/>
           <polyline class="trend-line" points="{{ chart.polyline }}"/>
-          {% for x, y, row in chart.coords %}<circle class="trend-dot" cx="{{ x }}" cy="{{ y }}" r="2.4"/>{% endfor %}
+          {# One group per year, hover-readable with no JavaScript.
+             .trend-hit is the whole point of the group: a 2.4px dot on a 720px
+             chart cannot be hit with a mouse, so an invisible 12px circle takes
+             the hover for it. <title> is the same figure for screen readers and
+             for anyone whose browser ignores the CSS. #}
+          {% for c in chart.coords %}
+            <g class="trend-point">
+              <title>{{ c.row.year }}: {{ fmt_pct(c.row.avg_coverage) }} average reported coverage</title>
+              <circle class="trend-hit" cx="{{ c.x }}" cy="{{ c.y }}" r="12"/>
+              <circle class="trend-dot" cx="{{ c.x }}" cy="{{ c.y }}" r="2.4"/>
+              <g class="trend-tip" aria-hidden="true">
+                <rect x="{{ c.tip_x }}" y="{{ c.tip_y }}" width="{{ chart.tip_w }}" height="{{ chart.tip_h }}" rx="5"/>
+                <text class="trend-tip-year" x="{{ c.tip_mid }}" y="{{ c.tip_y + 14 }}" text-anchor="middle">{{ c.row.year }}</text>
+                <text class="trend-tip-val" x="{{ c.tip_mid }}" y="{{ c.tip_y + 27 }}" text-anchor="middle">{{ fmt_pct(c.row.avg_coverage) }}</text>
+              </g>
+            </g>
+          {% endfor %}
         </svg>
         <details class="lp-trend-note">
           <summary>How to read this chart</summary>

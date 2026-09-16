@@ -185,16 +185,15 @@ summary:focus-visible {
 
 .logo { display: flex; align-items: center; gap: .55rem;
         text-decoration: none; color: inherit; }
+/* The site mark is an image, not a lettered tile: no background, no type
+   metrics. object-fit keeps the square artwork square whatever box it lands
+   in, and the explicit width/height in the HTML reserve the space so the
+   header does not jump while the file loads. */
 .logo-mark {
-  display: grid;
-  place-items: center;
+  display: block;
   width: 2rem; height: 2rem;
-  background: var(--accent);
-  color: var(--accent-ink);
+  object-fit: contain;
   border-radius: var(--radius);
-  font-size: .82rem;
-  font-weight: 700;
-  letter-spacing: .02em;
 }
 .logo-word { font-size: 1.22rem; font-weight: 700; letter-spacing: -.015em; }
 
@@ -202,8 +201,8 @@ summary:focus-visible {
   display: flex; flex-wrap: wrap; gap: .3rem;
   list-style: none; margin: 0; padding: 0;
 }
-/* Block by default so a no-script submenu stacks under its parent;
-   script switches it to a row. */
+/* Stacks under its parent by default; the hover rules below turn it into a
+   dropdown on pointer devices. */
 .nav-item { position: relative; }
 
 .primary-nav > ul > li > a {
@@ -221,32 +220,9 @@ summary:focus-visible {
   color: var(--accent);
   font-weight: 600;
 }
-.has-sub > a { padding-right: .35rem; }
-
-/* The expander is a separate control from the link, so the label can go
-   straight to its page while the button opens the pair. */
-.nav-toggle {
-  display: grid;
-  place-items: center;
-  width: 1.9rem;
-  border: 0;
-  border-bottom: 2px solid transparent;
-  border-radius: var(--radius);
-  background: transparent;
-  color: var(--ink-muted);
-  cursor: pointer;
-  font: inherit;
-}
-.nav-toggle:hover { background: var(--bg-sunk); color: var(--ink); }
-.chev { width: .72rem; height: .5rem; transition: transform .15s var(--ease-out); }
-.nav-toggle[aria-expanded="true"] { color: var(--accent); }
-.nav-toggle[aria-expanded="true"] .chev { transform: rotate(180deg); }
-@media (prefers-reduced-motion: reduce) { .chev { transition: none; } }
-
-/* NO SCRIPT is the base state: the expander is hidden, and the submenu sits in
-   the normal flow under its parent, visible. Every one of the six pages is
-   reachable from the header whether or not script runs. */
-.nav-toggle { display: none; }
+/* NO HOVER is the base state: the submenu sits in the normal flow under its
+   parent, visible. Every one of the six pages is reachable from the header on
+   a touch screen, with no hover and no script. */
 .subnav {
   list-style: none;
   margin: .15rem 0 0;
@@ -265,23 +241,33 @@ summary:focus-visible {
 .sub-code { font-weight: 700; color: var(--accent); min-width: 1.6rem; }
 
 /* On hover-capable devices the item becomes a real dropdown, no JavaScript:
-   the expandable labels get a right-pointing chevron; hovering OR keyboard-
+   the expandable labels get a left-pointing chevron; hovering OR keyboard-
    focusing the item reveals its pages and rotates the chevron to point down.
    Touch / no-hover devices keep the submenu in the flow (rules above), so every
    page stays reachable without hover and without script. */
 @media (hover: hover) {
   .nav-item { display: flex; align-items: center; }
 
-  /* Right-pointing chevron (▸) after Explore / Compare. */
-  .has-sub > a { display: inline-flex; align-items: center; gap: .38rem; }
-  .has-sub > a::after {
-    content: ""; width: .4rem; height: .4rem; flex: none;
+  /* Left-pointing chevron (◂) after Explore / Compare: a square showing only
+     two of its borders, turned so the corner between them becomes the point.
+     .primary-nav has to be in BOTH selectors. Without it .has-sub > a scores
+     (0,1,1) and loses `display` to .primary-nav > ul > li > a at (0,1,3), the
+     link stays `display: block`, and the pseudo-element stays a non-replaced
+     INLINE box -- where CSS ignores width, height and transform outright. The
+     arrow then paints as its bare 2px right border, one text-line tall: a
+     vertical bar, no matter what angle is written here. Both `inline-flex` on
+     the link (which blockifies the pseudo-element into a flex item) and
+     `inline-block` on the pseudo-element itself are load-bearing. */
+  .primary-nav .has-sub > a { display: inline-flex; align-items: center; gap: .38rem; }
+  .primary-nav .has-sub > a::after {
+    content: ""; display: inline-block;
+    width: .4rem; height: .4rem; flex: none;
     border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
-    transform: rotate(-45deg); opacity: .65;
+    transform: rotate(135deg); opacity: .65;
     transition: transform .15s var(--ease-out), opacity .15s var(--ease-out);
   }
-  .has-sub:hover > a::after,
-  .has-sub:focus-within > a::after { transform: rotate(45deg); opacity: 1; }  /* ▾ when open */
+  .primary-nav .has-sub:hover > a::after,
+  .primary-nav .has-sub:focus-within > a::after { transform: rotate(45deg); opacity: 1; }  /* ▾ when open */
 
   /* Submenu: a flyout below the item, hidden until hover / focus. */
   .subnav {
@@ -307,7 +293,7 @@ summary:focus-visible {
   .subnav a.current { background: var(--bg-sunk); }
 }
 @media (hover: hover) and (prefers-reduced-motion: reduce) {
-  .has-sub > a::after, .subnav { transition: none; }
+  .primary-nav .has-sub > a::after, .subnav { transition: none; }
 }
 
 .visually-hidden {
@@ -419,7 +405,15 @@ h3 {
 @media (max-width: 58rem) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 34rem) { .footer-grid { grid-template-columns: 1fr; } }
 
-.footer-brand .logo-mark { background: var(--accent-lift); margin-bottom: .6rem; }
+/* The artwork is drawn for a light ground, so it gets its own white plate in
+   the navy footer rather than being left to sink into it. Slightly larger than
+   the header copy because the footer has the room. */
+.footer-brand .logo-mark {
+  width: 2.6rem; height: 2.6rem;
+  padding: .25rem;
+  background: #fff;
+  margin-bottom: .6rem;
+}
 .footer-word { margin: 0; font-size: 1.15rem; font-weight: 700; }
 .footer-tagline { margin: .2rem 0 0; font-size: .88rem; color: var(--ink-invert-muted); }
 
@@ -687,6 +681,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: var(--radius);
   padding: 1.2rem;
   max-width: 44rem;
+  /* Capped width AND centred. Without the auto margin the box keeps its 44rem
+     cap but sits flush left in the 68rem wrap, which reads as a layout bug on
+     every page that shows a prompt or an empty result. */
+  margin-inline: auto;
 }
 .empty-inline { color: var(--ink-muted); font-style: italic; }
 
@@ -790,6 +788,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .filter-bar .field { flex: 1 1 9rem; min-width: 8rem; }
 .filter-bar .field select { width: 100%; max-width: none; }
+/* Sits under a control to explain why its options changed. */
+.field-hint { display: block; margin-top: .25rem; font-size: .76rem; color: var(--ink-muted); }
 .filter-bar .field-actions { flex: 0 0 auto; align-self: flex-end; }
 @media (max-width: 40rem) { .filter-bar .field { flex: 1 1 100%; } }
 
@@ -841,6 +841,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-table tbody tr:hover { background: var(--bg-sunk); }
 .vx-table tbody tr.is-current { background: var(--accent-wash); }
 .vx-table tbody tr.is-current th { color: var(--accent-strong); }
+/* "3 of 11": the denominator is muted so the eye lands on the count, but it is
+   still on screen -- a bare "3" beside a region says nothing about whether that
+   is most of it or almost none of it. */
+.vx-of { color: var(--ink-muted); font-weight: 400; font-size: .85em; }
 .vx-table-foot {
   padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
   border-top: 1px solid var(--rule);
@@ -919,7 +923,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 1rem 1.2rem;
-  max-width: 48rem;
+  /* No max-width: the note sits under a full-width table on all four data
+     pages, and a 48rem box below a 68rem table reads as a layout fault pinned
+     to the left margin rather than as part of the same block. */
   background: var(--bg-card);
 }
 .method-note h2 {
@@ -931,9 +937,24 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border: 0;
   padding: 0;
 }
-.method-note dl { margin: 0; }
-.method-note dt { font-weight: 700; margin-top: .8rem; font-size: .92rem; }
-.method-note dd { margin: .15rem 0 0; font-size: .92rem; }
+/* Full width would otherwise give 100-plus-character lines, so the list flows
+   into columns as wide as the card allows -- two on a laptop, one on a phone,
+   with no breakpoint to keep in sync with the container.
+
+   CSS columns, not grid: in a grid each <dt> and <dd> is its own item, so a
+   term can end up at the foot of one column with its definition at the head of
+   the next. The break rules below are what actually keep a pair together, and
+   they only exist in the column model. */
+.method-note dl {
+  margin: 0;
+  columns: 22rem 2;
+  column-gap: 2.4rem;
+}
+.method-note dt { font-weight: 700; margin-top: .8rem; font-size: .92rem; break-after: avoid; }
+.method-note dd { margin: .15rem 0 0; font-size: .92rem; break-inside: avoid; }
+/* The first term must not be pushed down by its own top margin at the head of
+   a column, or column two starts lower than column one. */
+.method-note dt:first-of-type { margin-top: 0; }
 .method-note .citation { display: block; margin-top: .35rem; border: 0; padding: 0; }
 
 .rejected-note {
@@ -982,13 +1003,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 
 /* ===========================================================================
-   1A landing — redesigned hero, count-up figures, an interactive self-drawing
-   trend chart, and one orchestrated reveal-on-scroll.
+   1A landing — hero, the four figures, the trend band and the vaccine cards.
 
-   All of this is progressive enhancement: every rule degrades to a readable,
-   fully-visible page. Motion is gated behind prefers-reduced-motion, and the
-   reveal only ever hides content once JS has confirmed it can show it again
-   (the .lp-anim class is added by script, never present in the served HTML).
+   There is no JavaScript on this site, so nothing here waits for a script:
+   every rule renders its final state on first paint. Motion is limited to
+   hover transitions, all of them gated behind prefers-reduced-motion.
    Class-prefixed `lp-` so nothing here can reach the other five pages.
    =========================================================================== */
 
@@ -1055,57 +1074,45 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   }
 }
 
-/* Interactive trend chart -------------------------------------------------- */
-.lp-chart { position: relative; margin: 1rem 0 0; }
-.lp-trend .trend-line {
-  fill: none;
-  stroke: var(--accent);
-  stroke-width: 2.5;
-  stroke-linejoin: round;
-  stroke-linecap: round;
-}
-/* pathLength="1" normalises the line so one keyframe draws any geometry. */
-.lp-trend.is-draw .trend-line {
-  stroke-dasharray: 1;
-  stroke-dashoffset: 1;
-  animation: lp-draw 1100ms var(--ease-out) forwards;
-}
-@keyframes lp-draw { to { stroke-dashoffset: 0; } }
-.lp-trend .trend-dot { fill: var(--accent); transition: r .12s var(--ease-out); }
-.lp-trend .lp-hit { fill: transparent; }             /* generous hover/tap target */
-.lp-pt { cursor: pointer; outline: none; }
-.lp-pt:hover .trend-dot,
-.lp-pt:focus-visible .trend-dot { r: 4.5; }
-.lp-pt:focus-visible .lp-hit { stroke: var(--focus); stroke-width: 2; }
+/* Trend chart: year + coverage on hover, no JavaScript --------------------
+   Every year is a <g class="trend-point"> holding an invisible hit circle, the
+   visible dot, and the tooltip. CSS :hover works on SVG elements, so the group
+   reveals its own tooltip and nothing has to listen for an event.
 
-/* The readout that follows the hovered / focused point. */
-.lp-tip {
-  position: absolute;
-  transform: translate(-50%, calc(-100% - .55rem));
-  background: var(--bg-deep);
-  color: var(--ink-invert);
-  border-radius: var(--radius);
-  padding: .35rem .6rem;
-  font-size: .78rem;
-  white-space: nowrap;
-  pointer-events: none;
-  box-shadow: 0 6px 18px rgba(22, 25, 29, .22);
-  z-index: 5;
-}
-.lp-tip strong { color: #fff; }
+   The hit circle is load-bearing, not padding: the dot is r="2.4" on a 720-unit
+   chart, which no one can land a pointer on. r="12" makes the target roughly a
+   finger wide while staying narrower than the gap between two years, so
+   neighbouring tooltips cannot both open.
 
-/* One orchestrated entrance ------------------------------------------------ */
-.lp-reveal.lp-anim {
+   The tooltip's x/y come from routes/landing.py, already clamped inside the
+   viewBox -- an SVG clips to its viewBox, so a tip centred on the first or last
+   dot would otherwise be sliced off at the edge. */
+.trend-hit { fill: transparent; }
+.trend-point { cursor: default; }
+
+/* The dot grows by thickening a ring around it rather than by animating r:
+   the r property is not reliably settable from CSS across browsers, and a
+   stroke works everywhere. */
+.trend-dot {
+  stroke: var(--bg);
+  stroke-width: 0;
+  transition: stroke-width .12s var(--ease-out);
+}
+.trend-point:hover .trend-dot { stroke-width: 3; }
+
+.trend-tip {
   opacity: 0;
-  transform: translateY(12px);
-  transition: opacity 500ms var(--ease-out), transform 500ms var(--ease-out);
+  pointer-events: none;           /* never steals the hover from its own group */
+  transition: opacity .12s var(--ease-out);
 }
-.lp-reveal.lp-anim.is-in { opacity: 1; transform: none; }
+.trend-point:hover .trend-tip { opacity: 1; }
+.trend-tip rect { fill: var(--bg-deep); }
+.trend-tip text { fill: #fff; font-family: var(--font-body); }
+.trend-tip-year { font-size: 11px; opacity: .8; }
+.trend-tip-val { font-size: 14px; font-weight: 700; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-reveal.lp-anim { opacity: 1; transform: none; transition: none; }
-  .lp-trend.is-draw .trend-line { animation: none; stroke-dashoffset: 0; }
-  .lp-trend .trend-dot { transition: none; }
+  .trend-dot, .trend-tip { transition: none; }
 }
 
 /* Four figures — small summary cards ---------------------------------------
@@ -1432,6 +1439,59 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .mission-section { max-width: 62rem; margin: 0 0 2.4rem; }
 .mission-section > p { color: var(--ink-muted); max-width: 60ch; }
 
+/* 1B "how to use this site": an ordered walkthrough. The number is drawn from a
+   CSS counter rather than the list marker, so it can be a filled circle beside
+   the step instead of a bare digit above it -- and screen readers still get a
+   real <ol>, which a <div> stack of steps would have thrown away. */
+.guide-steps {
+  list-style: none;
+  counter-reset: guide-step;
+  margin: 1.2rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: .85rem;
+  max-width: 60rem;
+}
+.guide-steps > li {
+  counter-increment: guide-step;
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: .3rem .85rem;
+  padding: .9rem 1rem;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+}
+.guide-steps > li::before {
+  content: counter(guide-step);
+  grid-row: 1 / span 2;
+  display: grid;
+  place-items: center;
+  width: 2rem; height: 2rem;
+  border-radius: 50%;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: .9rem;
+  font-weight: 700;
+}
+.guide-steps h3 {
+  margin: 0;
+  align-self: center;
+  font-size: 1rem;
+}
+.guide-steps p {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: .92rem;
+  max-width: 62ch;
+}
+/* Narrow screens: the number moves above the step rather than squeezing the
+   text into a column too thin to read. */
+@media (max-width: 34rem) {
+  .guide-steps > li { grid-template-columns: 1fr; }
+  .guide-steps > li::before { grid-row: auto; }
+}
+
 /* Persona switch: two name buttons toggle the two panels, pure CSS (radios). */
 .persona-switch { position: relative; }
 .persona-radio { position: absolute; width: 1px; height: 1px; opacity: 0; }
@@ -1628,6 +1688,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vbar-key::before { content: ""; width: .9rem; height: .6rem; border-radius: 2px; }
 .vbar-key--up::before { background: var(--accent); }
 .vbar-key--down::before { background: var(--outcome); }
+.vbar-key--top::before { background: var(--accent-strong); outline: 2px solid var(--accent-lift); outline-offset: 1px; }
 .vbar-scroll { overflow-x: auto; padding: 1.6rem 0; }
 .vbar-plot { position: relative; height: 17.5rem; }
 .vbar-zero { position: absolute; left: 0; right: 0; border-top: 1px solid var(--ink-muted); opacity: .45; z-index: 1; }
@@ -1639,6 +1700,22 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .vbar-fill.is-up   { background: var(--accent);  border-radius: 6px 6px 2px 2px; }
 .vbar-fill.is-down { background: var(--outcome); border-radius: 2px 2px 6px 6px; }
+/* The single biggest improvement. Darker fill AND an outline, so the mark does
+   not depend on telling two blues apart -- the rank number in the table says
+   the same thing in words. */
+.vbar-fill.is-top {
+  background: var(--accent-strong);
+  outline: 2px solid var(--accent-lift);
+  outline-offset: 1px;
+}
+.vbar-fill.is-top .vbar-val { color: var(--accent-strong); font-weight: 800; }
+/* Rank column: fixed-width tabular figures so the ranking reads as a column of
+   numbers rather than a ragged edge. */
+.vx-rank {
+  font-variant-numeric: tabular-nums; font-weight: 700;
+  color: var(--ink-muted); width: 3rem;
+}
+.vx-table tbody tr.is-current .vx-rank { color: var(--accent-strong); }
 .vbar-val {
   position: absolute; left: 50%; transform: translateX(-50%);
   font-family: var(--font-display); font-size: .78rem; font-weight: 700;
@@ -1652,9 +1729,42 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-size: .76rem; color: var(--ink-muted); overflow-wrap: anywhere;
 }
 
-/* 2A country table footer + pager (server-side pagination, GET links, no JS). */
+/* Per-table sort / rows-per-page, sitting in the table's own gradient header so
+   the control is beside the thing it changes rather than in a filter bar three
+   sections up the page. Its own GET form, a sibling of the filter form -- HTML
+   forbids nesting one form inside another. */
+.table-controls {
+  display: flex; align-items: center; gap: .45rem; flex-wrap: wrap;
+  margin-left: auto;
+}
+.table-controls-field { display: inline-flex; align-items: center; gap: .3rem; }
+.table-controls-field span {
+  font-size: .68rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: rgba(255, 255, 255, .8);
+}
+.table-controls select {
+  font: inherit; font-size: .8rem; padding: .18rem .35rem;
+  border: 1px solid rgba(255, 255, 255, .35); border-radius: var(--radius);
+  background: rgba(255, 255, 255, .12); color: #fff;
+}
+/* The dropdown list itself is painted by the OS, so its options need ink on
+   paper regardless of the translucent control above. */
+.table-controls select option { color: var(--ink); background: var(--bg-card); }
+.table-controls button {
+  font: inherit; font-size: .78rem; font-weight: 700; cursor: pointer;
+  padding: .22rem .6rem; border-radius: var(--radius);
+  border: 1px solid rgba(255, 255, 255, .5);
+  background: rgba(255, 255, 255, .16); color: #fff;
+}
+.table-controls button:hover { background: rgba(255, 255, 255, .28); }
+.vx-export { display: inline-flex; gap: .4rem; }
+
+/* Table footer + pager (server-side pagination, GET links, no JS). */
 .vx-table-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
-.pager { display: inline-flex; align-items: center; gap: .5rem; }
+/* Wraps rather than overflows: 27 numbered pages plus the jump box will not
+   fit one line on a narrow screen, and a pager that pushes the table sideways
+   is worse than one two rows tall. */
+.pager { display: inline-flex; align-items: center; gap: .35rem; flex-wrap: wrap; }
 .pager-btn {
   font-size: .85rem; font-weight: 600; text-decoration: none;
   color: var(--accent); border: 1px solid var(--rule); border-radius: 999px; padding: .28rem .7rem;
@@ -1663,6 +1773,51 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pager-btn:hover { background: var(--bg-sunk); }
 .pager-btn.is-disabled { color: var(--ink-muted); opacity: .5; pointer-events: none; }
 .pager-info { font-size: .82rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+/* Numbered pages. min-width keeps "1" and "27" the same width so the row does
+   not shift as the reader pages through. */
+.pager-num {
+  min-width: 1.9rem;
+  padding: .28rem .35rem;
+  border: 1px solid transparent;
+  border-radius: var(--radius);
+  font-size: .85rem;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+  text-decoration: none;
+  color: var(--accent);
+}
+.pager-num:hover { background: var(--bg-sunk); }
+.pager-num.is-current {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-ink);
+  font-weight: 700;
+}
+.pager-gap { color: var(--ink-muted); padding: 0 .1rem; }
+
+.pager-jump { display: inline-flex; align-items: center; gap: .35rem; margin-left: .4rem; }
+.pager-jump label { font-size: .82rem; color: var(--ink-muted); }
+.pager-jump input {
+  width: 4.2rem;
+  padding: .24rem .4rem;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  font: inherit;
+  font-size: .85rem;
+}
+.pager-jump button {
+  padding: .26rem .7rem;
+  border: 1px solid var(--rule);
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--accent);
+  font: inherit;
+  font-size: .85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.pager-jump button:hover { background: var(--bg-sunk); }
 
 /* vs-target pill used in the 2A region + country tables. */
 .vx-pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; white-space: nowrap; }

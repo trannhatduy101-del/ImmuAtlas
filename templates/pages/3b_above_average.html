@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_controls.html" import hidden_args, table_controls, pager, page_count, export_links %}
 {% block title %}Above the global rate &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
@@ -10,6 +11,12 @@
 {% endblock %}
 
 {% block main %}
+{% if db_missing %}
+  <div class="empty-state">
+    <h2>No data loaded</h2>
+    <p>{{ db_missing }}</p>
+  </div>
+{% else %}
 
 {# ---- Filters. GET, so the comparison lives in the URL and can be shared. ---- #}
 <h2 class="section-head">Filter</h2>
@@ -33,24 +40,30 @@
         {% endfor %}
       </select>
     </div>
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_labels %}
-          <option value="{{ key }}" {% if key == selected_sort %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
-    </div>
     <div class="field field-actions">
       <button type="submit">Compare rates</button>
       <a class="reset" href="{{ url_for('above_average.index') }}">Reset</a>
     </div>
   </div>
+  {# Sort and rows-per-page live in the table header, beside the table they
+     change. `page` is deliberately not carried: page 4 of the old result set
+     means nothing in the new one. #}
+  {{ hidden_args(table_args, omit=['infection_type', 'year', 'page']) }}
   <p class="filter-note">
     The global rate is total cases divided by total population &mdash;
     population-weighted, not an average of country rates.
   </p>
 </form>
+
+{% if rejected %}
+  <div class="rejected-note" role="status">
+    <strong>Filter ignored.</strong>
+    The value supplied for
+    {% for r in rejected %}{{ r }}{% if not loop.last %}{% if loop.revindex0 == 1 %} and {% else %}, {% endif %}{% endif %}{% endfor %}
+    is not one this page offers, so it was dropped. The filters now in force are
+    the ones shown selected above.
+  </div>
+{% endif %}
 
 {% if not (selected_infection and selected_year) %}
   <div class="empty-state prompt-state">
@@ -70,7 +83,7 @@
   <section class="outcome-verdict">
     <p class="ov-context">
       {{ global_rate.disease_name }} &middot; {{ selected_year }} &middot;
-      global rate {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k
+      global rate {{ fmt_num(global_rate.global_rate_per_100k) }} / 100k
     </p>
     <div class="ov-main">
       <span class="ov-fig">{{ fmt_int(results | length) }}</span>
@@ -78,7 +91,7 @@
         <span class="ov-label">countries reported a rate above the global rate</span>
         <p class="ov-verdict">
           Global rate this year:
-          <strong>{{ '%.2f'|format(global_rate.global_rate_per_100k) }} per 100k</strong>
+          <strong>{{ fmt_num(global_rate.global_rate_per_100k) }} per 100k</strong>
           &mdash; {{ fmt_big(global_rate.total_cases) }} reported cases across
           {{ fmt_big(global_rate.total_population) }} people.
         </p>
@@ -121,9 +134,13 @@
 
     {# ---- Full table of every country above the global rate ---- #}
     <h2 class="section-head">Result &middot; all countries above</h2>
-    <div class="vx-table-block">
+    <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
       <div class="vx-table-header">
         <span class="vx-table-title">{{ global_rate.disease_name }} &middot; {{ selected_year }} &middot; {{ fmt_int(results | length) }} above the global rate</span>
+        {{ table_controls('above_average.index', table_args, 'sort', sort_labels,
+                          selected_sort, anchor='#country-table', page_key='page',
+                          size_key='per_page', sizes=page.sizes, size_active=page.size) }}
+        {{ export_links('above_average.index', table_args, pdf_ok) }}
       </div>
       <div class="vx-table-wrap">
         <table class="vx-table">
@@ -136,18 +153,39 @@
             </tr>
           </thead>
           <tbody>
-            {% for row in results %}
+            {# Brief 3B: "The global rate should be shown at the top of the
+               table for easy viewing." Deliberately OUTSIDE the loop, so it is
+               not a row of `results`: sorting cannot move it and paging cannot
+               leave it behind on page 1. It is also why it is not in the CSV --
+               it has a different denominator from every row below it, and a
+               reader summing the cases column should not pick up the total as
+               though it were another country. #}
+            <tr class="is-current">
+              <th scope="row" class="vx-cell-key">Global</th>
+              <td class="num">{{ fmt_int(global_rate.total_cases) }}</td>
+              <td class="num">{{ fmt_int(global_rate.total_population) }}</td>
+              <td class="num"><strong>{{ fmt_num(global_rate.global_rate_per_100k) }}</strong></td>
+            </tr>
+            {% for row in page.rows %}
               <tr>
                 <th scope="row" class="vx-cell-key">{{ row.country_name }}</th>
                 <td class="num">{{ fmt_int(row.total_cases) }}</td>
                 <td class="num">{% if row.population is not none %}{{ fmt_int(row.population) }}{% else %}&mdash;{% endif %}</td>
-                <td class="num"><strong>{{ '%.2f'|format(row.country_rate_per_100k) }}</strong></td>
+                <td class="num"><strong>{{ fmt_num(row.country_rate_per_100k) }}</strong></td>
               </tr>
             {% endfor %}
           </tbody>
         </table>
       </div>
-      <div class="vx-table-foot">Sorted by {{ (sort_labels | selectattr('0','equalto',selected_sort) | first)[1] | lower }} &middot; every row is above the {{ '%.2f'|format(global_rate.global_rate_per_100k) }} / 100k global rate</div>
+      <div class="vx-table-foot">
+        <span class="vx-foot-count">
+          {{ page_count(page, 'countries') }} &middot; sorted by
+          {{ (sort_labels | selectattr('0','equalto',selected_sort) | first)[1] | lower }}
+          &middot; every row is above the
+          {{ fmt_num(global_rate.global_rate_per_100k) }} / 100k global rate
+        </span>
+        {{ pager(page, 'above_average.index', table_args, anchor='#country-table') }}
+      </div>
     </div>
   {% else %}
     <div class="empty-state">
@@ -177,5 +215,6 @@
     </dl>
   </div>
 
+{% endif %}
 {% endif %}
 {% endblock %}

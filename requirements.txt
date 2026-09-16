@@ -1,1 +1,6 @@
 Flask>=3.0
+
+# PDF export only. The site runs, and CSV export works, without it: exports.py
+# imports it inside the PDF renderer and hides the PDF link when it is absent,
+# so an environment that predates this line is never left with a broken app.
+fpdf2>=2.8,<3

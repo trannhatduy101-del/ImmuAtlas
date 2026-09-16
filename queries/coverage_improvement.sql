@@ -15,15 +15,41 @@
 --
 -- Bound params: :antigen, :start_year, :end_year (and :limit, appended with the
 -- whitelisted ORDER BY in the route -- a column name cannot be a bound value).
+-- improvement_rank stays on coverage_reported, NOT on doses_per_100_change.
+-- Ranking on the population denominator would change every figure on the page,
+-- change which country leads, and make "coverage" mean one thing here and
+-- another on 2A. The brief asks for a population-aware rate, not for the
+-- ranking to be rebuilt on it, so both denominators are reported and only one
+-- of them orders the table.
+--
+-- improvement_rank is computed in SQL, by coverage gain, ALWAYS -- never by
+-- whatever the reader last sorted the table by. That is the whole point: a
+-- Python enumerate() would renumber the rows under every sort, so "rank 3"
+-- would mean something different on each view. Ranking here means a country
+-- keeps its rank when the table is re-sorted or paged, and "biggest improver"
+-- is simply improvement_rank = 1. Window functions need SQLite 3.25+; the
+-- version bundled with Python 3.10+ is well past that.
 SELECT
     cs.country_id,
     cs.country_name,
     cs.region_name,
+    RANK() OVER (
+        ORDER BY ROUND(ce.coverage_reported - cs.coverage_reported, 2) DESC
+    )                                                       AS improvement_rank,
     cs.coverage_reported                                    AS coverage_start,
     ce.coverage_reported                                    AS coverage_end,
     ROUND(ce.coverage_reported - cs.coverage_reported, 2)   AS coverage_change,
     cs.national_population                                  AS population_start,
     ce.national_population                                  AS population_end,
+    -- The brief's population-based reading of "vaccination rate". v_coverage
+    -- already computes it (doses per 100 of the WHOLE national population), so
+    -- it is read here, never recalculated. It is NOT coverage: its denominator
+    -- is everyone alive, not the birth cohort the doses were aimed at, so the
+    -- two columns are shown side by side and labelled, never mixed.
+    cs.doses_per_100_population                             AS doses_per_100_start,
+    ce.doses_per_100_population                             AS doses_per_100_end,
+    ROUND(ce.doses_per_100_population - cs.doses_per_100_population, 4)
+                                                            AS doses_per_100_change,
     isf.cases_per_100k                                      AS cases_start,
     ief.cases_per_100k                                      AS cases_end,
     ROUND(ief.cases_per_100k - isf.cases_per_100k, 2)       AS case_change

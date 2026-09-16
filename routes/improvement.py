@@ -12,12 +12,10 @@ column, turns the numbers into bar geometry, and formats the output. Nothing is
 sorted or aggregated in Python.
 """
 
-import csv
-import io
-
-from flask import Blueprint, render_template, request, Response
+from flask import Blueprint, render_template, request
 
 import db
+import exports
 
 bp = Blueprint("improvement", __name__)
 
@@ -47,45 +45,44 @@ DEFAULT_SORT = "gain_desc"
 COUNT_OPTIONS = (5, 10, 20, 50)
 DEFAULT_COUNT = 10
 
+# Export columns, declared once and shared by CSV and PDF. Each formatter is
+# the one the template uses, so the file and the screen agree, and each turns
+# None into "no data" rather than an empty cell.
+COLUMNS = [
+    ("Rank", "improvement_rank", db.fmt_int),
+    ("Country", "country_name", str),
+    ("Region", "region_name", str),
+    ("Coverage start %", "coverage_start", db.fmt_num),
+    ("Coverage end %", "coverage_end", db.fmt_num),
+    ("Change pp", "coverage_change", db.fmt_num),
+    ("Cases per 100k start", "cases_start", db.fmt_num),
+    ("Cases per 100k end", "cases_end", db.fmt_num),
+    ("Case change", "case_change", db.fmt_num),
+    # Population denominator. Four decimals because doses per 100 of a whole
+    # national population is a small number -- rounded to two it reads 0.00 for
+    # most countries and the column looks empty rather than small.
+    ("Doses per 100 pop start", "doses_per_100_start", lambda v: db.fmt_num(v, 4)),
+    ("Doses per 100 pop end", "doses_per_100_end", lambda v: db.fmt_num(v, 4)),
+    ("Doses per 100 pop change", "doses_per_100_change", lambda v: db.fmt_num(v, 4)),
+]
 
-def _validate(raw, allowed, cast=str):
-    """Resolve a request value against the set we actually offer.
 
-    Returns (value, rejected). A value not on the list never reaches the
-    database, and the fact that it was dropped is returned so the page can say
-    so rather than silently widening the selection.
-    """
-    if raw is None or raw == "":
-        return None, False
-    try:
-        value = cast(raw)
-    except (TypeError, ValueError):
-        return None, True
-    if value in allowed:
-        return value, False
-    return None, True
-
-
-def _rows_for(antigen, start_year, end_year, order_by, limit):
+def _rows_for(antigen, start_year, end_year, order_by):
     """Run the ranked improvement query. `order_by` is a trusted SORT_KEYS
-    fragment; every value the user supplied is a bound parameter."""
+    fragment; every value the user supplied is a bound parameter.
+
+    Returns the WHOLE eligible pool, not a top-N slice. The "Countries" control
+    is now a page size, so the reader can walk past rank 10 and an export can
+    contain every ranked country instead of only the first page.
+    """
     # Wrap the join in a subquery so ORDER BY resolves against the SELECT's
     # output aliases (country_name etc. exist in several joined views, so an
     # unwrapped ORDER BY on them is ambiguous). order_by is a trusted fragment.
     base = db.load_query("coverage_improvement")
-    sql = "SELECT * FROM (" + base + ") ORDER BY " + order_by + " LIMIT :limit"
+    sql = "SELECT * FROM (" + base + ") ORDER BY " + order_by
     params = {"antigen": antigen, "start_year": start_year,
-              "end_year": end_year, "limit": limit}
+              "end_year": end_year}
     return db.query(sql, params)
-
-
-def _eligible_count(antigen, start_year, end_year):
-    """How many countries reported this antigen in BOTH years -- the pool the
-    top-N is drawn from, for an honest 'N of M' summary."""
-    base = db.load_query("coverage_improvement")
-    sql = "SELECT COUNT(*) FROM (" + base + ")"
-    return db.scalar(sql, {"antigen": antigen, "start_year": start_year,
-                           "end_year": end_year}) or 0
 
 
 def _summary_for(antigen, start_year, end_year):
@@ -140,7 +137,11 @@ def _gain_bars(rows):
         else:
             height_pct = round(-change / max_loss * (100 - zero_pct), 2) if max_loss else 0.0
             top_pct = zero_pct
-        bars.append({"row": r, "up": up, "top_pct": top_pct, "height_pct": height_pct})
+        bars.append({"row": r, "up": up, "top_pct": top_pct,
+                     "height_pct": height_pct,
+                     # Rank comes from SQL and is always by gain, so the single
+                     # biggest improver stays marked whatever the table sort is.
+                     "is_top": r["improvement_rank"] == 1})
     return {"zero_pct": zero_pct, "bars": bars}
 
 
@@ -158,8 +159,8 @@ def index():
     # The dropdowns land pre-filled with a sensible default period, but nothing
     # is ranked until the visitor presses Rank (the form carries submitted=1).
     # A CSV request always implies a submitted selection.
-    submitted = "submitted" in request.args or request.args.get("format") == "csv"
-    year_values = sorted(valid_years)
+    submitted = ("submitted" in request.args
+                 or request.args.get("format") in exports.FORMATS)
     disease_for = {a["antigen"]: a["disease_name"] for a in antigens}
     name_for = {a["antigen"]: a["antigen_name"] for a in antigens}
 
@@ -169,19 +170,19 @@ def index():
     # visitor chooses them (the form marks them with a red * and HTML `required`).
     # No silent default is filled in, so a ranking never appears for a period the
     # visitor did not actually pick.
-    antigen, bad = _validate(request.args.get("antigen"), valid_antigens)
+    antigen, bad = db.validate(request.args.get("antigen"), valid_antigens)
     if bad:
         rejected.append("antigen")
 
-    start_year, bad = _validate(request.args.get("start"), valid_years, int)
+    start_year, bad = db.validate(request.args.get("start"), valid_years, int)
     if bad:
         rejected.append("start year")
 
-    end_year, bad = _validate(request.args.get("end"), valid_years, int)
+    end_year, bad = db.validate(request.args.get("end"), valid_years, int)
     if bad:
         rejected.append("end year")
 
-    count, bad = _validate(request.args.get("n"), set(COUNT_OPTIONS), int)
+    count, bad = db.validate(request.args.get("n"), set(COUNT_OPTIONS), int)
     if bad:
         rejected.append("number of countries")
     if count is None:
@@ -193,14 +194,36 @@ def index():
     if sort is not None and sort not in SORT_KEYS:
         rejected.append("sort order")
 
+    # The End year dropdown only offers years after the chosen start, so the
+    # invalid half of the range is not on the menu at all. Narrowing happens on
+    # the next render because the site carries no JavaScript -- the page says
+    # so under the field rather than leaving the reader to wonder.
+    #
+    # Only the END list is narrowed. Filtering the start list by the chosen end
+    # would trap a reader who picked 2010-2015 and then wants to reach further
+    # back: 2005 would no longer be offered as a start.
+    end_years = ([y for y in years if y["year"] > start_year]
+                 if start_year is not None else list(years))
+
+    # This stays the real guard. A hand-typed ?start=2015&end=2000 never touches
+    # the dropdown, so the check cannot live in the markup.
     # The end year must be after the start year, or "improvement over a period"
     # has no meaning. Say so rather than returning a confusing empty table.
     range_error = (start_year is not None and end_year is not None
                    and end_year <= start_year)
 
+    # Every link and form on the page builds its URL from this dict, so the
+    # pager, the table controls and the export links cannot disagree about the
+    # current selection. It holds validated values only -- never request.args,
+    # which would round-trip a value the page just reported as rejected.
+    table_args = {
+        "antigen": antigen, "start": start_year, "end": end_year,
+        "n": count, "sort": sort_active, "submitted": 1,
+    }
+
     ctx = dict(
         db_missing=None,
-        antigens=antigens, years=years,
+        antigens=antigens, years=years, end_years=end_years,
         antigen=antigen, antigen_name=name_for.get(antigen),
         disease_name=disease_for.get(antigen),
         start_year=start_year, end_year=end_year,
@@ -209,7 +232,9 @@ def index():
         rejected=rejected, range_error=range_error, submitted=submitted,
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0,
         imp_summary=None, top_gainer=None,
-        fmt_int=db.fmt_int, fmt_pct=db.fmt_pct,
+        page=db.paginate([], None), table_args=table_args,
+        pdf_ok=exports.pdf_available(),
+        fmt_int=db.fmt_int, fmt_pct=db.fmt_pct, fmt_num=db.fmt_num,
     )
 
     # A required field left unchosen means the visitor hasn't really submitted a
@@ -222,37 +247,38 @@ def index():
     if range_error:
         return render_template("pages/3a_improvement.html", **ctx)
 
-    rows = _rows_for(antigen, start_year, end_year, order_by, count)
+    # The whole eligible pool, ordered by the reader's chosen sort.
+    rows = _rows_for(antigen, start_year, end_year, order_by)
     ctx["rows"] = rows
-    ctx["eligible"] = _eligible_count(antigen, start_year, end_year)
+
+    # An export is the full pool, never the page on screen -- the old version
+    # could only ever hand over the top N.
+    response = exports.send(
+        request.args.get("format"),
+        "improvement_%s_%s-%s" % (antigen, start_year, end_year),
+        "Biggest improvement in coverage",
+        "%s - %s to %s" % (name_for.get(antigen, antigen), start_year, end_year),
+        COLUMNS, rows,
+    )
+    if response is not None:
+        return response
+
+    # The pool size IS the row count, so the separate COUNT(*) round trip the
+    # old _eligible_count() did is gone.
+    page = db.paginate(rows, request.args.get("page"), count,
+                       sizes=COUNT_OPTIONS, default_size=DEFAULT_COUNT)
+    if page["rejected"]:
+        rejected.append("page")
+    ctx["page"] = page
+    ctx["eligible"] = page["total"]
     ctx["imp_summary"] = _summary_for(antigen, start_year, end_year)
+
     # The single biggest gainer, for the KPI row, regardless of the table sort.
-    _top = _rows_for(antigen, start_year, end_year, SORT_KEYS["gain_desc"], 1)
-    ctx["top_gainer"] = _top[0] if _top else None
+    # It is rank 1 by construction, so it is already in `rows`.
+    ctx["top_gainer"] = next((r for r in rows if r["improvement_rank"] == 1), None)
 
-    # CSV export of exactly what is shown: same antigen, years, N and sort.
-    if request.args.get("format") == "csv":
-        return _csv_response(rows, antigen, start_year, end_year)
-
-    ctx["bars"] = _gain_bars(rows)
+    # The chart draws the page the reader is looking at, so chart and table
+    # always show the same countries.
+    ctx["bars"] = _gain_bars(page["rows"])
 
     return render_template("pages/3a_improvement.html", **ctx)
-
-
-def _csv_response(rows, antigen, start_year, end_year):
-    """Stream the ranked result as CSV. Same figures as the table, so a reader
-    can take the numbers away and check them."""
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["country", "region",
-                "coverage_%s" % start_year, "coverage_%s" % end_year,
-                "coverage_change_pp",
-                "cases_per_100k_%s" % start_year, "cases_per_100k_%s" % end_year,
-                "case_rate_change"])
-    for r in rows:
-        w.writerow([r["country_name"], r["region_name"],
-                    r["coverage_start"], r["coverage_end"], r["coverage_change"],
-                    r["cases_start"], r["cases_end"], r["case_change"]])
-    fname = "improvement_%s_%s-%s.csv" % (antigen, start_year, end_year)
-    return Response(buf.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": "attachment; filename=%s" % fname})

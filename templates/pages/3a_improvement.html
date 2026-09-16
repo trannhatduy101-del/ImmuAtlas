@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% from "_controls.html" import hidden_args, table_controls, pager, page_count, export_links %}
 {% block title %}Biggest improvement &middot; {{ site_name }}{% endblock %}
 
 {% block hero %}
@@ -44,37 +45,42 @@
         {% endfor %}
       </select>
     </div>
+    {# Only the years after the chosen start are listed, so the invalid half of
+       the range is never on the menu. The list narrows when the page next
+       renders -- there is no JavaScript on this site -- which is what the hint
+       below the field says. #}
     <div class="field">
       <label for="f-end">End year <span class="req" aria-hidden="true">*</span></label>
       <select id="f-end" name="end" required>
-        <option value="">Select a year</option>
-        {% for y in years %}
-          <option value="{{ y.year }}" {% if y.year == end_year %}selected{% endif %}>{{ y.year }}</option>
-        {% endfor %}
+        {% if end_years %}
+          <option value="">Select a year</option>
+          {% for y in end_years %}
+            <option value="{{ y.year }}" {% if y.year == end_year %}selected{% endif %}>{{ y.year }}</option>
+          {% endfor %}
+        {% else %}
+          {# start is the last year in the data: an empty dropdown with no
+             explanation looks broken, so say what happened. #}
+          <option value="" disabled selected>No year after {{ start_year }}</option>
+        {% endif %}
       </select>
-    </div>
-    <div class="field">
-      <label for="f-n">Countries</label>
-      <select id="f-n" name="n">
-        {% for opt in count_options %}
-          <option value="{{ opt }}" {% if opt == count %}selected{% endif %}>Top {{ opt }}</option>
-        {% endfor %}
-      </select>
-    </div>
-    <div class="field">
-      <label for="f-sort">Sort by</label>
-      <select id="f-sort" name="sort">
-        {% for key, label in sort_labels %}
-          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-      </select>
+      {# Not shown when the list is empty: the disabled option already says
+         there is no year after this one, and two notices saying one thing
+         reads as a fault. #}
+      {% if start_year and end_years %}
+        <span class="field-hint">After {{ start_year }} only</span>
+      {% endif %}
     </div>
     <div class="field field-actions">
       <button type="submit">Rank</button>
       <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
     </div>
   </div>
-  <p class="filter-note">Fields marked <span class="req">*</span> are required &mdash; pick an antigen and both years to rank.</p>
+  {# Sort and page size belong to the ranking table and live in its header.
+     `page` is deliberately not carried: page 4 of the old ranking means
+     nothing once the antigen or period changes. #}
+  {{ hidden_args(table_args, omit=['antigen', 'start', 'end', 'page', 'submitted']) }}
+  <p class="filter-note">Fields marked <span class="req">*</span> are required &mdash; pick an antigen and both years to rank.
+    Once a start year is set, End year lists only the years after it; the list updates when you press Rank.</p>
 </form>
 
 {% if not submitted %}
@@ -112,10 +118,12 @@
 {% else %}
 
   <p class="selection-line">
-    Showing the <strong>top {{ rows | length }}</strong> of
+    Showing <strong>{{ page.first }}&ndash;{{ page.last }}</strong> of
     <strong>{{ fmt_int(eligible) }}</strong> countries that reported
     {{ antigen_name }} in both {{ start_year }} and {{ end_year }}, ranked by
     {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
+    Every ranked country is reachable through the pages below, and a download
+    contains all {{ fmt_int(eligible) }} of them.
   </p>
 
   {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
@@ -127,7 +135,7 @@
     <section class="outcome-verdict">
       <p class="ov-context">
         {{ antigen_name }} &middot; {{ start_year }}&ndash;{{ end_year }} &middot;
-        top {{ rows | length }} of {{ fmt_int(eligible) }} countries
+{{ fmt_int(eligible) }} ranked countries
       </p>
       <div class="ov-main">
         <span class="ov-fig">{{ '%+.1f'|format(top_gainer.coverage_change) }} pp</span>
@@ -159,9 +167,12 @@
   <div class="vbar-chart">
     <p class="vbar-cap">
       Each column is a country&rsquo;s change in reported coverage, <strong>{{ start_year }}</strong>
-      to <strong>{{ end_year }}</strong>. Bars above the line gained; bars below the line declined.
+      to <strong>{{ end_year }}</strong>. Bars above the line gained; bars below the
+      line declined. The outlined column is the biggest improvement of all
+      {{ fmt_int(eligible) }} ranked countries.
     </p>
     <div class="vbar-legend" aria-hidden="true">
+      <span class="vbar-key vbar-key--top">biggest improvement</span>
       <span class="vbar-key vbar-key--up">gained</span>
       <span class="vbar-key vbar-key--down">declined</span>
     </div>
@@ -172,7 +183,7 @@
           {% for b in bars.bars %}
             <li class="vbar-col"
                 title="{{ b.row.country_name }}: {{ '%+.1f'|format(b.row.coverage_change) }} pp">
-              <span class="vbar-fill {{ 'is-up' if b.up else 'is-down' }}"
+              <span class="vbar-fill {{ 'is-up' if b.up else 'is-down' }}{{ ' is-top' if b.is_top }}"
                     style="top: {{ b.top_pct }}%; height: {{ b.height_pct }}%;">
                 <span class="vbar-val">{{ '%+.1f'|format(b.row.coverage_change) }}</span>
               </span>
@@ -188,28 +199,34 @@
 
   {# ---- Full ranking table (VaxVision-style block: gradient header with title
          + download), including the different dataset: did cases actually fall? ---- #}
-  <div class="vx-table-block">
+  <div class="vx-table-block" id="rank-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">The ranking, with reported case rates beside it</span>
-      <a class="vx-download" href="{{ url_for('improvement.index', antigen=antigen, start=start_year,
-                        end=end_year, n=count, sort=sort_active, submitted='1', format='csv') }}">
-        Download CSV
-      </a>
+      {# "Countries" is the page size here, so `n` is the size key. #}
+      {{ table_controls('improvement.index', table_args, 'sort', sort_labels,
+                        sort_active, anchor='#rank-table', page_key='page',
+                        size_key='n', sizes=count_options, size_active=count) }}
+      {{ export_links('improvement.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
       <table class="vx-table vx-table--rank">
         <thead>
           <tr>
+            <th scope="col" class="num">#</th>
             <th scope="col">Country</th>
             <th scope="col" class="num">Coverage <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
             <th scope="col" class="num">Change</th>
+            <th scope="col" class="num">Doses / 100 pop <span class="th-sub">change</span></th>
             <th scope="col" class="num">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
             <th scope="col">Cases trend</th>
           </tr>
         </thead>
         <tbody>
-          {% for r in rows %}
-            <tr>
+          {% for r in page.rows %}
+            {# Rank comes from SQL and is always by coverage gain, so it stays
+               with a country when the reader re-sorts or pages. #}
+            <tr {% if r.improvement_rank == 1 %}class="is-current"{% endif %}>
+              <td class="num vx-rank">{{ fmt_int(r.improvement_rank) }}</td>
               <th scope="row" class="vx-cell-key">
                 <span class="vx-key-name">{{ r.country_name }}</span>
                 <span class="vx-sub">{{ r.region_name }}</span>
@@ -221,6 +238,15 @@
               </td>
               <td class="num">
                 <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</span>
+              </td>
+              {# The other denominator: doses per 100 of the whole population.
+                 Nullable -- a country missing a population figure at either end
+                 has no change to show -- so it goes through fmt_num, never
+                 through |format, which raises on None. #}
+              <td class="num">
+                {% if r.doses_per_100_change is not none %}
+                  <span class="delta-num {{ 'up' if r.doses_per_100_change >= 0 else 'down' }}">{{ fmt_num(r.doses_per_100_change, 4) }}</span>
+                {% else %}<span class="imp-tag none">no data</span>{% endif %}
               </td>
               <td class="num vx-range">
                 {% if r.cases_start is not none and r.cases_end is not none %}
@@ -246,8 +272,12 @@
       </table>
     </div>
     <div class="vx-table-foot">
-      Top {{ rows | length }} countries by coverage gain in {{ antigen_name }},
-      {{ start_year }} to {{ end_year }} &middot; case rates for {{ disease_name }}
+      <span class="vx-foot-count">
+        {{ page_count(page, 'countries') }} &middot; case rates for {{ disease_name }}
+        &middot; <strong>#</strong> is always the rank by coverage gain, so it
+        stays with a country when you re-sort
+      </span>
+      {{ pager(page, 'improvement.index', table_args, anchor='#rank-table') }}
     </div>
   </div>
 
@@ -271,6 +301,18 @@
         excluded, so none can appear from nowhere and show an impossible gain.
         {{ fmt_int(eligible) }} countries qualified.
       </dd>
+      <dt>Doses / 100 pop</dt>
+      <dd>
+        The second denominator the brief asks about: doses delivered per 100
+        people of the <em>whole</em> national population, and how that figure
+        moved between the two years. It is not a coverage rate &mdash; coverage
+        measures doses against the birth cohort they were aimed at, which is a
+        far smaller group, so this number is much smaller and the two are never
+        comparable. It reads &ldquo;no data&rdquo; where a country has no
+        population figure for one of the two years. The ranking stays on
+        reported coverage; this column is reported beside it, not ranked on.
+      </dd>
+
       <dt>Coverage above 100%</dt>
       <dd>
         Kept, not capped. Reported doses can exceed the target cohort, so an end

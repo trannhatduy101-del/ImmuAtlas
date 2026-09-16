@@ -4,10 +4,10 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block title %}{{ site_name }}{% endblock %}</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-  {# On-brand SVG favicon (the water-blue "IA" mark), so the browser tab reads as
-     a finished product rather than a blank default. SVG scales to any size. #}
-  <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
+  <link rel="stylesheet" href="{{ static_v('css/style.css') }}">
+  {# The site mark, so the browser tab matches the logo in the header rather
+     than showing a different image in each place. #}
+  <link rel="icon" href="{{ static_v('img/logo.png') }}" type="image/png">
   <meta name="theme-color" content="#0369a1">
   {% block head_extra %}{% endblock %}
   {# Preload the two self-hosted fonts so headings/body don't flash the fallback. #}
@@ -25,7 +25,11 @@
   <header class="site-header">
     <div class="wrap header-inner">
       <a class="logo" href="{{ url_for('landing.index') }}">
-        <span class="logo-mark" aria-hidden="true">IA</span>
+        {# alt is empty on purpose: the site name is spelled out in the very
+           next element, so a described image would make a screen reader
+           announce "ImmuAtlas" twice for one link. #}
+        <img class="logo-mark" width="308" height="308" alt="" aria-hidden="true"
+             src="{{ static_v('img/logo.png') }}">
         <span class="logo-word">{{ site_name }}</span>
       </a>
 
@@ -39,21 +43,10 @@
               <a href="{{ url_for(endpoint) }}"{% if current %} class="current" aria-current="page"{% endif %}>{{ label }}</a>
 
               {% if children %}
-                {# aria-expanded starts true so the submenu is OPEN in the HTML.
-                   Script collapses it on load. Without script the links are all
-                   still there and reachable, which is the point of doing it in
-                   this order rather than the other way round. #}
-                <button type="button" class="nav-toggle"
-                        aria-expanded="true"
-                        aria-controls="sub-{{ label|lower }}">
-                  <span class="visually-hidden">{{ label }} pages</span>
-                  <svg class="chev" viewBox="0 0 12 8" aria-hidden="true" focusable="false">
-                    <path d="M1 1.5 L6 6.5 L11 1.5" fill="none"
-                          stroke="currentColor" stroke-width="1.8"
-                          stroke-linecap="round" stroke-linejoin="round"/>
-                  </svg>
-                </button>
-
+                {# The submenu is always in the HTML. On a pointer device CSS
+                   turns it into a flyout that opens on hover or keyboard focus;
+                   everywhere else it simply stays in the flow. No script, so
+                   there is no state in which these links are unreachable. #}
                 <ul class="subnav" id="sub-{{ label|lower }}">
                   {% for code, sub_label, sub_endpoint in children %}
                     <li>
@@ -91,7 +84,8 @@
     <div class="wrap footer-grid">
 
       <div class="footer-brand">
-        <span class="logo-mark" aria-hidden="true">IA</span>
+        <img class="logo-mark" width="308" height="308" alt="" aria-hidden="true"
+             src="{{ static_v('img/logo.png') }}">
         <p class="footer-word">{{ site_name }}</p>
         <p class="footer-tagline">{{ site_tagline }}</p>
       </div>

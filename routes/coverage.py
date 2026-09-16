@@ -10,12 +10,10 @@ whitelists the sort column, and formats the output for reading. Nothing is
 sorted or aggregated in Python.
 """
 
-import csv
-import io
-
-from flask import Blueprint, render_template, request, Response
+from flask import Blueprint, render_template, request
 
 import db
+import exports
 
 bp = Blueprint("coverage", __name__)
 
@@ -43,35 +41,44 @@ SORT_LABELS = [
 ]
 DEFAULT_SORT = "coverage_desc"
 
+# The region table is seven rows, so it gets a sort of its own but no pager.
+# Its parameter is `rsort`, not `sort`: two controls sharing one name would put
+# it twice in the query string, and only the first occurrence is ever read.
+REGION_SORT_KEYS = {
+    "coverage_desc": "avg_weighted IS NULL, avg_weighted DESC, region_name ASC",
+    "coverage_asc":  "avg_weighted IS NULL, avg_weighted ASC,  region_name ASC",
+    "countries":     "n_countries DESC, region_name ASC",
+    "region":        "region_name ASC",
+}
+REGION_SORT_LABELS = [
+    ("coverage_desc", "Coverage, highest first"),
+    ("coverage_asc",  "Coverage, lowest first"),
+    ("countries",     "Most countries first"),
+    ("region",        "Region name"),
+]
+DEFAULT_REGION_SORT = "coverage_desc"
+
 # A typo in the source data, corrected for display only. Never
 # rewrite the supplied table.
 REGION_DISPLAY_FIX = {"Latin America & Carribean": "Latin America & Caribbean"}
 
 
+# Export columns, declared once and shared by CSV and PDF. Each formatter is
+# the one the template uses, so the downloaded file and the screen agree, and
+# each turns None into "no data" rather than an empty cell.
+COLUMNS = [
+    ("Country", "country_name", str),
+    ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
+    ("Coverage %", "coverage_reported", db.fmt_num),
+    ("Gap to threshold pp", "gap_to_threshold", db.fmt_num),
+    ("Target birth cohort", "target_cohort", db.fmt_int),
+    ("Doses per 100 population", "doses_per_100_population", db.fmt_num),
+    ("Herd immunity status", "herd_immunity_status", str),
+]
+
+
 def fix_region(name):
     return REGION_DISPLAY_FIX.get(name, name)
-
-
-def _validate(raw, allowed, cast=str):
-    """Resolve a request value against the list we actually offer.
-
-    Returns (value, rejected). This is the safety boundary the project spec section 7
-    puts in Python: a value that is not on the list never reaches the database.
-
-    Dropping an unrecognised filter WIDENS the selection, so the fact that it
-    was dropped is returned too and the page says so. Silently ignoring a filter
-    is how someone reads a figure for "all years" believing they asked for one
-    year -- which is exactly the mistake Grace was burned by.
-    """
-    if raw is None or raw == "":
-        return None, False
-    try:
-        value = cast(raw)
-    except (TypeError, ValueError):
-        return None, True
-    if value in allowed:
-        return value, False
-    return None, True
 
 
 @bp.route("/coverage")
@@ -94,7 +101,8 @@ def index():
     # the form (which carries submitted=1). Nothing is pre-run, so no figure
     # appears that the visitor did not ask for. A CSV request always implies a
     # submitted selection.
-    submitted = "submitted" in request.args or request.args.get("format") == "csv"
+    submitted = ("submitted" in request.args
+                 or request.args.get("format") in exports.FORMATS)
     if not submitted:
         return render_template(
             "pages/2a_coverage.html",
@@ -102,9 +110,12 @@ def index():
             antigens=antigens, years=years, regions=regions, countries=countries,
             antigen=None, year=None, region=None, country=None,
             sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
+            rsort_active=DEFAULT_REGION_SORT, region_sort_labels=REGION_SORT_LABELS,
             summary=None, region_view=[], rows=[], threshold=None,
             conflict=None, rejected=[], fix_region=fix_region,
+            page=db.paginate([], None), table_args={}, pdf_ok=False,
             fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,
+            fmt_num=db.fmt_num,
         )
 
     # An absent parameter falls back to the default; an invalid one falls back
@@ -113,23 +124,23 @@ def index():
     rejected = []
 
     if "antigen" in request.args:
-        antigen, bad = _validate(request.args.get("antigen"), valid_antigens)
+        antigen, bad = db.validate(request.args.get("antigen"), valid_antigens)
         if bad:
             rejected.append("antigen")
     else:
         antigen = defaults["default_antigen"]
 
     if "year" in request.args:
-        year, bad = _validate(request.args.get("year"), valid_years, int)
+        year, bad = db.validate(request.args.get("year"), valid_years, int)
         if bad:
             rejected.append("year")
     else:
         year = defaults["default_year"]
 
-    region, bad = _validate(request.args.get("region"), valid_regions, int)
+    region, bad = db.validate(request.args.get("region"), valid_regions, int)
     if bad:
         rejected.append("region")
-    country, bad = _validate(request.args.get("country"), valid_countries)
+    country, bad = db.validate(request.args.get("country"), valid_countries)
     if bad:
         rejected.append("country")
 
@@ -139,37 +150,64 @@ def index():
     if sort is not None and sort not in SORT_KEYS:
         rejected.append("sort order")
 
+    rsort = request.args.get("rsort")
+    region_order_by = db.safe_order_by(rsort, REGION_SORT_KEYS, DEFAULT_REGION_SORT)
+    rsort_active = rsort if rsort in REGION_SORT_KEYS else DEFAULT_REGION_SORT
+    if rsort is not None and rsort not in REGION_SORT_KEYS:
+        rejected.append("region sort order")
+
+    # Looked up BEFORE the queries run, because coverage_by_region binds it:
+    # the regional table counts how many of a region's countries cleared this
+    # bar. A threshold is a property of one disease, so there is none to apply
+    # until a single antigen has been chosen.
+    threshold = None
+    if antigen:
+        threshold = db.query_one(db.load_query("threshold_for_antigen"),
+                                 {"antigen": antigen})
+
     params = {"antigen": antigen, "year": year,
-              "region": region, "country": country}
+              "region": region, "country": country,
+              "threshold": threshold["threshold_pct"] if threshold else None}
 
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
     outcome = db.query_one(db.load_query("coverage_outcome"), params)
-    region_rows = db.query(db.load_query("coverage_by_region"), params)
+    # The region query is a UNION ALL, so its own ORDER BY has to sit outside
+    # the compound select -- hence the subquery wrapper.
+    region_rows = db.query(
+        "SELECT * FROM (" + db.load_query("coverage_by_region") + ") ORDER BY "
+        + region_order_by, params)
     # The only concatenation allowed near SQL in this project. order_by can only
     # be one of the literal strings in SORT_KEYS.
     rows = db.query(db.load_query("coverage_by_country") + " ORDER BY " + order_by,
                     params)
 
-    # Paginate the country table: 8 rows a page, navigated by a ?page= GET link
-    # so it works without JavaScript and stays bookmarkable. The full `rows` is
-    # kept (the CSV export needs every row); only the displayed slice is paged.
-    PER_PAGE = 8
-    total_rows = len(rows)
-    total_pages = max(1, -(-total_rows // PER_PAGE))
-    try:
-        page = int(request.args.get("page", 1))
-    except (TypeError, ValueError):
-        page = 1
-    page = max(1, min(page, total_pages))
-    page_start = (page - 1) * PER_PAGE
-    page_rows = rows[page_start:page_start + PER_PAGE]
-    page_from = page_start + 1 if total_rows else 0
-    page_to = min(page_start + PER_PAGE, total_rows)
+    # An export is the whole filtered, sorted result -- never the page on
+    # screen. Placed before the remaining page queries so a download does not
+    # pay for work it will not use.
+    response = exports.send(
+        request.args.get("format"),
+        "coverage_%s_%s" % (antigen or "all", year or "all"),
+        "Vaccination rates by country",
+        "%s - %s" % (antigen or "all antigens", year or "all years"),
+        COLUMNS, rows,
+    )
+    if response is not None:
+        return response
 
-    threshold = None
-    if antigen:
-        threshold = db.query_one(db.load_query("threshold_for_antigen"),
-                                 {"antigen": antigen})
+    # Paginate the country table with a ?page= GET link so it works without
+    # JavaScript and stays bookmarkable. The full `rows` is kept above, so an
+    # export still contains every row.
+    page = db.paginate(rows, request.args.get("page"), request.args.get("per_page"))
+    if page["rejected"]:
+        rejected.append("page or rows-per-page")
+
+    # Every link and form on the page builds its URL from this dict, so the
+    # pager, the two tables' controls and the export links cannot disagree.
+    table_args = {
+        "antigen": antigen, "year": year, "region": region, "country": country,
+        "sort": sort_active, "per_page": page["size"], "rsort": rsort_active,
+        "submitted": 1,
+    }
 
     # Is the selected country actually in the selected region? If not the result
     # is legitimately empty, and the page must say why rather than showing a
@@ -198,40 +236,17 @@ def index():
             "bar_pct": min(100.0, float(weighted)) if weighted is not None else 0.0,
         })
 
-    # CSV export of the country table exactly as filtered and sorted, so a
-    # reader can take the numbers away and check them.
-    if request.args.get("format") == "csv":
-        return _csv_coverage(rows, antigen, year)
-
     return render_template(
         "pages/2a_coverage.html",
         db_missing=None, submitted=True,
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
         sort_active=sort_active, sort_labels=SORT_LABELS,
+        rsort_active=rsort_active, region_sort_labels=REGION_SORT_LABELS,
         summary=summary, outcome=outcome, region_view=region_view, rows=rows,
-        page_rows=page_rows, page=page, total_pages=total_pages,
-        total_rows=total_rows, page_from=page_from, page_to=page_to,
+        page=page, table_args=table_args, pdf_ok=exports.pdf_available(),
         threshold=threshold, conflict=conflict, rejected=rejected,
         fix_region=fix_region,
         fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,
+        fmt_num=db.fmt_num,
     )
-
-
-def _csv_coverage(rows, antigen, year):
-    """Stream the country table as CSV, matching what is shown on the page."""
-    buf = io.StringIO()
-    w = csv.writer(buf)
-    w.writerow(["country", "region", "coverage_reported",
-                "gap_to_threshold_pp", "target_cohort",
-                "doses_per_100_population", "herd_immunity_status",
-                "unmatched_territory"])
-    for r in rows:
-        w.writerow([r["country_name"], fix_region(r["region_name"]),
-                    r["coverage_reported"], r["gap_to_threshold"],
-                    r["target_cohort"], r["doses_per_100_population"],
-                    r["herd_immunity_status"],
-                    1 if r["unmatched_territory"] else 0])
-    fname = "coverage_%s_%s.csv" % (antigen or "all", year or "all")
-    return Response(buf.getvalue(), mimetype="text/csv",
-                    headers={"Content-Disposition": "attachment; filename=%s" % fname})

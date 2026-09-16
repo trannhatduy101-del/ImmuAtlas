@@ -1,0 +1,133 @@
+{# Shared table controls: per-table sort/page-size form, pager, export links.
+
+   Every macro builds its URL from `args` -- the route's dict of ALREADY
+   VALIDATED parameters -- never from request.args. Feeding request.args back
+   in would round-trip a value the page just told the reader it had rejected.
+
+   HTML forbids nested forms, so a table's control form is a SIBLING of the
+   filter form at the top of the page, living in that table's header. #}
+
+
+{# Replay the current selection as hidden inputs so a GET form submits one
+   control without dropping the others. `omit` is the set of names this
+   particular form owns and therefore must not duplicate -- a name present
+   twice in a query string is read as the first occurrence and the second
+   control silently does nothing. #}
+{% macro hidden_args(args, omit=()) %}
+  {%- for key, value in args.items() if key not in omit and value not in (None, '') %}
+  <input type="hidden" name="{{ key }}" value="{{ value }}">
+  {%- endfor %}
+{% endmacro %}
+
+
+{# Sort + rows-per-page for one table. `sort_key`/`page_key`/`size_key` are the
+   query-parameter names this table owns, so two tables on one page never fight
+   over `sort`. The anchor goes in the form's action: a GET form replaces the
+   query string but keeps the fragment, so submitting returns the reader to the
+   table instead of the top of the page. #}
+{% macro table_controls(endpoint, args, sort_key, sort_options, sort_active,
+                        anchor='', page_key=None, size_key=None,
+                        sizes=None, size_active=None) %}
+  <form class="table-controls" method="get"
+        action="{{ url_for(endpoint) }}{{ anchor }}">
+    {{ hidden_args(args, omit=[sort_key, page_key, size_key] | reject('none') | list) }}
+    <label class="table-controls-field">
+      <span>Sort</span>
+      <select name="{{ sort_key }}">
+        {% for key, label in sort_options %}
+          <option value="{{ key }}" {% if key == sort_active %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </label>
+    {% if size_key and sizes %}
+      <label class="table-controls-field">
+        <span>Rows</span>
+        <select name="{{ size_key }}">
+          {% for n in sizes %}
+            <option value="{{ n }}" {% if n == size_active %}selected{% endif %}>{{ n }}</option>
+          {% endfor %}
+        </select>
+      </label>
+    {% endif %}
+    <button type="submit">Apply</button>
+  </form>
+{% endmacro %}
+
+
+{# Prev, numbered pages, Next, and a box to jump straight to a page. Hidden
+   when there is only one page, so a short result never shows a dead control.
+
+   page.window comes from db.page_window(): the page numbers worth offering,
+   with None marking a run that was skipped. The current page is a <span>, not
+   a link to where the reader already is.
+
+   The jump box is a GET form, and it is legal here only because this macro is
+   called from .vx-table-foot, which sits OUTSIDE the page's filter form -- HTML
+   forbids one form inside another. db.paginate() clamps an out-of-range page,
+   so min/max here are a browser convenience and never the actual guard. #}
+{% macro pager(page, endpoint, args, page_key='page', anchor='') %}
+  {% if page.pages > 1 %}
+    <nav class="pager" aria-label="Table pages">
+      {% if page.page > 1 %}
+        <a class="pager-btn" rel="prev"
+           href="{{ url_for(endpoint, **dict(args, **{page_key: page.page - 1})) }}{{ anchor }}">&lsaquo; Prev</a>
+      {% else %}
+        <span class="pager-btn is-disabled">&lsaquo; Prev</span>
+      {% endif %}
+
+      {% for n in page.window %}
+        {% if n is none %}
+          <span class="pager-gap" aria-hidden="true">&hellip;</span>
+        {% elif n == page.page %}
+          <span class="pager-num is-current" aria-current="page">{{ n }}</span>
+        {% else %}
+          <a class="pager-num"
+             href="{{ url_for(endpoint, **dict(args, **{page_key: n})) }}{{ anchor }}">{{ n }}</a>
+        {% endif %}
+      {% endfor %}
+
+      {% if page.page < page.pages %}
+        <a class="pager-btn" rel="next"
+           href="{{ url_for(endpoint, **dict(args, **{page_key: page.page + 1})) }}{{ anchor }}">Next &rsaquo;</a>
+      {% else %}
+        <span class="pager-btn is-disabled">Next &rsaquo;</span>
+      {% endif %}
+
+      <form class="pager-jump" method="get" action="{{ url_for(endpoint) }}{{ anchor }}">
+        {{ hidden_args(args, omit=[page_key]) }}
+        <label for="jump-{{ page_key }}-{{ endpoint }}">Go to</label>
+        <input id="jump-{{ page_key }}-{{ endpoint }}" type="number" inputmode="numeric"
+               name="{{ page_key }}" value="{{ page.page }}"
+               min="1" max="{{ page.pages }}"
+               aria-label="Page number, 1 to {{ page.pages }}">
+        <button type="submit">Go</button>
+      </form>
+    </nav>
+  {% endif %}
+{% endmacro %}
+
+
+{# "Showing 9-16 of 212" -- always printed, so a single-page table still states
+   its size rather than leaving the reader to count. #}
+{% macro page_count(page, noun='rows') %}
+  {% if page.total %}
+    Showing {{ page.first }}&ndash;{{ page.last }} of {{ page.total }} {{ noun }}
+  {% else %}
+    No {{ noun }}
+  {% endif %}
+{% endmacro %}
+
+
+{# CSV / PDF for the current selection. The PDF link only appears when fpdf2 is
+   importable, so an environment without it shows a working CSV link rather
+   than a link that returns an error. #}
+{% macro export_links(endpoint, args, pdf_ok=false) %}
+  <span class="vx-export">
+    <a class="vx-download"
+       href="{{ url_for(endpoint, **dict(args, format='csv')) }}">CSV</a>
+    {% if pdf_ok %}
+      <a class="vx-download"
+         href="{{ url_for(endpoint, **dict(args, format='pdf')) }}">PDF</a>
+    {% endif %}
+  </span>
+{% endmacro %}
