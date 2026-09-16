@@ -405,13 +405,11 @@ h3 {
 @media (max-width: 58rem) { .footer-grid { grid-template-columns: 1fr 1fr; } }
 @media (max-width: 34rem) { .footer-grid { grid-template-columns: 1fr; } }
 
-/* The artwork is drawn for a light ground, so it gets its own white plate in
-   the navy footer rather than being left to sink into it. Slightly larger than
-   the header copy because the footer has the room. */
+/* No plate behind it: the artwork has a transparent background, and the globe
+   and vial both read against the navy on their own. Slightly larger than the
+   header copy because the footer has the room. */
 .footer-brand .logo-mark {
   width: 2.6rem; height: 2.6rem;
-  padding: .25rem;
-  background: #fff;
   margin-bottom: .6rem;
 }
 .footer-word { margin: 0; font-size: 1.15rem; font-weight: 700; }
