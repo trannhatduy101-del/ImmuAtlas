@@ -29,6 +29,8 @@ SORT_KEYS = {
     "gain_asc":   "coverage_change IS NULL, coverage_change ASC,  country_name ASC",
     "end_desc":   "coverage_end IS NULL, coverage_end DESC,       country_name ASC",
     "cases_fell": "case_change IS NULL, case_change ASC,          country_name ASC",
+    "pop_rate":   ("doses_per_100_change IS NULL, doses_per_100_change DESC, "
+                   "country_name ASC"),
     "country":    "country_name ASC",
 }
 SORT_LABELS = [
@@ -36,6 +38,7 @@ SORT_LABELS = [
     ("gain_asc",   "Smallest gain (or decline) first"),
     ("end_desc",   "Highest end coverage first"),
     ("cases_fell", "Largest fall in case rate first"),
+    ("pop_rate",   "Biggest rise in doses per 100 population first"),
     ("country",    "Country name"),
 ]
 DEFAULT_SORT = "gain_desc"

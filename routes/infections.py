@@ -15,6 +15,14 @@ SORT_KEYS = {
     "rate_asc": "cases_per_100k IS NULL, cases_per_100k ASC,  country_name ASC",
     "cases_desc": "cases DESC, country_name ASC",
     "cases_asc": "cases ASC,  country_name ASC",
+    "population_desc": "national_population IS NULL, national_population DESC, country_name ASC",
+    "population_asc": "national_population IS NULL, national_population ASC,  country_name ASC",
+    # The Data column. Ordering on value_status alphabetically would sort by a
+    # code the reader never sees; the question they are actually asking when
+    # they sort that column is "which rows should I not trust", so the flagged
+    # ones come first.
+    "flagged_first": ("CASE WHEN value_status = 'suspicious_zero' THEN 0 ELSE 1 END, "
+                      "country_name ASC"),
     "country_asc": "country_name ASC",
 }
 SORT_LABELS = [
@@ -22,6 +30,9 @@ SORT_LABELS = [
     ("rate_asc", "Infection rate: lowest first"),
     ("cases_desc", "Cases: highest first"),
     ("cases_asc", "Cases: lowest first"),
+    ("population_desc", "Population: largest first"),
+    ("population_asc", "Population: smallest first"),
+    ("flagged_first", "Flagged data first"),
     ("country_asc", "Country name"),
 ]
 DEFAULT_SORT = "rate_desc"
@@ -31,12 +42,16 @@ PHASE_SORT_KEYS = {
     "cases_desc": "total_cases DESC",
     "rate_desc": "infection_rate_per_100k IS NULL, infection_rate_per_100k DESC",
     "rate_asc": "infection_rate_per_100k IS NULL, infection_rate_per_100k ASC",
+    "countries_desc": "country_count DESC, economy_phase ASC",
+    "flagged_desc": "n_suspicious_zero DESC, economy_phase ASC",
     "phase": "economy_phase ASC",
 }
 PHASE_SORT_LABELS = [
     ("cases_desc", "Total cases: highest first"),
     ("rate_desc", "Rate: highest first"),
     ("rate_asc", "Rate: lowest first"),
+    ("countries_desc", "Most countries first"),
+    ("flagged_desc", "Most flagged first"),
     ("phase", "Economic phase"),
 ]
 DEFAULT_PHASE_SORT = "cases_desc"

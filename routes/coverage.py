@@ -48,12 +48,16 @@ REGION_SORT_KEYS = {
     "coverage_desc": "avg_weighted IS NULL, avg_weighted DESC, region_name ASC",
     "coverage_asc":  "avg_weighted IS NULL, avg_weighted ASC,  region_name ASC",
     "countries":     "n_countries DESC, region_name ASC",
+    "met":           "n_met_threshold DESC, region_name ASC",
+    "reporting":     "n_reporting DESC, region_name ASC",
     "region":        "region_name ASC",
 }
 REGION_SORT_LABELS = [
     ("coverage_desc", "Coverage, highest first"),
     ("coverage_asc",  "Coverage, lowest first"),
     ("countries",     "Most countries first"),
+    ("met",           "Most countries meeting the target first"),
+    ("reporting",     "Most countries reporting first"),
     ("region",        "Region name"),
 ]
 DEFAULT_REGION_SORT = "coverage_desc"
@@ -169,6 +173,16 @@ def index():
               "region": region, "country": country,
               "threshold": threshold["threshold_pct"] if threshold else None}
 
+    # With no threshold there is no Met target column, and n_met_threshold is 0
+    # for every region -- so offering that sort would be a control that visibly
+    # does nothing. Drop the option, and fall back if it was the chosen one.
+    region_sort_labels = REGION_SORT_LABELS
+    if threshold is None:
+        region_sort_labels = [o for o in REGION_SORT_LABELS if o[0] != "met"]
+        if rsort_active == "met":
+            rsort_active = DEFAULT_REGION_SORT
+            region_order_by = REGION_SORT_KEYS[DEFAULT_REGION_SORT]
+
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
     outcome = db.query_one(db.load_query("coverage_outcome"), params)
     # The region query is a UNION ALL, so its own ORDER BY has to sit outside
@@ -242,7 +256,7 @@ def index():
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
         sort_active=sort_active, sort_labels=SORT_LABELS,
-        rsort_active=rsort_active, region_sort_labels=REGION_SORT_LABELS,
+        rsort_active=rsort_active, region_sort_labels=region_sort_labels,
         summary=summary, outcome=outcome, region_view=region_view, rows=rows,
         page=page, table_args=table_args, pdf_ok=exports.pdf_available(),
         threshold=threshold, conflict=conflict, rejected=rejected,

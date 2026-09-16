@@ -97,7 +97,7 @@
         </p>
       </div>
     </div>
-    <p class="ov-note">A country is &ldquo;above&rdquo; when its own rate (its cases &divide; its population &times; 100,000) exceeds the single global rate for the same disease and year.</p>
+    <p class="ov-note">A country is &ldquo;above&rdquo; when its own rate (<span class="formula">its cases &divide; its population &times; 100,000</span>) exceeds the single global rate for the same disease and year.</p>
   </section>
 
   {% if results %}
@@ -200,12 +200,13 @@
     <h2>How this comparison works</h2>
     <dl>
       <dt>Global rate</dt>
-      <dd>Total reported cases &divide; total population &times; 100,000, summed
+      <dd><span class="formula">Total reported cases &divide; total population &times; 100,000</span>, summed
         across the whole dataset for that disease and year. Population-weighted,
         so it is not thrown off by a small country with an extreme rate.</dd>
       <dt>Country rate</dt>
-      <dd>Each country&rsquo;s own cases &divide; its own population &times;
-        100,000, compared against that single global figure.</dd>
+      <dd><span class="formula">Each country&rsquo;s own cases &divide; its own
+        population &times; 100,000</span>, compared against that single global
+        figure.</dd>
       <dt>Who is shown</dt>
       <dd>Only countries strictly above the global rate, ordered from highest to
         lowest. A country at or below the line is left out by design.</dd>

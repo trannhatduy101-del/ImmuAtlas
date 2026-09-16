@@ -143,10 +143,10 @@ body {
    one-line label, pill or caption is left exactly as it was; only real
    paragraphs change shape.
 
-   hyphens is not decoration here. Justifying a column as narrow as the
-   two-column method note without hyphenation opens rivers of white space
-   between the words, which is harder to read than ragged-right ever was. The
-   document is lang="en", which is what the hyphenation dictionary keys off.
+   Hyphenation is deliberately OFF. Turning it on does tighten the word spacing
+   in the narrow columns, but it splits words mid-air (popu-lation) and cuts
+   straight through the formulas in the method notes, which is the more annoying
+   of the two faults. Wider word gaps in a narrow measure is the price.
 
    :where() pins this at zero specificity, so every deliberate alignment
    already in this file keeps winning. .prompt-state is excluded by hand
@@ -161,9 +161,14 @@ body {
 :where(main :is(p, li, dd, blockquote):not(.prompt-state *),
        .footer-legal p) {
   text-align: justify;
-  -webkit-hyphens: auto;
-  hyphens: auto;
 }
+
+/* A formula reads as one object, so it must not be broken across lines at its
+   operators. Released again on a phone: the longest of them is about 290px, and
+   forbidding a wrap in a single narrow column would push the whole page
+   sideways instead. */
+.formula { white-space: nowrap; }
+@media (max-width: 40rem) { .formula { white-space: normal; } }
 
 /* Headings carry the display serif; the small label-style headings (footer
    columns, method-note) stay in the body sans -- they read as labels, not titles. */
@@ -515,6 +520,36 @@ h3 {
   border-radius: var(--radius-sm);
   padding: .7rem 1.1rem;
   margin-top: var(--space-6);
+}
+
+/* A heading and the sentence that explains it are one block, not two things
+   that happen to be near each other. Left loose, the explanation was grey text
+   lying bare on the light-blue page, in a 60ch measure under a full-width
+   band -- so its justified right edge lined up with nothing and read as ragged.
+   Boxed and joined to the band, it matches the band's width and the alignment
+   finally shows.
+
+   :has() so a heading with NO explanation under it (Our team on 1B) keeps its
+   rounded bottom. A browser too old for :has() just keeps the rounding on every
+   heading: cosmetic, nothing breaks.
+
+   .section-head + .section-intro scores (0,2,0), which beats the (0,1,1) of
+   .mission-section > p, so the 60ch cap is overridden wherever this rule sits
+   in the file. */
+.section-head:has(+ .section-intro) {
+  margin-bottom: 0;
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+.section-head + .section-intro {
+  margin-top: 0;
+  max-width: none;
+  padding: .9rem 1.1rem;
+  background: var(--bg);
+  border: 1px solid var(--rule);
+  border-top: 0;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+  color: var(--ink);
 }
 
 /* Facts ------------------------------------------------------------------- */
