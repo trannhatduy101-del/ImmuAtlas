@@ -138,6 +138,33 @@ body {
   text-rendering: optimizeLegibility;
 }
 
+/* Justified body copy ------------------------------------------------------
+   text-align governs only the lines that are NOT the last in their block, so a
+   one-line label, pill or caption is left exactly as it was; only real
+   paragraphs change shape.
+
+   hyphens is not decoration here. Justifying a column as narrow as the
+   two-column method note without hyphenation opens rivers of white space
+   between the words, which is harder to read than ragged-right ever was. The
+   document is lang="en", which is what the hyphenation dictionary keys off.
+
+   :where() pins this at zero specificity, so every deliberate alignment
+   already in this file keeps winning. .prompt-state is excluded by hand
+   because it centres its text by INHERITANCE, which specificity alone would
+   not save: a justified block falls back to text-align-last: start, so its
+   centred lines would quietly jump left. (.pcard-banner has the same problem,
+   but only below 46rem, so it is handled in that media query instead of being
+   excluded at every width.)
+
+   Headings and table cells are left out on purpose -- a stretched two-line
+   heading and a stretched table cell both read as a rendering fault. */
+:where(main :is(p, li, dd, blockquote):not(.prompt-state *),
+       .footer-legal p) {
+  text-align: justify;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
+
 /* Headings carry the display serif; the small label-style headings (footer
    columns, method-note) stay in the body sans -- they read as labels, not titles. */
 h1, h2, h3, .hero-title, .lp-hero-head { font-family: var(--font-display); }
@@ -1568,6 +1595,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pcard-body .pbox { margin: 0; }
 @media (max-width: 46rem) {
   .pcard-banner { flex-direction: column; text-align: center; }
+  /* Re-stated on the children: the justify rule declares on them directly, and
+     a declared value beats an inherited one however specific the parent is. */
+  .pcard-banner :is(p, blockquote) { text-align: center; }
 }
 .pcol { display: flex; flex-direction: column; gap: .75rem; min-width: 0; }
 
