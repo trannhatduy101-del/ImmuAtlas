@@ -88,8 +88,8 @@
      the new one. #}
   {{ hidden_args(table_args, omit=['antigen', 'year', 'region', 'country', 'page', 'submitted']) }}
   <p class="filter-note">
-    Region and country apply together &mdash; selecting both narrows to that
-    country within that region.
+    Selecting both a region and a country narrows the result to that one
+    country.
   </p>
 </form>
 
@@ -198,7 +198,7 @@
           {% endif %}
         </div>
       </div>
-      <p class="ov-note">Denominator: the birth cohort each country targets &mdash; blanks excluded, not counted as zero.</p>
+      <p class="ov-note">Calculated against the children each country aimed to reach. Countries that reported no figure are excluded.</p>
     </section>
   {% endif %}
 
@@ -212,11 +212,13 @@
     <h2 class="section-head">Result &middot; coverage by region</h2>
     <div class="vbar-chart vbar-chart--scale">
       <p class="vbar-cap">
-        Reported coverage per region, <strong>weighted by the birth cohort</strong>.
+        Average reported coverage in each region.
         {% if threshold_pct is not none %}
-          The line is WHO&rsquo;s {{ fmt_pct(threshold_pct, 0) }} target for this disease.
+          The dashed line marks the {{ fmt_pct(threshold_pct, 0) }} WHO considers
+          necessary to stop this disease spreading.
         {% else %}
-          No line: the target differs by disease. Choose one antigen to see it.
+          No line is drawn, because the target differs from one disease to the
+          next. Select a single antigen to see it.
         {% endif %}
       </p>
       {% if threshold_pct is not none %}
@@ -270,7 +272,7 @@
 
   <h2 class="section-head">Result &middot; countries meeting the target, by region</h2>
   <p class="section-intro">
-    How many of each region&rsquo;s countries reached the target, over its total.
+    How many countries in each region reached the target.
   </p>
 
   {% set has_t = threshold and threshold.threshold_pct is not none %}
@@ -330,8 +332,8 @@
          the method note rather than crowding the table. ---- #}
   <h2 class="section-head">Result &middot; countries that met the target</h2>
   <p class="section-intro">
-    Only countries that reached their target, and the target is WHO&rsquo;s for
-    that disease rather than a flat 90%. Tick the box above to see the rest.
+    Every country listed here reached the target for this vaccine. The checkbox
+    above adds the countries that did not.
   </p>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
@@ -372,7 +374,7 @@
                 No country in this selection reached
                 {% if threshold and threshold.threshold_pct is not none %}the
                   {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}its target{% endif %}.
-                Widen the selection, or try another year.
+                Try a wider selection or a different year.
               </td>
             </tr>
           {% endif %}
@@ -439,21 +441,22 @@
     <dl>
       <dt>Percentage of target</dt>
       <dd>
-        <span class="formula">doses &divide; target cohort &times; 100</span>, as
-        reported to WHO. The denominator is the <strong>birth cohort</strong>,
-        not the whole population.
+        A country&rsquo;s doses divided by the number of children it aimed to
+        reach: <span class="formula">doses &divide; target group &times; 100</span>.
+        Countries report this figure to WHO.
       </dd>
 
       <dt>Doses per 100 people</dt>
       <dd>
-        <span class="formula">doses &divide; national population &times; 100</span>.
-        <strong>Not</strong> a coverage rate &mdash; a different denominator.
+        Doses divided by the whole population rather than the target group:
+        <span class="formula">doses &divide; population &times; 100</span>. It
+        answers a different question, so the two figures differ.
       </dd>
 
       <dt>Regional average</dt>
       <dd>
-        Each national figure weighted by the birth cohort it applies to, so one
-        large country does not speak for a region.
+        Each country counts towards its region in proportion to the children it
+        aimed to reach, so a large country carries more weight.
       </dd>
 
       <dt>Threshold</dt>
@@ -474,16 +477,16 @@
 
       <dt>Met target</dt>
       <dd>
-        Countries counted once each, not once per row: with no year chosen, a
-        country counts if it met the target in any year of the selection.
+        Each country counts once. With no year chosen, a country counts if it
+        met the target in any year of the selection.
       </dd>
 
       <dt>Exclusions</dt>
       <dd>
-        No coverage figure: excluded from every average, never counted as zero.
-        Above 100%: kept, not capped. No economic classification, or no country
-        entry: shown as &ldquo;Not classified&rdquo; or &ldquo;unmatched&rdquo;,
-        never dropped.
+        Countries that reported no figure are left out of the averages rather
+        than counted as zero. Figures above 100% are shown as reported, since a
+        country can deliver more doses than it has children to reach. Countries
+        with no region or income group are still listed, and labelled.
       </dd>
     </dl>
   </div>

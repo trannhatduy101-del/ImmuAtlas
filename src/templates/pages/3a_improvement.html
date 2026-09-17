@@ -85,7 +85,8 @@
      nothing once the antigen or period changes. #}
   {{ hidden_args(table_args, omit=['antigen', 'start', 'end', 'page', 'submitted']) }}
   <p class="filter-note">Fields marked <span class="req">*</span> are required.
-    End year lists only the years after the start year, and updates when you press Rank.</p>
+    The end year offers only years after the start year, and the list updates
+    when you press Rank.</p>
 </form>
 
 {% if not submitted %}
@@ -135,8 +136,8 @@
     {# The rank is a window function, so it is computed after the filter: it
        numbers this narrowed group, not the whole pool. Left unsaid, a reader
        who knows Nauru led overall would think the ranks were broken. #}
-    <p class="filter-note"><strong>#1</strong> is the biggest gain among these
-      countries, not the biggest gain overall.</p>
+    <p class="filter-note"><strong>#1</strong> is the biggest gain within this
+      narrowed group rather than across every country.</p>
   {% endif %}
 
   {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
@@ -166,14 +167,14 @@
           </p>
         </div>
       </div>
-      <p class="ov-note">Coverage denominator: the birth cohort each country targets. Only countries that reported {{ antigen_name }} in both years are ranked, so none can appear from nowhere.</p>
+      <p class="ov-note">Calculated against the children each country aimed to reach. Only countries that reported {{ antigen_name }} in both years are ranked.</p>
     </section>
   {% endif %}
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
   <p class="section-intro">
-    Countries ordered by how far their reported coverage rose. The case rate
-    beside each one says whether the disease followed.
+    Countries ranked by the rise in their reported coverage. The case rate
+    beside each one shows whether the disease followed.
   </p>
 
   {# ---- Vertical bar chart on the shared ImmuAtlas tokens and type: one
@@ -183,10 +184,11 @@
          live in the table + CSV below, so the chart is a reading aid. ---- #}
   <div class="vbar-chart">
     <p class="vbar-cap">
-      The <strong>top {{ chart_n }}</strong> of {{ fmt_int(eligible) }} ranked
-      countries, <strong>{{ start_year }}</strong> to <strong>{{ end_year }}</strong>.
-      Above the line gained, below declined; the outlined column leads.
-      Re-sorting the table does not change these ten.
+      The <strong>{{ chart_n }} largest risers</strong> among
+      {{ fmt_int(eligible) }} ranked countries, <strong>{{ start_year }}</strong>
+      to <strong>{{ end_year }}</strong>. Bars above the line rose and those
+      below it fell. The outlined column leads the ranking. Sorting the table
+      does not change this selection.
     </p>
     <div class="vbar-legend" aria-hidden="true">
       <span class="vbar-key vbar-key--top">biggest improvement</span>
@@ -295,36 +297,37 @@
     <dl>
       <dt>Coverage</dt>
       <dd>
-        As reported to WHO for {{ antigen_name }}. The denominator is the
-        <strong>birth cohort</strong>, not the whole population. Change is end
-        minus start, in percentage points.
+        The share of its target group a country reached with
+        {{ antigen_name }}, as reported to WHO. The change is the end year
+        figure minus the start year figure, measured in percentage points.
       </dd>
       <dt>Who is ranked</dt>
       <dd>
-        Only countries with a figure in <strong>both</strong> {{ start_year }}
-        and {{ end_year }} &mdash; {{ fmt_int(eligible) }} qualified. Missing
-        either year excludes a country, so none can show an impossible gain.
-        <strong>#</strong> is always the rank by coverage gain, so it stays with
-        a country when you re-sort.
+        A country appears only if it reported a figure in <strong>both</strong>
+        {{ start_year }} and {{ end_year }}; {{ fmt_int(eligible) }} did. Without
+        both years a country could appear to improve simply because its earlier
+        figure is missing. The rank is always by coverage gain, so it stays with
+        a country whatever the table is sorted by.
       </dd>
       <dt>Doses per 100 people</dt>
       <dd>
-        The second denominator: doses per 100 people of the <em>whole</em>
-        population. <strong>Not</strong> a coverage rate, so it is not a column
-        beside one &mdash; it is in the <strong>CSV and PDF</strong>, and you can
-        still order the table by it under Sort.
+        Doses divided by the whole population rather than the target group.
+        The figure appears in the <strong>CSV and PDF</strong>, and the table can
+        be sorted by it.
       </dd>
 
       <dt>Coverage above 100%</dt>
       <dd>
-        Kept, not capped &mdash; doses can exceed the target cohort.
+        Shown as reported rather than capped. A country can deliver more doses
+        than there are children in its target group.
       </dd>
       <dt>Did cases actually fall?</dt>
       <dd>
-        A <strong>different dataset</strong>: reported cases per 100,000 for
-        {{ disease_name }}, same years. Coverage and cases can rise together, and
-        that is shown. Case rates reflect surveillance too &mdash; a prompt, not
-        a verdict.
+        The final column draws on a <strong>separate dataset</strong>: reported
+        {{ disease_name }} cases per 100,000 people across the same years.
+        Coverage and case rates can rise together. Reported case numbers also
+        reflect how actively a country looks for cases, so they are best read as
+        an indication rather than a conclusion.
       </dd>
     </dl>
   </div>
