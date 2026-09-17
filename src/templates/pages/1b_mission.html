@@ -262,5 +262,22 @@
     {% endfor %}
   </div>
 </section>
+
+{# ---- Where to go from here. 1B is the one data-less page in the site, so it
+       has no "next step" card of its own; this closes it the way 1A closes,
+       with every other page offered equally. all_pages comes from the app
+       context processor, so a page added there appears here too. ---- #}
+<nav class="mission-section page-nav" aria-label="Other pages">
+  <h2 class="section-head">Go to a page</h2>
+  <div class="page-nav-grid">
+    {% for endpoint, label, task, owner, done in all_pages if endpoint != 'mission.index' %}
+      <a class="page-nav-card" href="{{ url_for(endpoint) }}">
+        <span class="page-nav-code">{{ task }}</span>
+        <span class="page-nav-label">{{ label }}</span>
+        <span class="page-nav-go" aria-hidden="true">&rarr;</span>
+      </a>
+    {% endfor %}
+  </div>
+</nav>
 {% endif %}
 {% endblock %}

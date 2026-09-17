@@ -33,6 +33,8 @@ SELECT
     cs.country_id,
     cs.country_name,
     cs.region_name,
+    -- Used by the globe to group each region's countries into one click target.
+    cs.region_id,
     -- On the table since :antigen became optional. With "all antigens" a
     -- country has one row per vaccine, and without this column those rows are
     -- the same name repeated with different numbers beside it.

@@ -113,6 +113,9 @@ def index():
     return render_template(
         "pages/3b_above_average.html",
         db_missing=None,
+        # Gates the "next page" card in base.html, on the same values the page
+        # checks before it drops the prompt.
+        submitted=bool(selected_infection and selected_year and global_rate),
         infection_types=infection_types,
         years=years,
         selected_infection=selected_infection,

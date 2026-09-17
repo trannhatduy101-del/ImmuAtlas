@@ -173,6 +173,11 @@ def index():
     return render_template(
         "pages/2b_infections.html",
         db_missing=None,
+        # Gates the "next page" card in base.html. Same three values the page
+        # itself checks before it stops showing the prompt, so the card cannot
+        # appear beside a page that has no result on it yet.
+        submitted=bool(selected_economy and selected_infection
+                       and selected_year and summary),
         economies=economies,
         infection_types=infection_types,
         years=years,

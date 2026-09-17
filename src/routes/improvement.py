@@ -17,6 +17,9 @@ from flask import Blueprint, render_template, request
 import db
 import exports
 import worldmap
+# One spelling of the region names across the site: 2A already corrects the
+# typo the supplied table carries, and 3A shows the same names.
+from routes.coverage import fix_region
 
 bp = Blueprint("improvement", __name__)
 
@@ -203,6 +206,11 @@ def globe_paths(rows):
         if r["coverage_end"] is not None:
             ends.setdefault(r["country_id"], []).append(r["coverage_end"])
     coverage = {iso: sum(v) / len(v) for iso, v in ends.items()}
+    # Which region each country belongs to, so the map can group a continent's
+    # outlines into one click target instead of 174 separate ones.
+    region_of = {r["country_id"]: (r["region_id"], r["region_name"])
+                 for r in rows if r["region_id"]}
+
     shapes = []
     for iso in sorted(worldmap.PATHS):
         value = coverage.get(iso)
@@ -212,9 +220,45 @@ def globe_paths(rows):
                 if limit is None or value < limit:
                     fill = colour
                     break
+        region_id, region_name = region_of.get(iso, (None, None))
         shapes.append({"iso": iso, "d": worldmap.PATHS[iso],
-                       "fill": fill, "value": value})
+                       "fill": fill, "value": value,
+                       "region_id": region_id, "region_name": region_name})
     return shapes
+
+
+def globe_regions(shapes, rows):
+    """The map's click targets: one entry per region, its outlines and its gain.
+
+    A region is worth clicking only because there is a figure behind it, so the
+    average gain is computed here from the same rows the table shows -- in
+    Python, because it is a summary OF a result already fetched, not a new
+    question for the database.
+    """
+    gains = {}
+    for r in rows:
+        if r["region_id"] and r["coverage_change"] is not None:
+            gains.setdefault(r["region_id"], []).append(r["coverage_change"])
+
+    grouped = {}
+    for shape in shapes:
+        if shape["region_id"]:
+            grouped.setdefault(shape["region_id"], []).append(shape)
+
+    out = []
+    for region_id, members in grouped.items():
+        values = gains.get(region_id) or []
+        out.append({
+            "region_id": region_id,
+            "region_name": fix_region(members[0]["region_name"]),
+            "shapes": members,
+            "n_countries": len(members),
+            "avg_gain": round(sum(values) / len(values), 1) if values else None,
+        })
+    # Biggest riser first: the strip under the map then reads as a ranking of
+    # its own rather than as whatever order the countries happened to arrive in.
+    out.sort(key=lambda r: (r["avg_gain"] is None, -(r["avg_gain"] or 0)))
+    return out
 
 
 @bp.route("/improvement")
@@ -321,7 +365,8 @@ def index():
         rejected=rejected, range_error=range_error, submitted=submitted,
         query_text=query_text,
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0, chart_n=0,
-        globe=[], globe_w=worldmap.WIDTH, globe_h=worldmap.HEIGHT,
+        globe=[], globe_regions=[], globe_rest=[],
+        globe_w=worldmap.WIDTH, globe_h=worldmap.HEIGHT,
         globe_credit=worldmap.CREDIT, globe_target=GLOBE_TARGET,
         imp_summary=None, top_gainer=None,
         tied_ranks=set(),
@@ -391,7 +436,21 @@ def index():
     top_rows = _rows_for(antigen, start_year, end_year,
                          SORT_KEYS["gain_desc"], region)[:CHART_BARS]
     ctx["bars"] = _gain_bars(top_rows)
-    ctx["globe"] = globe_paths(rows)
+    # The globe always describes the WHOLE world for the chosen antigen and
+    # years, never the current region or search. Built from `rows` it collapsed
+    # the moment a continent was clicked: the other five stopped being links,
+    # so the map became a one-way door out of itself. Re-fetched only when
+    # something is actually narrowing the table.
+    globe_rows = (rows if region is None and query_text is None
+                  else _rows_for(antigen, start_year, end_year,
+                                 SORT_KEYS["gain_desc"]))
+    globe = globe_paths(globe_rows)
+    ctx["globe"] = globe
+    ctx["globe_regions"] = globe_regions(globe, globe_rows)
+    # Everything with no region of its own -- Antarctica, the territories the
+    # country table has no row for -- still has to be drawn, or the map has
+    # holes in it. Not clickable, because there is nothing to filter to.
+    ctx["globe_rest"] = [s for s in globe if not s["region_id"]]
     ctx["chart_n"] = len(top_rows)
 
     return render_template("pages/3a_improvement.html", **ctx)

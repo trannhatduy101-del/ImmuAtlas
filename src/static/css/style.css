@@ -862,6 +862,42 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   animation: globe-spin 48s linear infinite;
 }
 @keyframes globe-spin { to { transform: translateX(-50%); } }
+/* Stop the world while it is being aimed at. Clicking a continent that is
+   sliding past is a game, not a control -- and :focus-within covers the reader
+   who tabs into the map instead of pointing at it. */
+.globe:hover .globe-map,
+.globe:focus-within .globe-map { animation-play-state: paused; }
+/* Each continent is one link. The hover state has to be visible through the
+   shading layer above it, hence a white stroke rather than a fill change. */
+.globe-region path { transition: fill-opacity .12s var(--ease-out); }
+.globe-region:hover path,
+.globe-region:focus path {
+  fill-opacity: .82;
+  stroke: #ffffff; stroke-width: 1.4;
+}
+.globe-region:focus { outline: none; }
+
+/* The same six regions as links under the map, each carrying its figure. The
+   map answers "where", this answers "how much" -- and it is the part that
+   works on a touch screen, where there is no hover to pause the spin. */
+.globe-legend {
+  display: flex; flex-wrap: wrap; gap: .4rem;
+  margin: .9rem 0 0; padding: 0; list-style: none;
+}
+.globe-legend a {
+  display: inline-flex; align-items: baseline; gap: .4rem;
+  padding: .3rem .6rem;
+  border: 1px solid var(--rule); border-radius: 999px;
+  background: var(--bg-card);
+  font-size: .82rem; text-decoration: none; color: var(--ink);
+}
+.globe-legend a:hover { border-color: var(--accent); }
+.globe-legend a[aria-current="true"] {
+  border-color: var(--accent); background: var(--accent-wash); font-weight: 700;
+}
+.globe-legend .gl-gain { font-variant-numeric: tabular-nums; font-weight: 700; }
+.globe-legend .gl-gain.up { color: var(--accent-strong); }
+.globe-legend .gl-gain.down { color: var(--outcome); }
 /* Lit from the top left, falling away to the lower right, plus a dark rim. Two
    gradients and an inset shadow are what turn a flat disc into a ball. */
 .globe-shade {
@@ -897,6 +933,38 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
 }
 .next-step:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+
+/* 1B's closing page list. Same card treatment as .next-step above, laid out as
+   a grid because this page offers all five rather than one. */
+.page-nav-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: .7rem;
+  margin-top: 1.2rem;
+}
+.page-nav-card {
+  display: flex; align-items: center; gap: .7rem;
+  padding: .85rem 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  text-decoration: none; color: var(--ink);
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.page-nav-card:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.page-nav-code {
+  flex: none;
+  font-size: .68rem; font-weight: 800; letter-spacing: .09em;
+  color: var(--accent-ink); background: var(--accent);
+  padding: .2rem .5rem; border-radius: 999px;
+}
+.page-nav-label { flex: 1 1 auto; font-weight: 600; font-size: .95rem; }
+.page-nav-go { flex: none; color: var(--accent); transition: transform .15s var(--ease-out); }
+.page-nav-card:hover .page-nav-go { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .page-nav-card, .page-nav-go { transition: none; }
+  .page-nav-card:hover .page-nav-go { transform: none; }
+}
 .next-step-kicker {
   flex: none;
   font-size: .68rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;

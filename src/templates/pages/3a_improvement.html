@@ -183,30 +183,70 @@
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
 
-  {# ---- The globe. A flat equirectangular map, drawn once in <defs> and used
-         twice side by side, sliding inside a round frame -- so the loop closes
-         on itself and the geometry is only in the page once. Pure CSS: there is
-         no JavaScript anywhere on this site, so it spins by itself rather than
-         following a drag. ---- #}
+  {# ---- The globe. A flat equirectangular map drawn twice side by side and
+         slid inside a round frame, so the loop closes on itself with no seam.
+         Pure CSS: there is no JavaScript anywhere on this site, so it spins by
+         itself rather than following a drag.
+
+         The two copies are written out in full rather than <defs> + <use>.
+         They were <use> until the regions became links: a <use> instantiates
+         its target in a shadow tree, and a click there lands on the <use>
+         element itself -- measured, elementFromPoint returns <use> and
+         closest('a') is null -- so the links inside were dead. Writing the
+         paths twice costs page weight and buys a working link.
+
+         Hovering or tabbing into the map stops the spin (see .globe:hover in
+         the stylesheet), because clicking a moving target is a game. ---- #}
   {% if globe %}
     <figure class="globe-figure">
-      <div class="globe" aria-hidden="true">
+      <div class="globe">
         <svg class="globe-map" viewBox="0 0 {{ globe_w * 2 }} {{ globe_h }}"
              preserveAspectRatio="xMidYMid slice">
-          <defs>
+          {% for offset in [0, globe_w] %}
+            <g transform="translate({{ offset }} 0)"
+               stroke="rgba(255,255,255,.30)" stroke-width="0.7"
+               stroke-linejoin="round">
             {# A hairline on every country, set once on the group. Without it
                a country filled in the deep "at or above" green disappears
                into the sea, and two neighbours in the same band merge. #}
-            <g id="world" stroke="rgba(255,255,255,.30)" stroke-width="0.7"
-               stroke-linejoin="round">
-              {% for c in globe %}<path d="{{ c.d }}" fill="{{ c.fill }}"/>{% endfor %}
+              {# One <a> per region rather than per country: the reader is
+                 picking a continent, and 174 separate links would be 174 tab
+                 stops for the same six destinations. The <title> is what the
+                 browser shows on hover, and what a screen reader announces. #}
+              {% for r in globe_regions %}
+                <a class="globe-region" href="{{ url_for('improvement.index', **dict(table_args, region=r.region_id, page=none)) }}">
+                  <title>{{ r.region_name }} &mdash; {% if r.avg_gain is not none %}{{ '%+.1f'|format(r.avg_gain) }} points average gain{% else %}no figures{% endif %}, {{ r.n_countries }} countries</title>
+                  {% for c in r.shapes %}<path d="{{ c.d }}" fill="{{ c.fill }}"/>{% endfor %}
+                </a>
+              {% endfor %}
+              {# Drawn but not clickable: no region of their own, so there is
+                 nothing to filter the ranking to. #}
+              {% for c in globe_rest %}<path d="{{ c.d }}" fill="{{ c.fill }}"/>{% endfor %}
             </g>
-          </defs>
-          <use href="#world"/>
-          <use href="#world" x="{{ globe_w }}"/>
+          {% endfor %}
         </svg>
         <span class="globe-shade"></span>
       </div>
+      {# The map's click targets, spelled out. A reader on a phone has no hover
+         to pause the spin with, and the average gain is the figure the map
+         itself cannot show. #}
+      <ul class="globe-legend">
+        <li>
+          <a href="{{ url_for('improvement.index', **dict(table_args, region=none, page=none)) }}"
+             {% if not region %}aria-current="true"{% endif %}>All regions</a>
+        </li>
+        {% for r in globe_regions %}
+          <li>
+            <a href="{{ url_for('improvement.index', **dict(table_args, region=r.region_id, page=none)) }}"
+               {% if region == r.region_id %}aria-current="true"{% endif %}>
+              {{ r.region_name }}
+              {% if r.avg_gain is not none %}
+                <span class="gl-gain {{ 'up' if r.avg_gain >= 0 else 'down' }}">{{ '%+.1f'|format(r.avg_gain) }}</span>
+              {% endif %}
+            </a>
+          </li>
+        {% endfor %}
+      </ul>
       <figcaption class="globe-cap">
         <strong>Reported coverage in {{ end_year }}</strong>, not the change
         above it. Green is at or above the {{ fmt_pct(globe_target, 0) }} target,
