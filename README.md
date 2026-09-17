@@ -83,6 +83,11 @@ src/               the application
                    app.py runs it automatically on the first start
   test_helpers.py  assert-based checks for db.py and exports.py; no framework,
                    run it with: python src/test_helpers.py
+  worldmap.py      GENERATED country outlines for the globe on 3A; rebuild with
+                   python tools/build_worldmap.py
+
+tools/             one-off scripts, not imported by the app. build_worldmap.py
+                   downloads Natural Earth (public domain) and projects it
 
   routes/          one module per page (see the table below)
   queries/         one .sql file per named query, loaded by db.load_query()

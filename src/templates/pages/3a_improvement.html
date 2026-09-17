@@ -173,6 +173,42 @@
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
 
+  {# ---- The globe. A flat equirectangular map, drawn once in <defs> and used
+         twice side by side, sliding inside a round frame -- so the loop closes
+         on itself and the geometry is only in the page once. Pure CSS: there is
+         no JavaScript anywhere on this site, so it spins by itself rather than
+         following a drag. ---- #}
+  {% if globe %}
+    <figure class="globe-figure">
+      <div class="globe" aria-hidden="true">
+        <svg class="globe-map" viewBox="0 0 {{ globe_w * 2 }} {{ globe_h }}"
+             preserveAspectRatio="xMidYMid slice">
+          <defs>
+            {# A hairline on every country, set once on the group. Without it
+               a country filled in the deep "at or above" blue disappears into
+               the ocean, and two neighbours in the same band merge. #}
+            <g id="world" stroke="rgba(255,255,255,.30)" stroke-width="0.7"
+               stroke-linejoin="round">
+              {% for c in globe %}<path d="{{ c.d }}" fill="{{ c.fill }}"/>{% endfor %}
+            </g>
+          </defs>
+          <use href="#world"/>
+          <use href="#world" x="{{ globe_w }}"/>
+        </svg>
+        <span class="globe-shade"></span>
+      </div>
+      <figcaption class="globe-cap">
+        <strong>Reported coverage in {{ end_year }}</strong>, not the change
+        above it. Blue is at or above the {{ fmt_pct(globe_target, 0) }} target,
+        orange is below, grey is a country with no figure for
+        {{ antigen_name }} in both years. The sphere is a flat map wrapped on a
+        circle, so it distorts towards the edges; the table below carries the
+        figures.
+        <span class="citation">Outlines: {{ globe_credit }}</span>
+      </figcaption>
+    </figure>
+  {% endif %}
+
   {# ---- Vertical bar chart on the shared ImmuAtlas tokens and type: one
          column per country, its change
          in reported coverage. Bars above the line gained, bars below declined;

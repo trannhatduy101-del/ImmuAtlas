@@ -16,6 +16,7 @@ from flask import Blueprint, render_template, request
 
 import db
 import exports
+import worldmap
 
 bp = Blueprint("improvement", __name__)
 
@@ -174,6 +175,44 @@ def _gain_bars(rows):
     return {"zero_pct": zero_pct, "bars": bars}
 
 
+# The globe's colour scale. Coverage at the end year, in the same language the
+# rest of the site uses: orange under the target, blue at or above it, two steps
+# of each so a country that just cleared the bar does not look like one at 100%.
+# Grey is "no figure", never a shade of the scale -- a country with nothing to
+# report must not read as a low number.
+GLOBE_NO_DATA = "#d3e2ee"
+GLOBE_SCALE = [
+    (70.0,  "#9a3412"),   # far below
+    (90.0,  "#e06024"),   # below the target
+    (95.0,  "#3b8fc4"),   # just over
+    (None,  "#075985"),   # comfortably over
+]
+GLOBE_TARGET = 90.0
+
+
+def globe_paths(rows):
+    """One drawable shape per country, coloured by its end-year coverage.
+
+    Reads the rows the ranking table already has, so the globe costs no extra
+    query. A country the ranking excluded -- no figure in both years -- keeps
+    its outline but takes the no-data grey, because leaving it off the map
+    entirely would punch a hole in the world.
+    """
+    coverage = {r["country_id"]: r["coverage_end"] for r in rows}
+    shapes = []
+    for iso in sorted(worldmap.PATHS):
+        value = coverage.get(iso)
+        fill = GLOBE_NO_DATA
+        if value is not None:
+            for limit, colour in GLOBE_SCALE:
+                if limit is None or value < limit:
+                    fill = colour
+                    break
+        shapes.append({"iso": iso, "d": worldmap.PATHS[iso],
+                       "fill": fill, "value": value})
+    return shapes
+
+
 @bp.route("/improvement")
 def index():
     try:
@@ -268,6 +307,8 @@ def index():
         rejected=rejected, range_error=range_error, submitted=submitted,
         below_only=below_only,
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0, chart_n=0,
+        globe=[], globe_w=worldmap.WIDTH, globe_h=worldmap.HEIGHT,
+        globe_credit=worldmap.CREDIT, globe_target=GLOBE_TARGET,
         imp_summary=None, top_gainer=None,
         page=db.paginate([], None), table_args=table_args,
         pdf_ok=exports.pdf_available(),
@@ -323,6 +364,7 @@ def index():
     top_rows = _rows_for(antigen, start_year, end_year,
                          SORT_KEYS["gain_desc"], below_only)[:CHART_BARS]
     ctx["bars"] = _gain_bars(top_rows)
+    ctx["globe"] = globe_paths(rows)
     ctx["chart_n"] = len(top_rows)
 
     return render_template("pages/3a_improvement.html", **ctx)
