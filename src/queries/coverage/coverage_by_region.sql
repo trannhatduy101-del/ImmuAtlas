@@ -26,7 +26,7 @@
 --    number that can exceed n_countries and read as nonsense beside it. The
 --    consequence to state on the page: without a year, a country counts as
 --    having met the threshold if it did so in at least one year of the
---    selection. :threshold is NULL whenever no single antigen is selected,
+--    selection. :met_threshold is NULL whenever no single antigen is selected,
 --    because the threshold is a property of the disease, so the count is then 0
 --    and the column is not displayed.
 --
@@ -49,8 +49,8 @@ SELECT
     , 2)                                          AS avg_weighted,
     SUM(CASE WHEN vc.coverage_reported IS NOT NULL
              THEN vc.target_cohort END)           AS cohort_weighted,
-    COUNT(DISTINCT CASE WHEN :threshold IS NOT NULL
-                         AND vc.coverage_reported >= :threshold
+    COUNT(DISTINCT CASE WHEN :met_threshold IS NOT NULL
+                         AND vc.coverage_reported >= :met_threshold
                         THEN vc.country_id END)   AS n_met_threshold
 FROM Region r
 LEFT JOIN v_coverage vc
@@ -77,8 +77,8 @@ SELECT
                           THEN vc.target_cohort END), 0)
     , 2),
     SUM(CASE WHEN vc.coverage_reported IS NOT NULL THEN vc.target_cohort END),
-    COUNT(DISTINCT CASE WHEN :threshold IS NOT NULL
-                         AND vc.coverage_reported >= :threshold
+    COUNT(DISTINCT CASE WHEN :met_threshold IS NOT NULL
+                         AND vc.coverage_reported >= :met_threshold
                         THEN vc.country_id END)
 FROM v_coverage vc
 WHERE vc.region_id IS NULL

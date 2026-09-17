@@ -133,12 +133,12 @@ def index():
         # global aggregate in "Four figures" and the year-by-year trend.
         region_base = db.load_query("coverage_by_region").rstrip().rstrip(";")
         region_sql = "SELECT * FROM (" + region_base + ") ORDER BY avg_weighted DESC"
-        # threshold is None here on purpose: a threshold belongs to one disease,
-        # and this call deliberately spans every antigen, so there is no single
+        # met_threshold is None here on purpose: this call deliberately spans
+        # every antigen, and 1A shows no "met the target" figure, so there is no
         # bar to measure against. n_met_threshold comes back 0 and is not shown.
         regions = db.query(region_sql, {"antigen": None, "year": None,
                                         "country": None, "region": None,
-                                        "threshold": None})
+                                        "met_threshold": None})
     except db.DatabaseMissing as exc:
         # An honest empty state, never a blank page and never a stale number.
         return render_template("pages/1a_landing.html", db_missing=str(exc)), 503

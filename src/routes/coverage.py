@@ -210,20 +210,11 @@ def index():
     if rsort is not None and rsort not in REGION_SORT_KEYS:
         rejected.append("region sort order")
 
-    # Looked up BEFORE the queries run, because coverage_by_region binds it:
-    # the regional table counts how many of a region's countries cleared this
-    # bar. A threshold is a property of one disease, so there is none to apply
-    # until a single antigen has been chosen.
-    threshold = None
-    if antigen:
-        threshold = db.query_one(db.load_query("threshold_for_antigen"),
-                                 {"antigen": antigen})
-
     params = {"antigen": antigen, "year": year,
               "region": region, "country": country,
-              # One bar for every antigen, so the regional counts, the outcome
-              # verdict and the country filter all measure the same thing.
-              "threshold": BRIEF_THRESHOLD,
+              # One bar for every antigen, under one name, so the regional
+              # counts, the outcome verdict and the country filter all measure
+              # the same thing.
               "met_threshold": BRIEF_THRESHOLD,
               # Table 1 lists only the countries that met their target, which
               # is the table the brief describes. The checkbox passes None to
@@ -243,21 +234,16 @@ def index():
                           if o[0] in VISIBLE_REGION_SORTS]
 
 
-    summary = db.query_one(db.load_query("coverage_selection_summary"), params)
-    outcome = db.query_one(db.load_query("coverage_outcome"), params)
-    # The region query is a UNION ALL, so its own ORDER BY has to sit outside
-    # the compound select -- hence the subquery wrapper.
-    region_rows = db.query(
-        "SELECT * FROM (" + db.load_query("coverage_by_region") + ") ORDER BY "
-        + region_order_by, params)
     # The only concatenation allowed near SQL in this project. order_by can only
     # be one of the literal strings in SORT_KEYS.
     rows = db.query(db.load_query("coverage_by_country") + " ORDER BY " + order_by,
                     params)
 
     # An export is the whole filtered, sorted result -- never the page on
-    # screen. Placed before the remaining page queries so a download does not
-    # pay for work it will not use.
+    # screen. It needs `rows` and nothing else, so it goes here: the three
+    # aggregates below feed the banner, the region table and the chart, none of
+    # which a download renders, and running them first meant every CSV paid for
+    # three queries it threw away.
     response = exports.send(
         request.args.get("format"),
         "coverage_%s_%s" % (antigen or "all", year or "all"),
@@ -267,6 +253,23 @@ def index():
     )
     if response is not None:
         return response
+
+    summary = db.query_one(db.load_query("coverage_selection_summary"), params)
+    outcome = db.query_one(db.load_query("coverage_outcome"), params)
+    # The region query is a UNION ALL, so its own ORDER BY has to sit outside
+    # the compound select -- hence the subquery wrapper.
+    region_rows = db.query(
+        "SELECT * FROM (" + db.load_query("coverage_by_region") + ") ORDER BY "
+        + region_order_by, params)
+
+    # WHO's own figure for this disease. Nothing on the page is filtered or
+    # counted with it -- that is BRIEF_THRESHOLD's job -- it only fills the
+    # citation in the method note, so it is looked up after the export branch
+    # above, where a download would have paid for a row it never renders.
+    threshold = None
+    if antigen:
+        threshold = db.query_one(db.load_query("threshold_for_antigen"),
+                                 {"antigen": antigen})
 
     # Paginate the country table with a ?page= GET link so it works without
     # JavaScript and stays bookmarkable. The full `rows` is kept above, so an
