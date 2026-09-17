@@ -696,8 +696,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .filter-bar .field { flex: 1 1 9rem; min-width: 8rem; }
 .filter-bar .field select { width: 100%; max-width: none; }
-/* Sits under a control to explain why its options changed. */
-.field-hint { display: block; margin-top: .25rem; font-size: .76rem; color: var(--ink-muted); }
 
 /* A checkbox filter reads as a sentence, so it gets the label's full width
    rather than the stacked label-over-control the other fields use. */
@@ -1351,7 +1349,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-export { display: inline-flex; gap: .4rem; }
 
 /* Table footer + pager (server-side pagination, GET links, no JS). */
-.vx-table-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .6rem; }
+/* Stacked and centred: the count line, then the pager under it. Side by side,
+   a pager wide enough for 27 numbered pages plus the jump box sat hard against
+   the right edge while the count hugged the left, and the two read as two
+   unrelated things rather than one footer for one table. */
+.vx-table-foot { display: flex; flex-direction: column; align-items: center; gap: .5rem; text-align: center; }
 /* Wraps rather than overflows: 27 numbered pages plus the jump box will not
    fit one line on a narrow screen, and a pager that pushes the table sideways
    is worse than one two rows tall. */
@@ -1449,11 +1451,14 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .delta-num.up   { color: var(--accent-strong); }
 .delta-num.down { color: var(--outcome); }
 
-/* 3A ranking table, redesigned: 8 columns collapsed to 5. Paired years live in
-   one "start -> end" cell, the country carries its region as a muted sub-line,
-   and the two verdict columns (Change, Cases trend) read in the same language as
-   the chart and banner above. */
-.vx-table--rank .th-sub {
+/* 3A ranking table: five columns. Paired years live in one "start -> end" cell,
+   the country carries its region as a muted sub-line, and the case column
+   carries its two raw rates the same way -- so Change and the case badge are the
+   only figures competing for the eye, in the same language as the chart and
+   banner above. */
+/* Also used by the 2A region header, so this is scoped to any result table
+   rather than only the ranking one. */
+.vx-table .th-sub {
   display: block; margin-top: .12rem;
   font-weight: 400; text-transform: none; letter-spacing: 0;
   font-size: .66rem; color: var(--ink-muted);
@@ -1464,6 +1469,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-weight: 400; font-size: .76rem; color: var(--ink-muted); white-space: normal;
 }
 .vx-table--rank .vx-cell-key { white-space: normal; min-width: 9rem; }
+/* The two raw case rates, tucked under the fell/rose badge. They used to be
+   their own column saying the same thing the badge says. */
+.vx-table--rank .imp-tag + .vx-sub {
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
 .vx-range { white-space: nowrap; }
 .vx-range .vx-from { color: var(--ink-muted); }
 .vx-range .vx-to { font-weight: 700; }

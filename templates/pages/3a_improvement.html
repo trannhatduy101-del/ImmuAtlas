@@ -63,12 +63,6 @@
           <option value="" disabled selected>No year after {{ start_year }}</option>
         {% endif %}
       </select>
-      {# Not shown when the list is empty: the disabled option already says
-         there is no year after this one, and two notices saying one thing
-         reads as a fault. #}
-      {% if start_year and end_years %}
-        <span class="field-hint">After {{ start_year }} only</span>
-      {% endif %}
     </div>
     {# Level 3: this box narrows the ranking to a sub-dataset picked out by a
        second query -- see the EXISTS clause in coverage_improvement.sql. It
@@ -159,13 +153,13 @@
 {{ fmt_int(eligible) }} ranked countries
       </p>
       <div class="ov-main">
-        <span class="ov-fig">{{ '%+.1f'|format(top_gainer.coverage_change) }} pp</span>
+        <span class="ov-fig">{{ '%+.1f'|format(top_gainer.coverage_change) }}</span>
         <div class="ov-detail">
-          <span class="ov-label">biggest gain &mdash; <strong>{{ top_gainer.country_name }}</strong>
+          <span class="ov-label">biggest gain in percentage points &mdash; <strong>{{ top_gainer.country_name }}</strong>
             ({{ fmt_pct(top_gainer.coverage_start) }} &rarr; {{ fmt_pct(top_gainer.coverage_end) }})</span>
           <p class="ov-verdict">
             Average gain across all {{ fmt_int(eligible) }} ranked countries:
-            <strong>{% if imp_summary.avg_gain is not none %}{{ '%+.1f'|format(imp_summary.avg_gain) }} pp{% else %}&mdash;{% endif %}</strong>.
+            <strong>{% if imp_summary.avg_gain is not none %}{{ '%+.1f'|format(imp_summary.avg_gain) }} percentage points{% else %}&mdash;{% endif %}</strong>.
             {% if imp_summary.n_with_cases %}
               <span class="ov-gap ov-gap--{{ 'up' if imp_summary.n_cases_fell * 2 >= imp_summary.n_with_cases else 'down' }}">
                 {{ fmt_int(imp_summary.n_cases_fell) }} of {{ fmt_int(imp_summary.n_with_cases) }} also saw reported cases fall
@@ -181,9 +175,10 @@
   <h2 class="section-head">Result &middot; biggest improvement</h2>
   <p class="section-intro">
     Countries ordered by how far their reported coverage rose between the two
-    years you chose. The chart shows the page you are on; the table beneath it
-    carries the case rate for the same disease, so a rise in effort can be read
-    against what happened to the disease.
+    years you chose. The chart is always the ten biggest improvers; the table
+    beneath it can be re-sorted and paged through, and carries the reported case
+    rate for the same disease, so a rise in effort can be read against what
+    happened to the disease.
   </p>
 
   {# ---- Vertical bar chart on the shared ImmuAtlas tokens and type: one
@@ -193,10 +188,11 @@
          live in the table + CSV below, so the chart is a reading aid. ---- #}
   <div class="vbar-chart">
     <p class="vbar-cap">
-      Each column is a country&rsquo;s change in reported coverage, <strong>{{ start_year }}</strong>
-      to <strong>{{ end_year }}</strong>. Bars above the line gained; bars below the
-      line declined. The outlined column is the biggest improvement of all
-      {{ fmt_int(eligible) }} ranked countries.
+      The <strong>top {{ chart_n }}</strong> of {{ fmt_int(eligible) }} ranked
+      countries by change in reported coverage, <strong>{{ start_year }}</strong>
+      to <strong>{{ end_year }}</strong>. Bars above the line gained; bars below
+      the line declined, and the outlined column is the biggest improvement.
+      These ten do not change when you re-sort or page the table below.
     </p>
     <div class="vbar-legend" aria-hidden="true">
       <span class="vbar-key vbar-key--top">biggest improvement</span>
@@ -209,7 +205,7 @@
         <ol class="vbar-cols">
           {% for b in bars.bars %}
             <li class="vbar-col"
-                title="{{ b.row.country_name }}: {{ '%+.1f'|format(b.row.coverage_change) }} pp">
+                title="{{ b.row.country_name }}: {{ '%+.1f'|format(b.row.coverage_change) }} percentage points">
               <span class="vbar-fill {{ 'is-up' if b.up else 'is-down' }}{{ ' is-top' if b.is_top }}"
                     style="top: {{ b.top_pct }}%; height: {{ b.height_pct }}%;">
                 <span class="vbar-val">{{ '%+.1f'|format(b.row.coverage_change) }}</span>
@@ -243,10 +239,8 @@
             <th scope="col" class="num">#</th>
             <th scope="col">Country</th>
             <th scope="col" class="num">Coverage <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
-            <th scope="col" class="num">Change</th>
-            <th scope="col" class="num">Doses / 100 pop <span class="th-sub">change</span></th>
-            <th scope="col" class="num">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
-            <th scope="col">Cases trend</th>
+            <th scope="col" class="num">Change <span class="th-sub">percentage points</span></th>
+            <th scope="col">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -265,24 +259,14 @@
                 <span class="vx-to">{{ fmt_pct(r.coverage_end) }}</span>
               </td>
               <td class="num">
-                <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }} pp</span>
+                <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}</span>
               </td>
-              {# The other denominator: doses per 100 of the whole population.
-                 Nullable -- a country missing a population figure at either end
-                 has no change to show -- so it goes through fmt_num, never
-                 through |format, which raises on None. #}
-              <td class="num">
-                {% if r.doses_per_100_change is not none %}
-                  <span class="delta-num {{ 'up' if r.doses_per_100_change >= 0 else 'down' }}">{{ fmt_num(r.doses_per_100_change, 4) }}</span>
-                {% else %}<span class="imp-tag none">no data</span>{% endif %}
-              </td>
-              <td class="num vx-range">
-                {% if r.cases_start is not none and r.cases_end is not none %}
-                  <span class="vx-from">{{ '%.2f'|format(r.cases_start) }}</span>
-                  <span class="arrow" aria-hidden="true">&rarr;</span>
-                  <span class="vx-to">{{ '%.2f'|format(r.cases_end) }}</span>
-                {% else %}&mdash;{% endif %}
-              </td>
+              {# The different dataset, in ONE column: the direction and size of
+                 the move, with the two raw rates beneath it. It was two columns
+                 -- "25.30 -> 5.36" beside "fell 19.94" -- which is the same fact
+                 written twice. Doses per 100 population left the table for the
+                 same reason: it is computed in the query and carried in the CSV
+                 and PDF, where a four-decimal figure can be read properly. #}
               <td>
                 {% if r.case_change is none %}
                   <span class="imp-tag none">no case data</span>
@@ -293,6 +277,9 @@
                 {% else %}
                   <span class="imp-tag flat">no change</span>
                 {% endif %}
+                {% if r.cases_start is not none and r.cases_end is not none %}
+                  <span class="vx-sub">{{ '%.2f'|format(r.cases_start) }} &rarr; {{ '%.2f'|format(r.cases_end) }}</span>
+                {% endif %}
               </td>
             </tr>
           {% endfor %}
@@ -301,9 +288,7 @@
     </div>
     <div class="vx-table-foot">
       <span class="vx-foot-count">
-        {{ page_count(page, 'countries') }} &middot; case rates for {{ disease_name }}
-        &middot; <strong>#</strong> is always the rank by coverage gain, so it
-        stays with a country when you re-sort
+        {{ page_count(page, 'countries') }}
       </span>
       {{ pager(page, 'improvement.index', table_args, anchor='#rank-table') }}
     </div>
@@ -319,7 +304,7 @@
         The figure each country reported to WHO for {{ antigen_name }}. Its
         denominator is the <strong>birth cohort</strong> that country targeted,
         which is what WHO reports as coverage. Change is end minus start, in
-        percentage points (pp). We deliberately do <strong>not</strong> use doses
+        percentage points. We deliberately do <strong>not</strong> use doses
         divided by total population: that is not a coverage rate.
       </dd>
       <dt>Who is ranked</dt>
@@ -327,18 +312,22 @@
         Only countries with a real coverage figure in <strong>both</strong>
         {{ start_year }} and {{ end_year }}. A country missing either year is
         excluded, so none can appear from nowhere and show an impossible gain.
-        {{ fmt_int(eligible) }} countries qualified.
+        {{ fmt_int(eligible) }} countries qualified. <strong>#</strong> is always
+        the rank by coverage gain, so it stays with a country when you re-sort
+        the table by something else.
       </dd>
-      <dt>Doses / 100 pop</dt>
+      <dt>Doses per 100 people</dt>
       <dd>
-        The second denominator the brief asks about: doses delivered per 100
-        people of the <em>whole</em> national population, and how that figure
-        moved between the two years. It is not a coverage rate &mdash; coverage
-        measures doses against the birth cohort they were aimed at, which is a
-        far smaller group, so this number is much smaller and the two are never
-        comparable. It reads &ldquo;no data&rdquo; where a country has no
-        population figure for one of the two years. The ranking stays on
-        reported coverage; this column is reported beside it, not ranked on.
+        The second denominator: doses delivered per 100 people of the
+        <em>whole</em> national population, and how that figure moved between the
+        two years. It is computed in the same query and is in the
+        <strong>CSV and PDF</strong>, where four decimal places can be read
+        properly &mdash; it is not a table column, because it is not a coverage
+        rate and sitting beside one invited the two to be compared. Coverage
+        measures doses against the birth cohort they were aimed at, a far smaller
+        group, so this number is much smaller and the two never mean the same
+        thing. You can still order the table by it: choose
+        <strong>Doses per 100 people</strong> under Sort.
       </dd>
 
       <dt>Coverage above 100%</dt>
@@ -348,7 +337,7 @@
       </dd>
       <dt>Did cases actually fall?</dt>
       <dd>
-        The last columns compare a <strong>different dataset</strong>: reported
+        The last column compares a <strong>different dataset</strong>: reported
         cases per 100,000 people for {{ disease_name }}, over the same years.
         Coverage rising while cases rise is possible, and is shown rather than
         hidden. Case rates reflect surveillance as much as transmission, so read

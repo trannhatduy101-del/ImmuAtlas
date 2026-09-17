@@ -179,10 +179,7 @@
       </div>
       <div class="vx-table-foot">
         <span class="vx-foot-count">
-          {{ page_count(page, 'countries') }} &middot; sorted by
-          {{ (sort_labels | selectattr('0','equalto',selected_sort) | first)[1] | lower }}
-          &middot; every row is above the
-          {{ fmt_num(global_rate.global_rate_per_100k) }} / 100k global rate
+          {{ page_count(page, 'countries') }}
         </span>
         {{ pager(page, 'above_average.index', table_args, anchor='#country-table') }}
       </div>

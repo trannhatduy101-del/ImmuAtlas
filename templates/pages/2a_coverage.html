@@ -169,7 +169,7 @@
               {{ 'country' if outcome.n_countries_reporting == 1 else 'countries' }}
               met the {{ fmt_pct(threshold.threshold_pct, 0) }} threshold
               <span class="ov-gap ov-gap--{{ 'up' if gap >= 0 else 'down' }}">
-                {{ '%+.1f'|format(gap) }} pp vs target
+                {{ '%+.1f'|format(gap) }} percentage points vs target
               </span>
             </p>
             {% if year is none %}
@@ -220,7 +220,8 @@
           <tr>
             <th scope="col">Region</th>
             <th scope="col" class="num">Avg coverage</th>
-            {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target</th>
+            {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target
+              <span class="th-sub">percentage points</span></th>
             <th scope="col" class="num">Met target</th>{% endif %}
             <th scope="col" class="num">Countries</th>
             <th scope="col" class="num">Reporting</th>
@@ -243,7 +244,7 @@
               {% if has_t %}
                 <td class="num">
                   {% if v is not none %}
-                    <span class="vx-pill vx-pill--{{ 'up' if met else 'down' }}">{{ '%+.1f'|format(v - threshold.threshold_pct) }} pp</span>
+                    <span class="vx-pill vx-pill--{{ 'up' if met else 'down' }}">{{ '%+.1f'|format(v - threshold.threshold_pct) }}</span>
                   {% else %}&mdash;{% endif %}
                 </td>
                 {# Brief 2A, Table 2: how many of this region's countries met at
@@ -326,7 +327,6 @@
     <div class="vx-table-foot">
       <span class="vx-foot-count">
         {{ page_count(page, 'countries') }}
-        &middot; sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}
       </span>
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>

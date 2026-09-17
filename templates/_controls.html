@@ -111,10 +111,17 @@
 
 
 {# "Showing 9-16 of 212" -- always printed, so a single-page table still states
-   its size rather than leaving the reader to count. #}
+   its size rather than leaving the reader to count.
+
+   The noun is de-pluralised at a total of one. Every caller passes a plural
+   ("countries", "rows"), which read as "of 1 countries" on any selection that
+   narrowed to a single row -- reachable on 2A by picking one country and on 3A
+   with a short period. Fixed here rather than in four templates, because all
+   four call this macro. #}
 {% macro page_count(page, noun='rows') %}
   {% if page.total %}
-    Showing {{ page.first }}&ndash;{{ page.last }} of {{ page.total }} {{ noun }}
+    Showing {{ page.first }}&ndash;{{ page.last }} of {{ page.total }}
+    {{- ' ' }}{{ noun if page.total != 1 else (noun[:-3] ~ 'y' if noun.endswith('ies') else noun[:-1]) }}
   {% else %}
     No {{ noun }}
   {% endif %}

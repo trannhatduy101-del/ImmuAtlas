@@ -246,8 +246,7 @@
     </div>
     <div class="vx-table-foot">
       <span class="vx-foot-count">
-        {{ page_count(page, 'countries') }} &middot; sorted by
-        {{ (sort_options | selectattr('0','equalto',selected_sort) | first)[1] | lower }}
+        {{ page_count(page, 'countries') }}
       </span>
       {{ pager(page, 'infections.index', table_args, anchor='#country-table') }}
     </div>

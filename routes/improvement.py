@@ -28,18 +28,37 @@ SORT_KEYS = {
     "gain_desc":  "coverage_change IS NULL, coverage_change DESC, country_name ASC",
     "gain_asc":   "coverage_change IS NULL, coverage_change ASC,  country_name ASC",
     "end_desc":   "coverage_end IS NULL, coverage_end DESC,       country_name ASC",
+    "end_asc":    "coverage_end IS NULL, coverage_end ASC,        country_name ASC",
+    # The start year was only ever a number on screen, never something you could
+    # order by -- so "who began furthest behind" could not be asked.
+    "start_asc":  "coverage_start IS NULL, coverage_start ASC,    country_name ASC",
     "cases_fell": "case_change IS NULL, case_change ASC,          country_name ASC",
+    "cases_rose": "case_change IS NULL, case_change DESC,         country_name ASC",
+    # Sorts on the case rate the table actually SHOWS at the end year. Every
+    # other case key orders by the change, which answers a different question.
+    "cases_now":  "cases_end IS NULL, cases_end DESC,             country_name ASC",
     "pop_rate":   ("doses_per_100_change IS NULL, doses_per_100_change DESC, "
                    "country_name ASC"),
+    "pop_rate_asc": ("doses_per_100_change IS NULL, doses_per_100_change ASC, "
+                     "country_name ASC"),
     "country":    "country_name ASC",
 }
+# Same shape as the 2A labels: "what is being sorted: which direction", and no
+# "first". The three case options are worded so they cannot be confused: the two
+# "Change in case rate" ones order by how far the rate MOVED, while "Case rate
+# in the end year" orders by the rate the table actually shows.
 SORT_LABELS = [
-    ("gain_desc",  "Biggest coverage gain first"),
-    ("gain_asc",   "Smallest gain (or decline) first"),
-    ("end_desc",   "Highest end coverage first"),
-    ("cases_fell", "Largest fall in case rate first"),
-    ("pop_rate",   "Biggest rise in doses per 100 population first"),
-    ("country",    "Country name"),
+    ("gain_desc",  "Coverage gain: biggest to smallest"),
+    ("gain_asc",   "Coverage gain: smallest to biggest"),
+    ("end_desc",   "Coverage in the end year: high to low"),
+    ("end_asc",    "Coverage in the end year: low to high"),
+    ("start_asc",  "Coverage in the start year: low to high"),
+    ("cases_fell", "Change in case rate: biggest fall"),
+    ("cases_rose", "Change in case rate: biggest rise"),
+    ("cases_now",  "Case rate in the end year: high to low"),
+    ("pop_rate",   "Doses per 100 people: biggest rise"),
+    ("pop_rate_asc", "Doses per 100 people: smallest rise"),
+    ("country",    "Country name: alphabetical"),
 ]
 DEFAULT_SORT = "gain_desc"
 
@@ -47,6 +66,11 @@ DEFAULT_SORT = "gain_desc"
 # rather than an unbounded number spliced anywhere near the SQL.
 COUNT_OPTIONS = (5, 10, 20, 50)
 DEFAULT_COUNT = 10
+
+# How many columns the bar chart draws. Fixed, and deliberately NOT the page
+# size: the chart answers "who improved most", which does not change when the
+# reader re-sorts the table or walks to page 3.
+CHART_BARS = 10
 
 # Export columns, declared once and shared by CSV and PDF. Each formatter is
 # the one the template uses, so the file and the screen agree, and each turns
@@ -57,7 +81,7 @@ COLUMNS = [
     ("Region", "region_name", str),
     ("Coverage start %", "coverage_start", db.fmt_num),
     ("Coverage end %", "coverage_end", db.fmt_num),
-    ("Change pp", "coverage_change", db.fmt_num),
+    ("Change (percentage points)", "coverage_change", db.fmt_num),
     ("Cases per 100k start", "cases_start", db.fmt_num),
     ("Cases per 100k end", "cases_end", db.fmt_num),
     ("Case change", "case_change", db.fmt_num),
@@ -243,7 +267,7 @@ def index():
         sort_active=sort_active, sort_labels=SORT_LABELS,
         rejected=rejected, range_error=range_error, submitted=submitted,
         below_only=below_only,
-        rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0,
+        rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0, chart_n=0,
         imp_summary=None, top_gainer=None,
         page=db.paginate([], None), table_args=table_args,
         pdf_ok=exports.pdf_available(),
@@ -290,8 +314,15 @@ def index():
     # It is rank 1 by construction, so it is already in `rows`.
     ctx["top_gainer"] = next((r for r in rows if r["improvement_rank"] == 1), None)
 
-    # The chart draws the page the reader is looking at, so chart and table
-    # always show the same countries.
-    ctx["bars"] = _gain_bars(page["rows"])
+    # The chart is ALWAYS the ten biggest improvers, whatever the table is
+    # sorted by and whatever page the reader is on. Drawing the current page
+    # meant "sort by country name" produced a chart of ten countries beginning
+    # with A -- a ranked bar chart of nothing in particular. Ordered by SQL
+    # (gain_desc) and sliced here; Python never sorts. Same below_only as the
+    # table, so the chart and the rows beneath it describe the same pool.
+    top_rows = _rows_for(antigen, start_year, end_year,
+                         SORT_KEYS["gain_desc"], below_only)[:CHART_BARS]
+    ctx["bars"] = _gain_bars(top_rows)
+    ctx["chart_n"] = len(top_rows)
 
     return render_template("pages/3a_improvement.html", **ctx)
