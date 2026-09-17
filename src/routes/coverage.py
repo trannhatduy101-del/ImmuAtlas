@@ -39,8 +39,10 @@ SORT_KEYS = {
 SORT_LABELS = [
     ("coverage_desc", "Percentage of target: high to low"),
     ("coverage_asc",  "Percentage of target: low to high"),
-    ("gap",           "Gap to the target: furthest below"),
-    ("gap_desc",      "Gap to the target: furthest above"),
+    # Every row in this table cleared its threshold, so the only gap left to
+    # order by is the margin ABOVE it.
+    ("gap",           "Margin above the target: smallest first"),
+    ("gap_desc",      "Margin above the target: largest first"),
     # "birth cohort" is the epidemiology term; the general-public persona reads
     # "target group size". Marked as a download column because it is one: the
     # table shows the percentage, the file carries the cohort behind it.
@@ -75,7 +77,10 @@ REGION_SORT_LABELS = [
     ("reporting_asc", "Countries reporting: fewest to most"),
     ("region",        "Region name: alphabetical"),
 ]
-DEFAULT_REGION_SORT = "coverage_desc"
+# The table's own subject: how many of each region's countries cleared the bar.
+# "coverage_desc" used to be the default, but average coverage is no longer one
+# of the four columns on screen.
+DEFAULT_REGION_SORT = "met"
 
 # A typo in the source data, corrected for display only. Never
 # rewrite the supplied table.
@@ -189,21 +194,35 @@ def index():
 
     params = {"antigen": antigen, "year": year,
               "region": region, "country": country,
-              "threshold": threshold["threshold_pct"] if threshold else None}
+              "threshold": threshold["threshold_pct"] if threshold else None,
+              # Table 1 lists only the countries that met their target, which is
+              # what the brief asks it to be. Pass None here to list everyone
+              # again -- the query keeps both shapes.
+              "met_only": 1}
 
     # With no threshold there is no Met target column, and n_met_threshold is 0
     # for every region -- so offering that sort would be a control that visibly
     # does nothing. Drop the option, and fall back if it was the chosen one.
+    # The region table now carries the brief's four columns and nothing else, so
+    # only the sorts that address one of those columns are offered. The other
+    # keys still WORK -- a bookmarked ?rsort=reporting is honoured -- they are
+    # simply not listed, because a control that visibly does nothing is worse
+    # than no control.
+    VISIBLE_REGION_SORTS = ("met", "met_asc", "region")
+    region_sort_labels = [o for o in REGION_SORT_LABELS
+                          if o[0] in VISIBLE_REGION_SORTS]
+
     # Both directions, not just the descending one: "fewest meeting the target"
     # is equally meaningless when there is no target to meet.
     THRESHOLD_SORTS = ("met", "met_asc")
-    region_sort_labels = REGION_SORT_LABELS
     if threshold is None:
-        region_sort_labels = [o for o in REGION_SORT_LABELS
+        region_sort_labels = [o for o in region_sort_labels
                               if o[0] not in THRESHOLD_SORTS]
         if rsort_active in THRESHOLD_SORTS:
-            rsort_active = DEFAULT_REGION_SORT
-            region_order_by = REGION_SORT_KEYS[DEFAULT_REGION_SORT]
+            # NOT DEFAULT_REGION_SORT -- that is "met", the very thing being
+            # withdrawn. Region name is the one column still on screen.
+            rsort_active = "region"
+            region_order_by = REGION_SORT_KEYS["region"]
 
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
     outcome = db.query_one(db.load_query("coverage_outcome"), params)

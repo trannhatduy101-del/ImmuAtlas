@@ -773,6 +773,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    neither there is no single value to print -- and an empty cell would read as
    missing data rather than as "everything". */
 .vx-all { color: var(--ink-muted); font-style: italic; }
+/* The one row a result table shows when nothing matched. Centred and muted so
+   it reads as a sentence about the result, not as a data row. */
+.vx-empty-row { text-align: center; color: var(--ink-muted); padding: 1.1rem 1rem; }
 .vx-table-foot {
   padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
   border-top: 1px solid var(--rule);

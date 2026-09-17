@@ -199,10 +199,11 @@
     <a href="#country-table">Country table</a>
   </nav>
 
-  <h2 class="section-head">Result &middot; by region</h2>
+  <h2 class="section-head">Result &middot; countries meeting the target, by region</h2>
   <p class="section-intro">
-    Weighted by the birth cohort each national rate applies to, so one large
-    country does not outweigh a small one.
+    How many of each region&rsquo;s countries reached the coverage WHO says is
+    needed to stop transmission, shown over the region&rsquo;s total so the count
+    reads as a proportion rather than a bare number.
   </p>
 
   {% set has_t = threshold and threshold.threshold_pct is not none %}
@@ -217,52 +218,33 @@
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
+          {# Brief 2A, Table 2, column for column: Antigen | Year | Countries
+             that met the target | Region. This table aggregates the whole
+             selection, so Antigen and Year carry the value the visitor chose
+             rather than a per-row figure -- and when they chose neither, they
+             say so in words instead of sitting blank. #}
           <tr>
-            <th scope="col">Region</th>
-            {# Brief 2A, Table 2: Antigen and Year sit in the table, not only in
-               the filter above it. This table aggregates the whole selection,
-               so the value is the one the visitor chose rather than a per-row
-               figure -- and when they chose neither, it says so in words. #}
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
-            <th scope="col" class="num">Avg coverage</th>
-            {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target
-              <span class="th-sub">percentage points</span></th>
-            <th scope="col" class="num">Met target</th>{% endif %}
-            <th scope="col" class="num">Countries</th>
-            <th scope="col" class="num">Reporting</th>
+            <th scope="col" class="num">Countries that met
+              {% if has_t %}the {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}their target{% endif %}</th>
+            <th scope="col">Region</th>
           </tr>
         </thead>
         <tbody>
+          {% set a_row = antigens | selectattr('antigen','equalto',antigen) | first if antigen else none %}
           {% for item in region_view %}
-            {% set v = item.row.avg_weighted %}
-            {% set met = has_t and v is not none and v >= threshold.threshold_pct %}
             <tr>
-              <th scope="row" class="vx-cell-key">{{ item.name }}</th>
-              {% set a_row = antigens | selectattr('antigen','equalto',antigen) | first if antigen else none %}
               <td{% if a_row %} title="{{ a_row.antigen_name }}"{% endif %}>{% if a_row %}{{ antigen }} &middot; {{ a_row.disease_name }}{% else %}<span class="vx-all">All antigens</span>{% endif %}</td>
               <td class="num">{% if year %}{{ year }}{% else %}<span class="vx-all">All years</span>{% endif %}</td>
+              {# An em dash, not 0, without a single antigen: the thresholds
+                 differ by disease, so there is no one bar to count against and
+                 "0" would assert that no region has any country meeting one. #}
               <td class="num">
-                {% if v is not none %}
-                  <span class="cov-cell">
-                    <span class="cov-num">{{ fmt_pct(v) }}</span>
-                    <span class="cov-bar {% if has_t %}{{ 'is-met' if met else 'is-below' }}{% endif %}"><span style="width: {{ [v, 100]|min }}%"></span></span>
-                  </span>
+                {% if has_t %}{{ fmt_int(item.row.n_met_threshold) }} <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span>
                 {% else %}&mdash;{% endif %}
               </td>
-              {% if has_t %}
-                <td class="num">
-                  {% if v is not none %}
-                    <span class="vx-pill vx-pill--{{ 'up' if met else 'down' }}">{{ '%+.1f'|format(v - threshold.threshold_pct) }}</span>
-                  {% else %}&mdash;{% endif %}
-                </td>
-                {# Brief 2A, Table 2: how many of this region's countries met at
-                   least the threshold. Shown over the region's total so the
-                   count is read as a proportion, not as a bare number. #}
-                <td class="num">{{ fmt_int(item.row.n_met_threshold) }} <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span></td>
-              {% endif %}
-              <td class="num">{{ fmt_int(item.row.n_countries) }}</td>
-              <td class="num">{{ fmt_int(item.row.n_reporting) }}</td>
+              <th scope="row" class="vx-cell-key">{{ item.name }}</th>
             </tr>
           {% endfor %}
         </tbody>
@@ -276,13 +258,18 @@
     </div>
   </div>
 
-  {# ---- Table 2: by country. Trimmed to the columns that answer the question;
-         the birth cohort and doses-per-100 detail stay in the CSV and method
-         note rather than crowding the table. ---- #}
-  <h2 class="section-head">Result &middot; by country</h2>
+  {# ---- Table 1: the countries that met their target. Five columns, the
+         brief's; the birth cohort and doses-per-100 detail stay in the CSV and
+         the method note rather than crowding the table. ---- #}
+  <h2 class="section-head">Result &middot; countries that met the target</h2>
   <p class="section-intro">
-    Every country in the selection, one per row. Sort and page size sit in the
-    table header; a download always contains every row, not just this page.
+    Only the countries that reached their target appear here &mdash; the bar is
+    the one WHO sets for that disease, so it is 95% for measles, 90% for
+    diphtheria-tetanus-pertussis and 80% for rubella, not a flat 90% for
+    everything. Countries below the bar, and countries that reported no figure
+    at all, are counted in the summary above but are not rows in this table.
+    Sort and page size sit in the table header; a download contains every
+    matching country, not just this page.
   </p>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
@@ -295,29 +282,36 @@
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
+          {# Brief 2A, Table 1, column for column and in the brief's order:
+             Antigen | Year | Country | Region | Percentage of target. Antigen
+             and Year come from the row itself, so with "All antigens" each row
+             still names its own. There is no Status column because every row
+             here met its target -- that is what puts it in the table. #}
           <tr>
-            <th scope="col">Country</th>
-            {# Brief 2A, Table 1: Antigen | Year | Country | Region | Percentage
-               of target. Country stays first because it is the row's header
-               cell and the column people scan. Antigen and Year come from the
-               row itself, so with "All antigens" each row still names its own. #}
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
+            <th scope="col">Country</th>
             <th scope="col">Region</th>
             <th scope="col" class="num">Percentage of target
               <span class="th-sub">doses &divide; target birth cohort</span></th>
-            <th scope="col">Status</th>
           </tr>
         </thead>
         <tbody>
+          {# The table only holds countries that met their target, so "no rows"
+             means "none of them did" -- a real answer, not a data gap. Saying
+             so beats an empty tbody, which reads as something broken. #}
+          {% if not page.rows %}
+            <tr>
+              <td colspan="5" class="vx-empty-row">
+                No country in this selection reached
+                {% if threshold and threshold.threshold_pct is not none %}the
+                  {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}its target{% endif %}.
+                Widen the selection, or try another year.
+              </td>
+            </tr>
+          {% endif %}
           {% for r in page.rows %}
             <tr>
-              <th scope="row" class="vx-cell-key">
-                {{ r.country_name }}
-                {% if r.unmatched_territory %}
-                  <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
-                {% endif %}
-              </th>
               {# The code plus its disease, the same wording as the filter
                  dropdown, and the form the brief's own example uses ("MCV2").
                  The full name -- "Measles-containing vaccine, 1st dose" --
@@ -326,22 +320,23 @@
                  the download. #}
               <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
               <td class="num">{{ r.year }}</td>
-              <td>{{ fix_region(r.region_name) }}</td>
-              <td class="num">
-                {% if r.coverage_reported is not none %}
-                  {% set cmet = r.gap_to_threshold is not none and r.gap_to_threshold >= 0 %}
-                  <span class="cov-cell">
-                    <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
-                    <span class="cov-bar {% if r.gap_to_threshold is not none %}{{ 'is-met' if cmet else 'is-below' }}{% endif %}"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
-                  </span>
-                {% else %}&mdash;{% endif %}
-              </td>
-              <td>
-                {% if r.gap_to_threshold is not none %}
-                  <span class="vx-pill vx-pill--{{ 'up' if r.gap_to_threshold >= 0 else 'down' }}">{{ r.herd_immunity_status }}</span>
-                {% else %}
-                  <span class="vx-pill vx-pill--none">{{ r.herd_immunity_status }}</span>
+              {# Third column, but still the row's header cell: it is what names
+                 the row, and HTML puts no constraint on where that sits. #}
+              <th scope="row" class="vx-cell-key">
+                {{ r.country_name }}
+                {% if r.unmatched_territory %}
+                  <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
                 {% endif %}
+              </th>
+              <td>{{ fix_region(r.region_name) }}</td>
+              {# Always a real figure and always at or above the threshold: the
+                 query only returns rows that met it, and a country with no
+                 figure cannot have met anything. #}
+              <td class="num">
+                <span class="cov-cell">
+                  <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
+                  <span class="cov-bar is-met"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
+                </span>
               </td>
             </tr>
           {% endfor %}

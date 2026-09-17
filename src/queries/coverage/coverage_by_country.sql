@@ -40,3 +40,10 @@ WHERE (:antigen IS NULL OR antigen    = :antigen)
   AND (:year    IS NULL OR year       = :year)
   AND (:country IS NULL OR country_id = :country)
   AND (:region  IS NULL OR region_id  = :region)
+  -- Brief 2A, Table 1: "all countries that have MET at least 90% of their
+  -- vaccination targets". Each row is compared against ITS OWN threshold_pct,
+  -- never a literal 90: WHO sets 95 for measles, 90 for DTP and 80 for rubella,
+  -- so a hardcoded 90 would list measles countries that did not in fact meet
+  -- theirs. coverage_reported >= NULL is NULL, so a country that reported
+  -- nothing falls out on its own -- which is right, "no figure" is not "met".
+  AND (:met_only IS NULL OR coverage_reported >= threshold_pct)
