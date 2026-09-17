@@ -59,16 +59,26 @@ Then open http://127.0.0.1:5000.
 ## Project layout
 
 ```
-app.py          application factory, blueprint registration, error pages
-config.py       paths and site constants
-db.py           all SQLite access: connect/query helpers, named-query
-                loader, safe ORDER BY whitelist, display formatters
-routes/         one module per page (see table below)
-queries/        one .sql file per named query, loaded by db.load_query()
-sql/            schema, seed, and provenance scripts
-templates/      Jinja templates (base layout + one file per page)
-static/         CSS, fonts and images
-rebuild_db.py   rebuilds immuatlas.db from immunisation2.db + sql/
+app.py             application factory, blueprint registration, error pages
+config.py          paths and site constants
+db.py              all SQLite access: connect/query helpers, named-query
+                   loader, safe ORDER BY whitelist, pagination, formatters
+exports.py         CSV and PDF for every result table, columns declared once
+rebuild_db.py      rebuilds immuatlas.db from immunisation2.db + sql/
+test_helpers.py    assert-based checks for db.py and exports.py; no framework,
+                   run it with: python test_helpers.py
+
+routes/            one module per page (see the table below)
+queries/           one .sql file per named query, loaded by db.load_query();
+                   the name prefix says which page uses it (landing_, coverage_,
+                   infections_, persona_, filter_)
+sql/               schema, seed and provenance scripts, applied in that order
+templates/         base.html, the _controls.html macros shared by every result
+                   table, and one file per page under pages/
+static/            CSS, self-hosted fonts and images
+
+immunisation2.db   the supplied WHO data, read-only and never modified; the one
+                   file here that cannot be regenerated
 ```
 
 ## Pages
