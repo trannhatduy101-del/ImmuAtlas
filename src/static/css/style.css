@@ -1154,11 +1154,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 0;
   display: grid;
   gap: .85rem;
-  /* Narrow enough that the paragraph inside fills its card. At 60rem the text
-     stopped at its own 62ch measure and left a third of every card empty on
-     the right, so justified text sat in a box two-thirds too wide for it. The
-     card now ends where the line ends. */
-  max-width: 40rem;
+  /* Full width, so the steps line up with the heading band above them and
+     with every other card on the page. The paragraph inside carries no measure
+     cap of its own, so the justified text reaches both edges of the card
+     instead of stopping two-thirds of the way across. */
 }
 .guide-steps > li {
   counter-increment: guide-step;
@@ -1191,8 +1190,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin: 0;
   color: var(--ink-muted);
   font-size: .92rem;
-  /* No measure cap of its own: the list above is the measure now, so the
-     paragraph runs to both edges of the card it sits in. */
+  /* No measure cap of its own: the card is the measure, so the text runs to
+     both of its edges. A line that wide is harder to track back to the start,
+     so it gets more leading than the 1.65 used elsewhere -- the cheapest fix
+     for a long measure, and invisible at a short one. */
+  line-height: 1.75;
 }
 /* Narrow screens: the number moves above the step rather than squeezing the
    text into a column too thin to read. */
