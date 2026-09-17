@@ -20,7 +20,37 @@ import db
 import config
 
 
+def ensure_database():
+    """Build the working database the first time the app starts without one.
+
+    immuatlas.db is git-ignored, so a fresh clone or a downloaded ZIP arrives
+    without it and every page answers 503 until someone runs rebuild_db.py.
+    Nobody reads a README before pressing Run, so the app does that step itself.
+
+    Deliberately not fatal. If the build fails -- immunisation2.db missing, no
+    write permission, a syntax error in sql/ -- the app still starts, and
+    db.connect() raises DatabaseMissing, which every page already turns into a
+    503 naming the command to run. A failed build should leave a page that
+    explains itself, not a traceback at import time.
+
+    Cheap to call twice: `flask run --debug` builds the app in both the parent
+    and the reloader child, and the second call finds the file and returns.
+    """
+    if os.path.exists(config.DB_PATH):
+        return
+    print("No working database found. Building it from immunisation2.db + sql/ ...")
+    try:
+        # Imported here, not at module scope, for the same reason as the
+        # blueprints below: a failure names rebuild_db in the traceback.
+        import rebuild_db
+        rebuild_db.main()
+    except Exception as exc:
+        print("Automatic build failed (%s). Run: python rebuild_db.py" % exc)
+
+
 def create_app():
+    ensure_database()
+
     app = Flask(__name__)
     app.config["SITE_NAME"] = config.SITE_NAME
     app.config["SITE_TAGLINE"] = config.SITE_TAGLINE

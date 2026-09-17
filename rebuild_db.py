@@ -24,11 +24,19 @@ import sqlite3
 import sys
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent
+import config
 
-SOURCE_DB = ROOT / "immunisation2.db"
-OUTPUT_DB = ROOT / "immuatlas.db"
-TEMP_DB = ROOT / ".immuatlas.db.tmp"
+# Paths come from config so this script and the application can never disagree
+# about where the database lives. config.DB_PATH honours IMMUATLAS_DB; with the
+# old hardcoded path, setting that variable made the app look in one place and
+# this script write to another, so app.py's first-run build would rebuild on
+# every single start and never say why.
+ROOT = Path(config.BASE_DIR)          # sql/ travels with the source, not the database
+SOURCE_DB = Path(config.SOURCE_DB)
+OUTPUT_DB = Path(config.DB_PATH)
+# Beside the target, so os.replace() stays within one filesystem and therefore
+# stays atomic.
+TEMP_DB = OUTPUT_DB.with_name("." + OUTPUT_DB.name + ".tmp")
 
 # (label, path) in the order they must be applied.
 SCRIPTS = [
@@ -151,7 +159,7 @@ def main(argv=None):
         for table, rowid, parent, _fk in violations:
             print("  %s rowid %s has no matching %s row" % (table, rowid, parent))
         print("  The views resolve these to 'Not classified' rather than dropping them.")
-    print("\nRebuilt immuatlas.db from immunisation2.db and sql/.")
+    print("\nRebuilt %s from %s and sql/." % (OUTPUT_DB.name, SOURCE_DB.name))
     print("You can now run: python app.py")
     return 0
 

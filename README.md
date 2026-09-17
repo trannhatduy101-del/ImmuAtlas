@@ -20,11 +20,29 @@ source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Build the working database
+## Run
+
+```bash
+python app.py
+```
+
+Then open http://127.0.0.1:5000. That is the whole setup: on the first
+start the app notices there is no working database and builds one, which
+takes a few seconds. Every start after that is immediate.
+
+For the auto-reloading development server instead:
+
+```bash
+flask --app app run --debug
+```
+
+## Rebuilding after you change `sql/`
 
 `immuatlas.db` is git-ignored and disposable: it is a copy of the supplied
 `immunisation2.db` (read-only source data) with this project's schema,
-views and seed data applied on top. Rebuild it any time `sql/` changes.
+views and seed data applied on top. The app builds it for you when it is
+missing, so you only need this command when you have edited something in
+`sql/` and want the change applied now:
 
 ```bash
 python rebuild_db.py
@@ -44,17 +62,9 @@ It also reports the two foreign key anomalies in the supplied data
 as supplied; the views resolve them to `Not classified` rather than
 dropping the countries.
 
-Until the database exists, every page says so and returns 503 rather
-than erroring, so a fresh clone tells you what to do instead of
-crashing.
-
-## Run
-
-```bash
-flask --app app run --debug
-```
-
-Then open http://127.0.0.1:5000.
+If the automatic build cannot run — no `immunisation2.db`, nowhere to
+write — the app still starts and every page returns 503 saying so, rather
+than crashing with a traceback.
 
 ## Project layout
 
@@ -64,14 +74,16 @@ config.py          paths and site constants
 db.py              all SQLite access: connect/query helpers, named-query
                    loader, safe ORDER BY whitelist, pagination, formatters
 exports.py         CSV and PDF for every result table, columns declared once
-rebuild_db.py      rebuilds immuatlas.db from immunisation2.db + sql/
+rebuild_db.py      rebuilds immuatlas.db from immunisation2.db + sql/;
+                   app.py runs it automatically on the first start
 test_helpers.py    assert-based checks for db.py and exports.py; no framework,
                    run it with: python test_helpers.py
 
 routes/            one module per page (see the table below)
-queries/           one .sql file per named query, loaded by db.load_query();
-                   the name prefix says which page uses it (landing_, coverage_,
-                   infections_, persona_, filter_)
+queries/           one .sql file per named query, loaded by db.load_query()
+                   by file name alone, in per-page folders mirroring routes/:
+                   shell/ filter/ landing/ mission/ coverage/ infections/
+                   improvement/ above_average/
 sql/               schema, seed and provenance scripts, applied in that order
 templates/         base.html, the _controls.html macros shared by every result
                    table, and one file per page under pages/
