@@ -25,14 +25,10 @@ SELECT
     coverage_reported,
     doses_per_100_population,
     target_cohort,
-    -- Status and gap are both measured against :met_threshold, the one bar this
-    -- page uses. If they disagreed, the pill would call a country "below" while
-    -- the filter had already let it through.
-    CASE
-      WHEN coverage_reported IS NULL                 THEN 'No figure reported'
-      WHEN coverage_reported >= :met_threshold       THEN 'At or above target'
-      ELSE 'Below target'
-    END                                          AS herd_immunity_status,
+    -- How far above the bar, measured against the same :met_threshold the WHERE
+    -- clause filters on, so the number and the filter can never disagree. A
+    -- status column sat here too; now that the table is only ever the countries
+    -- that met the target, it said "At or above target" on every single row.
     ROUND(coverage_reported - :met_threshold, 2) AS gap_to_threshold,
     CASE WHEN country_name IS NULL THEN 1 ELSE 0 END AS unmatched_territory
 FROM v_coverage
@@ -44,9 +40,11 @@ WHERE (:antigen IS NULL OR antigen    = :antigen)
   -- vaccination targets". One bar for every antigen, bound as :met_threshold
   -- rather than read from the row, because the brief names a single figure.
   -- WHO's own per-disease targets live in herd_immunity_threshold and are
-  -- cited in the method note; nothing here is filtered or counted with them. coverage_reported >= NULL is NULL, so a country that
-  -- reported nothing falls out on its own: "no figure" is not "met".
-  AND (:met_only IS NULL OR coverage_reported >= :met_threshold)
+  -- cited in the method note; nothing here is filtered or counted with them.
+  -- Not optional: the brief asks for the countries that MET the target, so this
+  -- table is only ever those. coverage_reported >= NULL is NULL, so a country
+  -- that reported nothing falls out on its own -- "no figure" is not "met".
+  AND coverage_reported >= :met_threshold
   -- The table's search box. Bound, never spliced, so a reader typing % or _ is
   -- searching for those characters rather than writing a pattern of their own.
   -- SQLite's LIKE is case-insensitive for ASCII, so "viet" finds "Viet Nam"

@@ -1592,7 +1592,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .cov-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
 .cov-bar.is-met > span   { background: var(--accent); }
-.cov-bar.is-below > span { background: var(--outcome); }
 
 /* Coloured delta in the 3A ranking table's Change column, matching the dumbbell
    above it, so a gain reads apart from a decline at a glance. Word/sign carry

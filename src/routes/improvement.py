@@ -22,7 +22,10 @@ bp = Blueprint("improvement", __name__)
 
 
 # A user-chosen sort cannot be a bound parameter, so each option is written out
-# here and the request can only pick one of these keys. Every key ends on
+# here and the request can only pick one of these keys. Each orders a column the
+# table actually shows -- doses per 100 population is in the download but not on
+# screen, so sorting by it produced an order the reader could not account for.
+# Every key ends on
 # country_name so ties resolve deterministically, and pushes NULLs last in both
 # directions so "no data" never leads the ranking.
 SORT_KEYS = {
@@ -38,10 +41,6 @@ SORT_KEYS = {
     # Sorts on the case rate the table actually SHOWS at the end year. Every
     # other case key orders by the change, which answers a different question.
     "cases_now":  "cases_end IS NULL, cases_end DESC,             country_name ASC",
-    "pop_rate":   ("doses_per_100_change IS NULL, doses_per_100_change DESC, "
-                   "country_name ASC"),
-    "pop_rate_asc": ("doses_per_100_change IS NULL, doses_per_100_change ASC, "
-                     "country_name ASC"),
     "country":    "country_name ASC",
     "country_desc": "country_name DESC",
 }
@@ -58,8 +57,6 @@ SORT_LABELS = [
     ("cases_fell", "Case change: biggest fall"),
     ("cases_rose", "Case change: biggest rise"),
     ("cases_now",  "End case rate: high → low"),
-    ("pop_rate",   "Doses/100: high → low"),
-    ("pop_rate_asc", "Doses/100: low → high"),
     ("country",    "Country: A – Z"),
     ("country_desc", "Country: Z – A"),
 ]

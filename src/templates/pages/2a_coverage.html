@@ -62,20 +62,6 @@
         {% endfor %}
       </select>
     </div>
-    {# Off by default, so the page opens on the table the brief describes: only
-       the countries that met their target. On, it answers the other half of the
-       question -- who is still short -- which is what Grace comes here for.
-
-       "every country", not "below the target too": switching this on also
-       brings back the countries that reported no figure at all, and those are
-       not below the target, they are unknown. #}
-    <div class="field field-check">
-      <label for="f-below">
-        <input type="checkbox" id="f-below" name="show_below" value="1"
-               {% if show_below %}checked{% endif %}>
-        Show every country, not only those that met the target
-      </label>
-    </div>
     <div class="field field-actions">
       <button type="submit">Apply</button>
       <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
@@ -316,8 +302,7 @@
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">Countries reaching
-        {{ fmt_pct(threshold_pct, 0) }} vaccine coverage
-        <span class="vx-table-sub">The checkbox above adds the countries that did not.</span></span>
+        {{ fmt_pct(threshold_pct, 0) }} vaccine coverage</span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
                         size_key='per_page', sizes=page.sizes, size_active=page.size,
@@ -340,10 +325,6 @@
             <th scope="col">Region</th>
             <th scope="col" class="num">Percentage of target
               <span class="th-sub">doses &divide; target birth cohort</span></th>
-            {# Only with the countries below the bar in view. Without them every
-               row has the same status, and a column of one repeated word is
-               noise. #}
-            {% if show_below %}<th scope="col">Status</th>{% endif %}
           </tr>
         </thead>
         <tbody>
@@ -352,7 +333,7 @@
              so beats an empty tbody, which reads as something broken. #}
           {% if not page.rows %}
             <tr>
-              <td colspan="{{ 6 if show_below else 5 }}" class="vx-empty-row">
+              <td colspan="5" class="vx-empty-row">
                 No country in this selection reached the
                 {{ fmt_pct(threshold_pct, 0) }} target.
                 Try a wider selection or a different year.
@@ -376,11 +357,8 @@
               <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
               <td class="num">{{ r.year }}</td>
               <td>{{ fix_region(r.region_name) }}</td>
-              {# With the filter on (the default) this is always a real figure
-                 at or above the threshold, because the query returns nothing
-                 else. With it off the table also holds countries that fell
-                 short and countries that reported nothing at all. #}
-              {% set cmet = r.gap_to_threshold is not none and r.gap_to_threshold >= 0 %}
+              {# Always a real figure at or above the threshold: the query
+                 returns nothing else, which is what the brief asks for. #}
               <td class="num">
                 {% if r.coverage_reported is not none %}
                   <span class="cov-cell">
@@ -390,19 +368,10 @@
                          unmarked it reads as a broken number. #}
                       <span class="tag" title="More doses reported than the target group: kept as reported, not capped">over 100%</span>
                     {% endif %}
-                    <span class="cov-bar {{ 'is-met' if cmet else 'is-below' }}"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
+                    <span class="cov-bar is-met"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
                   </span>
                 {% else %}&mdash;{% endif %}
               </td>
-              {% if show_below %}
-                <td>
-                  {% if r.gap_to_threshold is not none %}
-                    <span class="vx-pill vx-pill--{{ 'up' if cmet else 'down' }}">{{ r.herd_immunity_status }}</span>
-                  {% else %}
-                    <span class="vx-pill vx-pill--none">{{ r.herd_immunity_status }}</span>
-                  {% endif %}
-                </td>
-              {% endif %}
             </tr>
           {% endfor %}
         </tbody>

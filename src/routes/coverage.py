@@ -23,12 +23,15 @@ bp = Blueprint("coverage", __name__)
 # with country_name so the order is deterministic and a reload cannot reshuffle
 # tied rows. "coverage_reported IS NULL" first pushes the blanks to the bottom
 # in both directions, rather than letting them lead an ascending sort.
+#
+# Every key here orders a column the table actually shows. Sorting by something
+# off screen produces an order the reader cannot account for, so it reads as no
+# order at all: that is why target_cohort left, and why gap_to_threshold left
+# too -- it is coverage minus a constant, so it was a second name for a sort
+# already in the list.
 SORT_KEYS = {
     "coverage_desc": "coverage_reported IS NULL, coverage_reported DESC, country_name ASC",
     "coverage_asc":  "coverage_reported IS NULL, coverage_reported ASC,  country_name ASC",
-    "gap":           "gap_to_threshold IS NULL, gap_to_threshold ASC,    country_name ASC",
-    "gap_desc":      "gap_to_threshold IS NULL, gap_to_threshold DESC,   country_name ASC",
-    "cohort":        "target_cohort IS NULL, target_cohort DESC,         country_name ASC",
     "country":       "country_name ASC",
     "country_desc":  "country_name DESC",
     "region":        "region_name ASC, country_name ASC",
@@ -43,12 +46,10 @@ SORT_KEYS = {
 # One shape for every option: "what is being sorted: which direction". It reads
 # the same way in the dropdown and inside the "sorted by ..." sentence under the
 # table, which lowercases whatever is chosen. No "first" -- ordering is what a
-# sort control does, so the word carried no information on 22 of these.
+# sort control does, so the word carried no information.
 SORT_LABELS = [
     ("coverage_desc", "% of target: high → low"),
     ("coverage_asc",  "% of target: low → high"),
-    ("gap",           "Margin: small → large"),
-    ("gap_desc",      "Margin: large → small"),
     ("country",       "Country: A – Z"),
     ("country_desc",  "Country: Z – A"),
     ("antigen",       "Antigen: A – Z"),
@@ -57,7 +58,6 @@ SORT_LABELS = [
     ("year_asc",      "Year: old → new"),
     ("region",        "Region: A – Z"),
     ("region_desc",   "Region: Z – A"),
-    ("cohort",        "Target group: large → small"),
 ]
 DEFAULT_SORT = "coverage_desc"
 
@@ -68,25 +68,14 @@ DEFAULT_SORT = "coverage_desc"
 # and are still what 3A filters on. This page simply does not rank against them.
 BRIEF_THRESHOLD = 90.0
 
-# With "show countries below the target too" on, the table holds rows on both
-# sides of the bar, so "margin above" is the wrong word for half of them.
-GAP_LABELS_BELOW = {
-    "gap":      "Gap: furthest below",
-    "gap_desc": "Gap: furthest above",
-}
-
-# The region table is seven rows, so it gets a sort of its own but no pager.
+# The region table has its own sort, and the same rule applies: only columns on
+# screen. Average coverage, countries in selection and countries reporting were
+# offered here until they stopped being columns; they stay in the download.
 # Its parameter is `rsort`, not `sort`: two controls sharing one name would put
 # it twice in the query string, and only the first occurrence is ever read.
 REGION_SORT_KEYS = {
     "met":           "n_met_threshold DESC, region_name ASC",
     "met_asc":       "n_met_threshold ASC,  region_name ASC",
-    "coverage_desc": "avg_weighted IS NULL, avg_weighted DESC, region_name ASC",
-    "coverage_asc":  "avg_weighted IS NULL, avg_weighted ASC,  region_name ASC",
-    "countries":     "n_countries DESC, region_name ASC",
-    "countries_asc": "n_countries ASC,  region_name ASC",
-    "reporting":     "n_reporting DESC, region_name ASC",
-    "reporting_asc": "n_reporting ASC,  region_name ASC",
     "region":        "region_name ASC, antigen ASC, year DESC",
     "region_desc":   "region_name DESC, antigen ASC, year DESC",
     # The table splits by antigen and year, so both are columns a reader sees
@@ -96,6 +85,10 @@ REGION_SORT_KEYS = {
     "year_desc":     "year DESC, region_name ASC",
     "year_asc":      "year ASC,  region_name ASC",
 }
+# Every key in REGION_SORT_KEYS appears here, and nothing else does. Offering a
+# key without a label is what broke this control once: the default was a key
+# filtered out of the labels, so no <option> matched, the browser showed the
+# first one, and the page announced an order the table was not in.
 REGION_SORT_LABELS = [
     ("met",           "Met target: high → low"),
     ("met_asc",       "Met target: low → high"),
@@ -105,16 +98,7 @@ REGION_SORT_LABELS = [
     ("antigen_desc",  "Antigen: Z – A"),
     ("year_desc",     "Year: new → old"),
     ("year_asc",      "Year: old → new"),
-    ("coverage_desc", "Coverage: high → low"),
-    ("coverage_asc",  "Coverage: low → high"),
-    ("countries",     "Countries: high → low"),
-    ("countries_asc", "Countries: low → high"),
-    ("reporting",     "Reporting: high → low"),
-    ("reporting_asc", "Reporting: low → high"),
 ]
-# The table's own subject: how many of each region's countries cleared the bar.
-# "coverage_desc" used to be the default, but average coverage is no longer one
-# of the four columns on screen.
 # Most countries meeting the target first, which is the only figure this table
 # actually shows. It used to default to "coverage_asc", a key that is not in the
 # label list -- so no <option> matched, the browser displayed the first one, and
@@ -142,7 +126,6 @@ COLUMNS = [
     ("Gap to threshold (percentage points)", "gap_to_threshold", db.fmt_num),
     ("Target birth cohort", "target_cohort", db.fmt_int),
     ("Doses per 100 population", "doses_per_100_population", db.fmt_num),
-    ("Herd immunity status", "herd_immunity_status", str),
 ]
 
 
@@ -213,7 +196,7 @@ def index():
             antigen=None, year=None, region=None, country=None,
             sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
             rsort_active=DEFAULT_REGION_SORT, region_sort_labels=REGION_SORT_LABELS,
-            show_below=None, threshold_pct=BRIEF_THRESHOLD,
+            threshold_pct=BRIEF_THRESHOLD,
             query_text=None, region_query_text=None,
             summary=None, region_view=[], chart_view=[], rows=[], threshold=None,
             disease_of={},
@@ -248,14 +231,6 @@ def index():
     if bad:
         rejected.append("country")
 
-    # A single opt-in value. Anything else is rejected rather than coerced, so a
-    # hand-typed ?show_below=maybe cannot quietly widen someone's selection.
-    # Off by default: the table then holds only the countries that met their
-    # target, which is the table the brief describes.
-    show_below, bad = db.validate(request.args.get("show_below"), {"1"})
-    if bad:
-        rejected.append("below-target filter")
-
     export_table, bad = db.validate(request.args.get("table"), EXPORT_TABLES)
     if bad:
         rejected.append("download table")
@@ -265,9 +240,6 @@ def index():
     # characters to look for rather than a pattern the reader gets to write.
     query_text = search_text(request.args.get("q"))
     region_query_text = search_text(request.args.get("rq"))
-
-    sort_labels = ([(k, GAP_LABELS_BELOW.get(k, v)) for k, v in SORT_LABELS]
-                   if show_below else SORT_LABELS)
 
     sort = request.args.get("sort")
     order_by = db.safe_order_by(sort, SORT_KEYS, DEFAULT_SORT)
@@ -292,22 +264,9 @@ def index():
               # that managed it in any single year, and every region reads close
               # to 100%. 1A passes None and keeps the rolled-up shape.
               "detail": 1,
-              # Table 1 lists only the countries that met their target, which
-              # is the table the brief describes. The checkbox passes None to
-              # list everyone again -- the query keeps both shapes.
-              "met_only": None if show_below else 1,
               # Each table searches its own column, so the two boxes never
               # narrow each other.
               "q": query_text}
-
-    # With no threshold there is no Met target column, and n_met_threshold is 0
-    # for every region -- so offering that sort would be a control that visibly
-    # Every key is offered. Hiding some of them is what broke the control: the
-    # default was a key that had been filtered out of this list, so no <option>
-    # matched it, the browser showed the first one instead, and the page
-    # announced an order the table was not in.
-    region_sort_labels = REGION_SORT_LABELS
-
 
     # The region query is a UNION ALL, so its own ORDER BY has to sit outside
     # the compound select -- hence the subquery wrapper.
@@ -385,7 +344,7 @@ def index():
     table_args = {
         "antigen": antigen, "year": year, "region": region, "country": country,
         "sort": sort_active, "per_page": page["size"], "rsort": rsort_active,
-        "submitted": 1, "show_below": show_below,
+        "submitted": 1,
         "q": query_text, "rq": region_query_text,
     }
 
@@ -436,9 +395,9 @@ def index():
         db_missing=None, submitted=True,
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
-        sort_active=sort_active, sort_labels=sort_labels,
-        rsort_active=rsort_active, region_sort_labels=region_sort_labels,
-        show_below=show_below, threshold_pct=BRIEF_THRESHOLD,
+        sort_active=sort_active, sort_labels=SORT_LABELS,
+        rsort_active=rsort_active, region_sort_labels=REGION_SORT_LABELS,
+        threshold_pct=BRIEF_THRESHOLD,
         query_text=query_text, region_query_text=region_query_text,
         # antigen code -> disease, so the region table can print "MCV1 . Measles"
         # without a per-row lookup in the template.
