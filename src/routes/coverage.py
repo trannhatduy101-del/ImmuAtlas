@@ -63,7 +63,12 @@ SORT_LABELS = [
     ("region",        "Region: A – Z"),
     ("region_desc",   "Region: Z – A"),
 ]
-DEFAULT_SORT = "coverage_desc"
+# Alphabetical, not "% of target: high to low". Every row here already cleared
+# the 90% bar, and 15% of them sit at 100 -- so the descending sort opened on two
+# full pages of "100.0%" and the table read as though every country were at the
+# ceiling. A-Z opens on the actual spread (90.4, 94.0, 95.0, 98.9, 100.0); the
+# coverage sorts are still one click away.
+DEFAULT_SORT = "country"
 
 # 2A measures every antigen against one 90% bar, the benchmark the brief names:
 # "all countries that have met at least 90% of their vaccination targets".

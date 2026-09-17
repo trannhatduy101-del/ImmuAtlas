@@ -72,7 +72,7 @@ EXPLORE HERO SECTION
     /* No stock photo: a deep teal gradient built from the palette, with a faint
        data-grid pattern layered on top (inline SVG, offline, on-brand). */
     background:
-      linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 55%, #0891b2 100%);
+      linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 55%, #3e9769 100%);
   }
   .explore-hero::after {
     content: "";
@@ -93,7 +93,7 @@ EXPLORE HERO SECTION
     inset: 0;
     background:
       radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 34%),
-      radial-gradient(circle at bottom right, rgba(125,211,252,0.24), transparent 36%);
+      radial-gradient(circle at bottom right, rgba(140, 219, 174,0.24), transparent 36%);
     pointer-events: none;
   }
 
@@ -145,7 +145,7 @@ EXPLORE HERO SECTION
 
   .explore-btn:hover {
     transform: translateY(-3px);
-    background: #f3fbff;
+    background: #f4fcf7;
     box-shadow: 0 24px 50px rgba(0, 0, 0, 0.24);
   }
 
@@ -246,11 +246,11 @@ VACCINE CARDS SECTION
 .vaccine-cards-section {
     width: 100%;
     padding: 70px 90px 90px;
+    /* The photograph this sat on was never in the repository, so the url 404'd
+       on every load and only the wash above it ever rendered. Kept as the wash
+       it always really was. */
     background-image:
-        linear-gradient(rgba(255, 255, 255, 0.35), rgba(120, 145, 165, 0.35)),
-        url("../img/background_bluetheme.png");
-    background-size: cover;
-    background-position: center;
+        linear-gradient(rgba(255, 255, 255, 0.35), rgba(121, 149, 132, 0.35));
 }
 
 .vc-inner {
@@ -352,15 +352,15 @@ RESPONSIVE - INDEX ONLY
   overflow: hidden;   /* clip the top accent bar to the rounded corners */
   display: flex; flex-direction: column; align-items: flex-start; gap: 2px;
   background: #ffffff;
-  border: 1px solid #cfe3f2;
+  border: 1px solid #d0e6d8;
   border-radius: 14px;
   padding: 1.4rem 1.4rem 1.2rem;
-  box-shadow: 0 2px 16px rgba(8,47,73,0.06);
+  box-shadow: 0 2px 16px rgba(6, 53, 32,0.06);
   transition: box-shadow .15s ease, transform .15s ease;
 }
 /* Effort/outcome is signalled by the tag pill, the icon colour and the figure
    colour -- no accent tab (a recognisable AI-UI tell), keeping the card clean. */
-.snap-stat:hover { box-shadow: 0 16px 34px rgba(8,47,73,0.12); transform: translateY(-2px); }
+.snap-stat:hover { box-shadow: 0 16px 34px rgba(6, 53, 32,0.12); transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) { .snap-stat:hover { transform: none; } }
 
 .snap-ico { width: 30px; height: 30px; color: var(--accent); margin: .2rem 0 .5rem; }
@@ -370,8 +370,8 @@ RESPONSIVE - INDEX ONLY
   align-self: flex-start; font-size: .66rem; font-weight: 800; letter-spacing: .06em;
   text-transform: uppercase; padding: .18rem .5rem; border-radius: 999px;
 }
-.snap-tag--context { color: #4a5b57; background: #eef3f8; }
-.snap-tag--effort  { color: #0c4a72; background: var(--accent-wash); }
+.snap-tag--context { color: #4a5b57; background: #eef4f0; }
+.snap-tag--effort  { color: #055433; background: var(--accent-wash); }
 .snap-tag--outcome { color: #9a3412; background: var(--bg-flag); }
 
 .snap-fig {
@@ -388,7 +388,7 @@ RESPONSIVE - INDEX ONLY
   background: linear-gradient(150deg, var(--accent-strong) 0%, var(--bg-deep) 100%);
 }
 .vc-vial { width: 96px; height: 96px; }
-.vc-vial .v-cap { fill: #0c4a72; }
+.vc-vial .v-cap { fill: #055433; }
 .vc-vial .v-neck { fill: #cbe7e2; }
 .vc-vial .v-body { fill: #e6f4f1; stroke: var(--accent); stroke-width: 1.5; }
 .vc-vial .v-liquid { fill: var(--accent-lift); opacity: .9; }
@@ -398,7 +398,7 @@ RESPONSIVE - INDEX ONLY
 .vc-more-link { color: var(--accent); }
 
 /* ===========================================================================
-   Distinctive rework: expanding vaccine panels + face-off + CTA. Water-blue.
+   Distinctive rework: expanding vaccine panels + face-off + CTA.
    =========================================================================== */
 
 /* ---- Vaccine information: case-style master / detail ----
@@ -417,11 +417,11 @@ RESPONSIVE - INDEX ONLY
   font-family: var(--font-body); cursor: pointer;
   min-height: 240px; padding: 18px; border-radius: 16px; color: #ffffff; text-align: left;
   display: flex; flex-direction: column; gap: 12px;
-  box-shadow: 0 6px 20px rgba(8,47,73,0.14); transition: transform .18s ease, box-shadow .18s ease;
+  box-shadow: 0 6px 20px rgba(6, 53, 32,0.14); transition: transform .18s ease, box-shadow .18s ease;
 }
-.vcase:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(8,47,73,0.22); }
+.vcase:hover { transform: translateY(-3px); box-shadow: 0 16px 34px rgba(6, 53, 32,0.22); }
 .vcase--c1 { background: var(--accent); }
-.vcase--c2 { background: #0e7490; }
+.vcase--c2 { background: #317954; }
 .vcase--c3 { background: var(--bg-deep); }
 
 .vcase-badge {
@@ -441,7 +441,7 @@ RESPONSIVE - INDEX ONLY
 .vax-home {
   cursor: pointer; display: none;                 /* shown only once a card is open */
   place-items: center; border-radius: 14px; background: var(--accent-lift); color: #ffffff;
-  box-shadow: 0 6px 20px rgba(8,47,73,0.14); transition: transform .18s ease;
+  box-shadow: 0 6px 20px rgba(6, 53, 32,0.14); transition: transform .18s ease;
 }
 .vax-home:hover { transform: translateY(-3px); }
 
@@ -449,11 +449,11 @@ RESPONSIVE - INDEX ONLY
 #vaxsel-1:focus-visible ~ .vax-rail .vcase--c1,
 #vaxsel-2:focus-visible ~ .vax-rail .vcase--c2,
 #vaxsel-3:focus-visible ~ .vax-rail .vcase--c3,
-#vaxsel-home:focus-visible ~ .vax-rail .vax-home { outline: 3px solid #7dd3fc; outline-offset: 3px; }
+#vaxsel-home:focus-visible ~ .vax-rail .vax-home { outline: 3px solid #8cdbae; outline-offset: 3px; }
 
 /* Layout containers. Panel and details hidden until a card radio is checked. */
 .vax-cases { position: relative; display: flex; gap: 18px; align-items: flex-start; }
-.vax-panel { display: none; background: #ffffff; border: 1px solid #cfe3f2; border-radius: 18px; padding: 26px 28px; }
+.vax-panel { display: none; background: #ffffff; border: 1px solid #d0e6d8; border-radius: 18px; padding: 26px 28px; }
 .vcase-detail { display: none; }
 
 /* ---- Open state: any card checked == home NOT checked (exactly one is
@@ -480,7 +480,7 @@ RESPONSIVE - INDEX ONLY
 #vaxsel-2:checked ~ .vax-rail .vcase--c2,
 #vaxsel-3:checked ~ .vax-rail .vcase--c3 {
   order: 0; grid-column: 1 / -1; min-height: 240px; padding: 18px; gap: 12px;
-  box-shadow: 0 16px 40px rgba(8,47,73,0.28);
+  box-shadow: 0 16px 40px rgba(6, 53, 32,0.28);
 }
 #vaxsel-1:checked ~ .vax-rail .vcase--c1 .vcase-badge,
 #vaxsel-2:checked ~ .vax-rail .vcase--c2 .vcase-badge,
@@ -497,19 +497,19 @@ RESPONSIVE - INDEX ONLY
 /* Rail default: three equal colour cards. */
 .vax-rail { flex: 1 1 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; align-content: start; }
 
-.vcase-detail-media { flex: 0 0 clamp(120px, 26%, 200px); background: #eef6fd; border-radius: 14px;
+.vcase-detail-media { flex: 0 0 clamp(120px, 26%, 200px); background: #eef8f2; border-radius: 14px;
   padding: 14px; display: grid; place-items: center; }
 .vcase-detail-media img { max-width: 100%; max-height: 220px; object-fit: contain; }
 .vcase-detail-body { flex: 1 1 auto; min-width: 0; }
 .vcase-detail-badge { display: inline-block; font-family: var(--font-body); font-size: .72rem; font-weight: 700;
   letter-spacing: .01em; padding: .3rem .7rem; border-radius: 14px; color: #ffffff; }
-.vcase-dot--c1 { background: var(--accent); } .vcase-dot--c2 { background: #0e7490; } .vcase-dot--c3 { background: var(--bg-deep); }
+.vcase-dot--c1 { background: var(--accent); } .vcase-dot--c2 { background: #317954; } .vcase-dot--c3 { background: var(--bg-deep); }
 .vcase-detail-title { font-family: var(--font-display); color: var(--accent-strong); font-size: clamp(1.4rem, 1.1rem + 1vw, 1.9rem); margin: .5rem 0 .2rem; }
 .vcase-thr { color: var(--accent-strong); font-size: 1rem; margin: 0 0 12px; }
 .vcase-thr strong { color: var(--accent); font-size: 1.15rem; }
 .vax-panel p { font-size: .96rem; line-height: 1.65; color: var(--ink-muted); margin: 0 0 12px; }
 .vcase-report { font-weight: 600; color: var(--ink) !important; }
-.vcase-src { font-size: .84rem !important; color: #6b7c8a !important; }
+.vcase-src { font-size: .84rem !important; color: #6c7f73 !important; }
 
 @media (prefers-reduced-motion: reduce) { .vcase, .vax-home { transition: none; } .vcase:hover, .vax-home:hover { transform: none; } }
 
@@ -542,7 +542,7 @@ RESPONSIVE - INDEX ONLY
 .lp-twin-label { display: block; font-size: .78rem; text-transform: uppercase; letter-spacing: .05em;
   color: var(--ink-muted); font-weight: 700; }
 .lp-twin-move { display: flex; align-items: baseline; gap: .55rem; flex-wrap: wrap; margin: .5rem 0 .6rem; }
-/* --ink-muted rather than a loose hex: the old #6b7c8a measured 4.06:1 here,
+/* --ink-muted rather than a loose hex: the old #6c7f73 measured 4.06:1 here,
    and at 1.4rem it is just under the 24px that would have let it off at 3:1. */
 .lp-twin-from { font-family: var(--font-display); font-size: 1.4rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 .lp-twin-arrow { color: var(--accent); font-size: 1.15rem; }
@@ -565,7 +565,7 @@ RESPONSIVE - INDEX ONLY
 .lp-trend-note p { font-size: .84rem; color: var(--ink-muted); line-height: 1.55; margin: .5rem 0 0; max-width: 74ch; }
 .lp-trend-chart svg { width: 100%; height: auto; background: var(--bg);
   border: 1px solid var(--rule); border-radius: 16px; padding: 14px;
-  box-shadow: 0 2px 6px rgba(8,47,73,.06), 0 12px 26px rgba(8,47,73,.09); }
+  box-shadow: 0 2px 6px rgba(6, 53, 32,.06), 0 12px 26px rgba(6, 53, 32,.09); }
 .lp-trend-area { fill: var(--accent-lift); opacity: .12; }
 
 /* ---- Closing CTA band ---- */
@@ -578,9 +578,9 @@ RESPONSIVE - INDEX ONLY
   letter-spacing: .05em; color: #9a3412; background: var(--bg-flag); border-radius: 999px; padding: .1rem .45rem; }
 @media (max-width: 44rem) { .cta-grid { grid-template-columns: 1fr; } }
 .cta-card { display: flex; align-items: center; gap: 16px; padding: 22px 24px;
-  background: #fff; border: 1px solid #cfe3f2; border-radius: 16px; text-decoration: none; color: var(--ink);
+  background: #fff; border: 1px solid #d0e6d8; border-radius: 16px; text-decoration: none; color: var(--ink);
   transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease; }
-.cta-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(8,47,73,0.12); border-color: var(--accent); }
+.cta-card:hover { transform: translateY(-3px); box-shadow: 0 18px 40px rgba(6, 53, 32,0.12); border-color: var(--accent); }
 .cta-card-body { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
 .cta-card-t { font-weight: 700; color: var(--accent-strong); }
 .cta-go { margin-left: auto; color: var(--accent); font-size: 1.35rem; transition: transform .2s ease; }
@@ -593,29 +593,29 @@ RESPONSIVE - INDEX ONLY
 .spotlight-eyebrow { text-transform: uppercase; letter-spacing: .12em; font-size: .78rem; font-weight: 700; color: var(--accent); }
 
 /* ============================================
-   1A: solid water-blue page, vaccine hero image, trend axes, impact cards
+   1A: solid tinted page, vaccine hero image, trend axes, impact cards
    ============================================ */
 
-/* Solid water-blue background for the whole 1A page; the content bands sit
-   transparent on top so the page reads as one water surface with white cards. */
+/* Solid tinted background for the whole 1A page; the content bands sit
+   transparent on top so the page reads as one surface with white cards. */
 body.lp-vax { background: var(--bg-sunk); }
 body.lp-vax .snapshot-section,
 body.lp-vax .vaccine-cards-section,
 body.lp-vax .lp-impact,
 body.lp-vax .cta-band { background: transparent; }
 
-/* Trend band: a dark ocean background like the hero, so it reads as a feature
-   band on the water-blue page. Its text goes light; the chart itself stays a
+/* Trend band: a dark green background like the hero, so it reads as a feature
+   band on the tinted page. Its text goes light; the chart itself stays a
    light panel (its own background) for contrast. */
 body.lp-vax .lp-trend-band {
-  background: linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 60%, #0891b2 100%);
+  background: linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 60%, #3e9769 100%);
 }
 body.lp-vax .lp-trend-band h2 { color: #ffffff; }
-body.lp-vax .lp-trend-eyebrow { color: #7dd3fc; }
+body.lp-vax .lp-trend-eyebrow { color: #8cdbae; }
 body.lp-vax .lp-trend-takeaway { color: rgba(255, 255, 255, .88); }
 body.lp-vax .lp-trend-takeaway strong { color: #ffffff; }
 body.lp-vax .lp-trend-cap-top { color: rgba(255, 255, 255, .82); }
-body.lp-vax .lp-trend-note summary { color: #7dd3fc; }
+body.lp-vax .lp-trend-note summary { color: #8cdbae; }
 body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 
 /* Hero graphic: an abstract shield + pulse line -- "protection", drawn on the
@@ -628,7 +628,7 @@ body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .22));
 }
 .lp-shield-outline { fill: rgba(255, 255, 255, .08); stroke: #ffffff; stroke-width: 3; stroke-linejoin: round; }
-.lp-shield-pulse { fill: none; stroke: #7dd3fc; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.lp-shield-pulse { fill: none; stroke: #8cdbae; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Trend chart axes (Y = coverage %, X = year). */
 .lp-trend-grid { stroke: var(--rule); stroke-width: 1; }
@@ -655,13 +655,13 @@ body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 .impact-card {
   display: grid; grid-template-columns: minmax(0, 200px) 1fr; gap: 1.3rem; align-items: stretch;
   background: #fff; border: 1px solid var(--rule); border-radius: 18px; overflow: hidden;
-  box-shadow: 0 2px 6px rgba(8, 47, 73, .06), 0 12px 26px rgba(8, 47, 73, .09);
+  box-shadow: 0 2px 6px rgba(6, 53, 32, .06), 0 12px 26px rgba(6, 53, 32, .09);
   transition: transform .18s var(--ease-out), box-shadow .18s var(--ease-out), border-color .18s var(--ease-out);
 }
 .impact-card:hover {
   transform: translateY(-4px);
   border-color: var(--accent);
-  box-shadow: 0 10px 22px rgba(8, 47, 73, .12), 0 26px 50px rgba(8, 47, 73, .18);
+  box-shadow: 0 10px 22px rgba(6, 53, 32, .12), 0 26px 50px rgba(6, 53, 32, .18);
 }
 .impact-card-media {
   position: relative;

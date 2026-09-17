@@ -195,8 +195,8 @@
              preserveAspectRatio="xMidYMid slice">
           <defs>
             {# A hairline on every country, set once on the group. Without it
-               a country filled in the deep "at or above" blue disappears into
-               the ocean, and two neighbours in the same band merge. #}
+               a country filled in the deep "at or above" green disappears
+               into the sea, and two neighbours in the same band merge. #}
             <g id="world" stroke="rgba(255,255,255,.30)" stroke-width="0.7"
                stroke-linejoin="round">
               {% for c in globe %}<path d="{{ c.d }}" fill="{{ c.fill }}"/>{% endfor %}
@@ -209,7 +209,7 @@
       </div>
       <figcaption class="globe-cap">
         <strong>Reported coverage in {{ end_year }}</strong>, not the change
-        above it. Blue is at or above the {{ fmt_pct(globe_target, 0) }} target,
+        above it. Green is at or above the {{ fmt_pct(globe_target, 0) }} target,
         orange is below, grey is a country with no figure for
         {{ vaccine }} in both years. The sphere is a flat map wrapped on a
         circle, so it distorts towards the edges; the table below carries the

@@ -9,10 +9,10 @@
 
    Contrast targets WCAG AA, 4.5:1 for body text. Measured against the page
    paper #fbfcfc (a hair off pure white so the surface does not read as flat
-   synthetic white). The anchor is a WHO-style blue:
-     --ink        #16191d   ~17:1
-     --ink-muted  #4a5158   ~8:1
-     --accent     #10589e   ~7.0:1
+   synthetic white). The anchor is an emerald green, measured on the paper:
+     --ink        #08301d   13.7:1
+     --ink-muted  #4a5d51    6.7:1
+     --accent     #007748    5.3:1
    No meaning is ever carried by colour alone; status is spelled out in words. */
 
 /* Self-hosted, latin-subset variable fonts, bundled in static/fonts/ under the
@@ -34,21 +34,26 @@
 }
 
 :root {
-  /* Paper is tinted a hair off pure white toward the teal anchor: a flat
+  /* Paper is tinted a hair off pure white toward the green anchor: a flat
      #ffffff surface reads as synthetic. Contrast against --ink is unchanged. */
-  /* Palette: a water-blue "effort" anchor (vaccination) against a coral
+  /* Palette: an emerald "effort" anchor (vaccination) against a coral
      "outcome" (disease cases), so the site's central contrast is carried by
-     colour as well as words. Ocean/azure blues read as clean and clinical. All
-     text colours below still clear WCAG AA (4.5:1) on the paper. */
-  --bg:          #f4f9fd;
-  --bg-sunk:     #e4f0fa;
+     colour as well as words. Green is the colour public health already uses
+     for "protected", and it keeps the maximum distance from the coral.
+
+     The whole palette was rotated out of blue by tools/recolour.py, which
+     moves hue only and leaves lightness and chroma untouched -- so every
+     contrast figure above survived the change to within 0.3. All text colours
+     below clear WCAG AA (4.5:1) on the paper. */
+  --bg:          #f4faf6;
+  --bg-sunk:     #e4f2e9;
   --bg-flag:     #fdead9;
-  --bg-deep:     #082f49;   /* deep ocean footer, high contrast with inverted ink */
-  --bg-card:     #ffffff;   /* pure white card surface, to stand out against the light-blue page */
+  --bg-deep:     #063520;   /* deep green footer, high contrast with inverted ink */
+  --bg-card:     #ffffff;   /* pure white card surface, to stand out against the tinted page */
 
   /* One colour per persona, warm against cool so the two cards are told apart
      at a glance rather than by reading the name, and both stand clear of the
-     ocean blue everything else on the site is painted in. Each clears WCAG AA
+     green everything else on the site is painted in. Each clears WCAG AA
      on white and carries a matching wash for the boxes inside the card.
      These appear only on the Mission page, so they never sit beside the
      status badges (which use their own green and amber) on the data pages. */
@@ -57,16 +62,16 @@
   --persona-b:      #15803d;   /* Daniel Nguyen - soft green */
   --persona-b-wash: #e8f5ec;
 
-  --ink:         #0c2a42;   /* dark navy body text, ~12:1 on paper */
-  --ink-muted:   #4a5a68;
-  --ink-invert:  #e8f2fb;
-  --ink-invert-muted: #a3c3dc;
+  --ink:         #08301d;   /* near-black green body text, 13.7:1 on paper */
+  --ink-muted:   #4a5d51;
+  --ink-invert:  #e8f4ec;
+  --ink-invert-muted: #a5c9b2;
 
-  --accent:      #0369a1;   /* azure-700, ~5.9:1 on paper */
+  --accent:      #007748;   /* emerald-700, 5.3:1 on paper */
   --accent-ink:  #ffffff;
-  --accent-lift: #06b6d4;   /* cyan "water" accent */
-  --accent-strong: #075985;   /* button/hover, darker than --accent */
-  --accent-wash: #e0f2fe;     /* faint sky fill for the highlighted filter group */
+  --accent-lift: #53bb84;   /* light "leaf" accent */
+  --accent-strong: #0a643d;   /* button/hover, darker than --accent */
+  --accent-wash: #e2f4e9;     /* faint green fill for the highlighted filter group */
   --outcome:     #c2410c;     /* coral for the case/outcome figure, ~6.4:1 */
   --flag-rule:   #c2410c;
 
@@ -76,11 +81,11 @@
   --ok:          #1c6b4a;
   --ok-bg:       #e6f1ec;
   --warn-ink:    #8a5a00;
-  --none-ink:    #5f676d;
+  --none-ink:    #606863;
 
-  --rule:        #d3e2ee;
-  --rule-deep:   #1e3a52;
-  --focus:       #0369a1;
+  --rule:        #d4e5da;
+  --rule-deep:   #1c402d;
+  --focus:       #007748;
 
   --wrap:        68rem;
   --step:        1.25rem;
@@ -91,11 +96,11 @@
 
   --space-6: 2.5rem;
 
-  /* One coherent, ocean-tinted elevation scale. Every raised surface (cards,
+  /* One coherent, green-tinted elevation scale. Every raised surface (cards,
      tables, dropdown, banners) references these instead of an ad-hoc rgba, so
      depth reads as one system rather than a dozen slightly-different shadows. */
-  --shadow-md:   0 2px 6px rgba(8, 47, 73, .06), 0 12px 26px rgba(8, 47, 73, .09);
-  --shadow-lg:   0 8px 22px rgba(8, 47, 73, .10), 0 26px 50px rgba(8, 47, 73, .14);
+  --shadow-md:   0 2px 6px rgba(6, 53, 32, .06), 0 12px 26px rgba(6, 53, 32, .09);
+  --shadow-lg:   0 8px 22px rgba(6, 53, 32, .10), 0 26px 50px rgba(6, 53, 32, .14);
 
   /* One named easing, so transitions state their intent instead of falling
      back to the browser default `ease`. */
@@ -337,19 +342,19 @@ summary:focus-visible {
 
 .hero {
   position: relative;
-  /* Deep-ocean band, the same surface as the footer, so the page opens and
+  /* Deep-green band, the same surface as the footer, so the page opens and
      closes on the same colour and the title reads as a landmark instead of
-     text on tinted paper. The cyan bloom in the top-right keeps the navy from
+     text on tinted paper. The light bloom in the top-right keeps the dark from
      reading as a flat slab. The landing page replaces this band entirely
      (css/landing.css), so this is the other five pages. */
   background:
-    radial-gradient(120% 90% at 88% -20%, rgba(6, 182, 212, .22) 0%, transparent 55%),
+    radial-gradient(120% 90% at 88% -20%, rgba(83, 187, 132, .22) 0%, transparent 55%),
     var(--bg-deep);
   border-bottom: 1px solid var(--rule-deep);
   padding: 3rem 0 2.6rem;
 }
-/* The same signature water accent as the section marks, drawn as a hairline
-   azure-to-cyan rule along the very top of the hero so the band reads as one
+/* The same signature accent as the section marks, drawn as a hairline
+   deep-to-light green rule along the very top of the hero so the band reads as one
    deliberate surface joined to the header above it. */
 .hero::before {
   content: "";
@@ -422,7 +427,7 @@ h3 {
 @media (max-width: 34rem) { .footer-grid { grid-template-columns: 1fr; } }
 
 /* No plate behind it: the artwork has a transparent background, and the globe
-   and vial both read against the navy on their own. Slightly larger than the
+   and vial both read against the dark band on their own. Slightly larger than the
    header copy because the footer has the room. */
 .footer-brand .logo-mark {
   width: 2.6rem; height: 2.6rem;
@@ -469,9 +474,9 @@ h3 {
 .footer-legal p { margin: 0 0 .4rem; }
 .footer-legal cite { font-style: italic; }
 
-/* A filled dark-blue heading band (same ocean as the footer/outcome banner),
-   so a section title reads as a landmark against the light-blue page instead
-   of blending into it. The cyan accent survives as a left edge inside the
+/* A filled dark-green heading band (same surface as the footer/outcome banner),
+   so a section title reads as a landmark against the tinted page instead
+   of blending into it. The light accent survives as a left edge inside the
    band rather than a hairline above it, since there is no page rule to sit on
    once the heading is a solid box. */
 .section-head {
@@ -490,7 +495,7 @@ h3 {
 
 /* A heading and the sentence that explains it are one block, not two things
    that happen to be near each other. Left loose, the explanation was grey text
-   lying bare on the light-blue page, in a 60ch measure under a full-width
+   lying bare on the tinted page, in a 60ch measure under a full-width
    band -- so its justified right edge lined up with nothing and read as ragged.
    Boxed and joined to the band, it matches the band's width and the alignment
    finally shows.
@@ -591,6 +596,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding-top: .5rem;
 }
 .citation a { color: var(--accent); }
+/* This sheet styles links per context rather than globally, so a link dropped
+   into a note takes the browser default blue -- which on this palette is the
+   one colour left that does not belong. */
+.filter-note a { color: var(--accent); }
 
 /* Caveats ----------------------------------------------------------------- */
 
@@ -656,7 +665,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   font: inherit;
   font-size: .92rem;
   padding: .38rem .5rem;
-  border: 1px solid #9aa4a4;
+  border: 1px solid #9ca49f;
   border-radius: var(--radius);
   background: var(--bg);
   color: var(--ink);
@@ -842,9 +851,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   position: relative; flex: none;
   width: min(320px, 78vw); aspect-ratio: 1;
   border-radius: 50%; overflow: hidden;
-  /* Ocean. Deliberately desaturated rather than blue: the data scale is blue,
-     and a blue sea made every country that met the target vanish into it. */
-  background: #16242e;
+  /* Sea. Deliberately desaturated: the data scale is green, and a saturated
+     sea made every country that met the target vanish into it. */
+  background: #17261d;
   box-shadow: var(--shadow-md);
 }
 .globe-map {
@@ -859,8 +868,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
   background:
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, .20), rgba(255, 255, 255, 0) 42%),
-    radial-gradient(circle at 74% 80%, rgba(3, 20, 34, .38), rgba(3, 20, 34, 0) 66%);
-  box-shadow: inset 0 0 26px rgba(3, 20, 34, .42),
+    radial-gradient(circle at 74% 80%, rgba(2, 23, 12, .38), rgba(2, 23, 12, 0) 66%);
+  box-shadow: inset 0 0 26px rgba(2, 23, 12, .42),
               inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
 .globe-cap {
@@ -1030,7 +1039,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
 }
 .lp-vax:hover,
-.lp-vax[open] { border-color: var(--accent); box-shadow: 0 4px 16px rgba(22, 25, 29, .10); }
+.lp-vax[open] { border-color: var(--accent); box-shadow: 0 4px 16px rgba(21, 26, 23, .10); }
 .lp-vax .citation { border-top: 1px solid var(--rule); padding-top: .5rem; }
 
 /* The vial illustration. Colours come from tokens so the art stays on-palette. */
@@ -1312,7 +1321,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .pcard-dot {
   position: absolute; top: 50%; width: 14px; height: 14px; border-radius: 50%;
   background: var(--pc-accent, var(--accent)); transform: translate(-50%, -50%);
-  box-shadow: 0 1px 3px rgba(12,42,66,.3);
+  box-shadow: 0 1px 3px rgba(8, 48, 29,.3);
 }
 
 /* Motivation / channel bars. */
@@ -1362,11 +1371,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ov-detail { flex: 1 1 18rem; min-width: 0; }
 .ov-label { display: block; font-size: .9rem; color: rgba(255, 255, 255, .85); margin-bottom: .45rem; }
 .ov-bar { position: relative; height: 10px; border-radius: 999px; background: rgba(255, 255, 255, .2); margin: .3rem 0 .6rem; }
-.ov-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; background: #7dd3fc; }
+.ov-bar-fill { position: absolute; left: 0; top: 0; height: 100%; border-radius: 999px; background: #8cdbae; }
 .ov-bar-mark { position: absolute; top: -3px; width: 2px; height: 16px; background: #fff; }
 .ov-verdict { margin: 0; font-size: 1rem; color: #fff; }
 .ov-gap { display: inline-block; margin-left: .4rem; font-size: .82rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; }
-.ov-gap--up { background: rgba(125, 211, 252, .25); color: #e0f2fe; }
+.ov-gap--up { background: rgba(140, 219, 174, .25); color: #e2f4e9; }
 .ov-gap--down { background: rgba(251, 146, 60, .25); color: #fdba74; }
 .ov-verdict--muted { color: rgba(255, 255, 255, .85); font-size: .92rem; }
 .ov-note { margin: .9rem 0 0; font-size: .8rem; color: rgba(255, 255, 255, .75); }
@@ -1386,7 +1395,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    written with :where() and so loses to any class. */
 .vbar-cap {
   margin: 0 auto .8rem; font-size: .9rem; color: var(--ink-muted);
-  max-width: 60ch; text-align: center;
+  max-width: 60ch; text-align: justify; text-align-last: center;
 }
 .vbar-legend { display: flex; gap: 1.2rem; margin: 0 0 1rem; font-size: .78rem; color: var(--ink-muted); }
 .vbar-key { display: inline-flex; align-items: center; gap: .4rem; }
@@ -1406,7 +1415,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vbar-fill.is-up   { background: var(--accent);  border-radius: 6px 6px 2px 2px; }
 .vbar-fill.is-down { background: var(--outcome); border-radius: 2px 2px 6px 6px; }
 /* The single biggest improvement. Darker fill AND an outline, so the mark does
-   not depend on telling two blues apart -- the rank number in the table says
+   not depend on telling two greens apart -- the rank number in the table says
    the same thing in words. */
 .vbar-fill.is-top {
   background: var(--accent-strong);

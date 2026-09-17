@@ -132,8 +132,9 @@
       every one of them reported.
     {% endif %}
     {% if summary.n_above_100 %}
-      {{ fmt_int(summary.n_above_100) }} records report coverage above 100% and
-      are kept, not capped.
+      {{ fmt_int(summary.n_above_100) }} report coverage above 100% &mdash; more
+      doses than the target group. The country table shows those as 100% and
+      names the reported figure on the row; the download keeps it unchanged.
     {% endif %}
   </p>
 
@@ -193,7 +194,7 @@
     <div class="vbar-chart vbar-chart--scale">
       <p class="vbar-cap">
         Average reported coverage in each region, lowest first. Regions at or
-        above the {{ fmt_pct(threshold_pct, 0) }} target are blue. The nine
+        above the {{ fmt_pct(threshold_pct, 0) }} target are green. The nine
         territories with no region of their own are not a region, so they are
         counted on the &ldquo;Not classified&rdquo; row of the regional table
         rather than charted here.
@@ -324,10 +325,11 @@
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
             <th scope="col">Region</th>
-            {# No formula in the header: "doses / target birth cohort" is four
-               words of arithmetic in a space that has room for a label. The
-               method note under the table spells it out properly. #}
-            <th scope="col" class="num">Percentage of target</th>
+            {# No formula in the header -- the method note spells it out. The
+               sub-line says what the bar spans instead, because the bar starts
+               at the threshold rather than at zero. #}
+            <th scope="col" class="num">Percentage of target
+              <span class="th-sub">bar spans {{ fmt_pct(threshold_pct, 0) }}&ndash;100%</span></th>
           </tr>
         </thead>
         <tbody>
@@ -361,12 +363,15 @@
                  the brief's own example -- and every row that was capped says
                  so, because an anomaly has to be visible to count as handled. #}
               <td class="num">
-                <span class="cov-cell">
+                {# The title carries the two numbers the percentage came from,
+                   so "why is this one 100%" is answerable on the row itself. #}
+                <span class="cov-cell"
+                      title="{{ fmt_int(r.doses) }} doses &divide; {{ fmt_int(r.target_cohort) }} children in the target group">
                   <span class="cov-num">{{ fmt_pct(r.coverage_display) }}</span>
                   {% if r.coverage_reported > 100 %}
                     <span class="tag" title="More doses reported than the target group. The reported figure is kept in the download.">capped from {{ fmt_pct(r.coverage_reported) }}</span>
                   {% endif %}
-                  <span class="cov-bar is-met"><span style="width: {{ r.coverage_display }}%"></span></span>
+                  <span class="cov-bar is-met"><span style="width: {{ r.bar_pct }}%"></span></span>
                 </span>
               </td>
             </tr>
@@ -380,7 +385,14 @@
       </span>
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>
-    {# Said out loud, because a row removed without a word is a row hidden. #}
+    {# Two things a reader reasonably asks of this table, answered where they
+       ask them rather than in the method note further down. #}
+    <p class="filter-note">Every country here already reached the
+      {{ fmt_pct(threshold_pct, 0) }} target, so high figures are the point of
+      the table rather than a surprise. WHO reports coverage as a whole number,
+      which is why so many land on exactly 100; about one row in seven is at
+      100% or above. Hover a figure to see the doses and the target group
+      behind it.</p>
     <p class="filter-note">Nine territories report figures but have no country
       record, so they have no name or region to list here. They are counted on
       the <a href="#region-table">regional table's</a> &ldquo;Not
@@ -398,7 +410,8 @@
       <dd>
         A country&rsquo;s doses divided by the number of children it aimed to
         reach: <span class="formula">doses &divide; target group &times; 100</span>.
-        Countries report this figure to WHO.
+        The figure is the one each country reported to WHO, taken from the
+        supplied data as it stands &mdash; this site does not recalculate it.
       </dd>
 
       <dt>Doses per 100 people</dt>

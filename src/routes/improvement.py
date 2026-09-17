@@ -173,16 +173,16 @@ def _gain_bars(rows):
 
 
 # The globe's colour scale. Coverage at the end year, in the same language the
-# rest of the site uses: orange under the target, blue at or above it, two steps
+# rest of the site uses: orange under the target, green at or above it, two steps
 # of each so a country that just cleared the bar does not look like one at 100%.
 # Grey is "no figure", never a shade of the scale -- a country with nothing to
 # report must not read as a low number.
-GLOBE_NO_DATA = "#d3e2ee"
+GLOBE_NO_DATA = "#d4e5da"
 GLOBE_SCALE = [
     (70.0,  "#9a3412"),   # far below
     (90.0,  "#e06024"),   # below the target
-    (95.0,  "#3b8fc4"),   # just over
-    (None,  "#075985"),   # comfortably over
+    (95.0,  "#409b6c"),   # just over
+    (None,  "#0a643d"),   # comfortably over
 ]
 GLOBE_TARGET = 90.0
 

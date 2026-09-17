@@ -29,8 +29,19 @@ SELECT
     -- Capped HERE and not in db.fmt_pct, because 1A, 2B and 3A's banner all
     -- still print the figure as reported.
     MIN(coverage_reported, 100)                  AS coverage_display,
+    -- Bar geometry, on a 90-100 scale rather than 0-100. Every row in this
+    -- table is at or above the threshold by definition, so a bar drawn from
+    -- zero is between 90% and 100% full on every single row and the column
+    -- shows nothing. Measured from the threshold, 90.4 and 99.8 are visibly
+    -- different. The header says what the bar spans, because a bar that does
+    -- not start at zero and does not say so is a lie by drawing.
+    ROUND((MIN(coverage_reported, 100) - :met_threshold)
+          * 100.0 / (100 - :met_threshold), 1)   AS bar_pct,
     doses_per_100_population,
-    target_cohort
+    target_cohort,
+    -- The two numbers the percentage is made of. On the row as a tooltip, so
+    -- "why is this one 100%" is answerable without leaving the table.
+    doses
 FROM v_coverage
 WHERE (:antigen IS NULL OR antigen    = :antigen)
   AND (:year    IS NULL OR year       = :year)
