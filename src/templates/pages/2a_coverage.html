@@ -153,7 +153,7 @@
 
   {# ---- Outcome verdict: one defensible headline for the selection ---- #}
   {% if outcome and outcome.avg_coverage is not none %}
-    {% set single_threshold = threshold and threshold.threshold_pct is not none and outcome.n_thresholds == 1 %}
+
     <section class="outcome-verdict">
       <p class="ov-context">
         {{ antigen or 'All antigens' }} &middot; {{ year or 'All years' }} &middot;
@@ -165,14 +165,13 @@
         <div class="ov-detail">
           <span class="ov-label">average of reporting national figures</span>
           {# avg_coverage is an AVG() and is NULL when nothing in the selection
-             reported. n_thresholds is then 0, so single_threshold already
-             excludes that case -- but only by accident, and the arithmetic on
-             the next line would raise rather than degrade. Test it directly. #}
-          {% if single_threshold and outcome.avg_coverage is not none %}
-            {% set gap = outcome.avg_coverage - threshold.threshold_pct %}
+             reported, and the arithmetic on the next line would raise rather
+             than degrade. Tested directly. #}
+          {% if outcome.avg_coverage is not none %}
+            {% set gap = outcome.avg_coverage - threshold_pct %}
             <div class="ov-bar" aria-hidden="true">
               <span class="ov-bar-fill" style="width: {{ [outcome.avg_coverage, 100]|min }}%"></span>
-              <span class="ov-bar-mark" style="left: {{ [threshold.threshold_pct, 100]|min }}%"></span>
+              <span class="ov-bar-mark" style="left: {{ [threshold_pct, 100]|min }}%"></span>
             </div>
             <p class="ov-verdict">
               {# Country counts, not row counts: with several years or several
@@ -181,7 +180,7 @@
                  of four or more. #}
               <strong>{{ fmt_int(outcome.n_countries_met) }} of {{ fmt_int(outcome.n_countries_reporting) }}</strong>
               {{ 'country' if outcome.n_countries_reporting == 1 else 'countries' }}
-              met the {{ fmt_pct(threshold.threshold_pct, 0) }} threshold
+              met the {{ fmt_pct(threshold_pct, 0) }} target
               <span class="ov-gap ov-gap--{{ 'up' if gap >= 0 else 'down' }}">
                 {{ '%+.1f'|format(gap) }} percentage points vs target
               </span>
@@ -190,11 +189,6 @@
               <p class="ov-note">Across every year, a country counts as having met
                  the threshold if it did so in at least one of them.</p>
             {% endif %}
-          {% else %}
-            <p class="ov-verdict ov-verdict--muted">
-              Select a single antigen to see how many countries met its threshold
-              (thresholds differ by disease).
-            </p>
           {% endif %}
         </div>
       </div>
@@ -212,37 +206,27 @@
     <h2 class="section-head">Result &middot; coverage by region</h2>
     <div class="vbar-chart vbar-chart--scale">
       <p class="vbar-cap">
-        Average reported coverage in each region.
-        {% if threshold_pct is not none %}
-          The dashed line marks the {{ fmt_pct(threshold_pct, 0) }} WHO considers
-          necessary to stop this disease spreading.
-        {% else %}
-          No line is drawn, because the target differs from one disease to the
-          next. Select a single antigen to see it.
-        {% endif %}
+        Average reported coverage in each region. The dashed line marks the
+        {{ fmt_pct(threshold_pct, 0) }} target.
       </p>
-      {% if threshold_pct is not none %}
-        <div class="vbar-legend" aria-hidden="true">
+      <div class="vbar-legend" aria-hidden="true">
           <span class="vbar-key vbar-key--up">at or above the target</span>
-          <span class="vbar-key vbar-key--down">below the target</span>
-        </div>
-      {% endif %}
+        <span class="vbar-key vbar-key--down">below the target</span>
+      </div>
       <div class="vbar-scroll">
         <div class="vbar-plot">
           {# The same absolutely-positioned rule 3A uses for its zero line,
              placed at the threshold instead. #}
-          {% if threshold_pct is not none %}
-            <div class="vbar-zero" style="bottom: {{ [threshold_pct, 100]|min }}%"></div>
-          {% endif %}
+          <div class="vbar-zero" style="bottom: {{ [threshold_pct, 100]|min }}%"></div>
           <ol class="vbar-cols">
             {% for item in region_view %}
               {% set v = item.row.avg_weighted %}
-              {% set rmet = threshold_pct is not none and v is not none and v >= threshold_pct %}
+              {% set rmet = v is not none and v >= threshold_pct %}
               <li class="vbar-col"
                   title="{{ item.name }}: {% if v is not none %}{{ fmt_pct(v) }}{% else %}no data{% endif %}">
                 {# A region with no figure is neither above nor below: painting
                    it "below" would assert a measurement nobody made. #}
-                <span class="vbar-fill {% if v is none %}is-nodata{% elif rmet or threshold_pct is none %}is-up{% else %}is-down{% endif %}"
+                <span class="vbar-fill {% if v is none %}is-nodata{% elif rmet %}is-up{% else %}is-down{% endif %}"
                       style="height: {{ item.bar_pct }}%;">
                   {# The number is on the bar, so colour is never the only
                      thing saying whether a region cleared the bar. #}
@@ -275,15 +259,13 @@
     How many countries in each region reached the target.
   </p>
 
-  {% set has_t = threshold and threshold.threshold_pct is not none %}
   <div class="vx-table-block" id="region-table">
     <div class="vx-table-header">
       {# The number is the threshold of the antigen actually selected, not a
          fixed 90: WHO sets 95 for measles, 90 for DTP and 80 for rubella, so a
          hardcoded 90 would be wrong on the default view. #}
-      <span class="vx-table-title">Countries reaching
-        {% if has_t %}the {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}their target{% endif %},
-        by region</span>
+      <span class="vx-table-title">Countries reaching the
+        {{ fmt_pct(threshold_pct, 0) }} target, by region</span>
       {# Seven rows, so this table gets a sort but no pager. Its parameter is
          `rsort`, so sorting regions never disturbs the country table below. #}
       {{ table_controls('coverage.index', table_args, 'rsort',
@@ -301,8 +283,8 @@
             <th scope="col">Region</th>
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
-            <th scope="col" class="num">Countries that met
-              {% if has_t %}the {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}their target{% endif %}</th>
+            <th scope="col" class="num">Countries that met the
+              {{ fmt_pct(threshold_pct, 0) }} target</th>
           </tr>
         </thead>
         <tbody>
@@ -312,22 +294,13 @@
               <th scope="row" class="vx-cell-key">{{ item.name }}</th>
               <td{% if a_row %} title="{{ a_row.antigen_name }}"{% endif %}>{% if a_row %}{{ antigen }} &middot; {{ a_row.disease_name }}{% else %}<span class="vx-all">All antigens</span>{% endif %}</td>
               <td class="num">{% if year %}{{ year }}{% else %}<span class="vx-all">All years</span>{% endif %}</td>
-              {# An em dash rather than 0 when no single antigen is chosen: the
-                 thresholds differ by disease, so there is no one bar to count
-                 against, and 0 would assert that no region has a country
-                 meeting one. #}
-              <td class="num">
-                {% if has_t %}{{ fmt_int(item.row.n_met_threshold) }} <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span>
-                {% else %}&mdash;{% endif %}
-              </td>
+              <td class="num">{{ fmt_int(item.row.n_met_threshold) }}
+                <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
     </div>
-    {% if not has_t and not antigen %}
-      <div class="vx-table-foot">Select a single antigen to compare each region against its disease threshold.</div>
-    {% endif %}
     <div class="vx-table-foot vx-table-foot--jump">
       <a href="#country-table">By country &darr;</a>
     </div>
@@ -344,7 +317,7 @@
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">Countries reaching
-        {% if threshold and threshold.threshold_pct is not none %}{{ fmt_pct(threshold.threshold_pct, 0) }} vaccine coverage{% else %}their vaccine coverage target{% endif %}</span>
+        {{ fmt_pct(threshold_pct, 0) }} vaccine coverage</span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
                         size_key='per_page', sizes=page.sizes, size_active=page.size) }}
@@ -353,15 +326,16 @@
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
-          {# Brief 2A, Table 1, column for column and in the brief's order:
-             Antigen | Year | Country | Region | Percentage of target. Antigen
-             and Year come from the row itself, so with "All antigens" each row
-             still names its own. There is no Status column because every row
-             here met its target -- that is what puts it in the table. #}
+          {# Country | Antigen | Year | Region | Percentage of target, the same
+             rhythm as the region table above: the subject of the row first,
+             then antigen and year. Antigen and Year come from the row itself,
+             so with "All antigens" each row still names its own. There is no
+             Status column because every row here met the target -- that is what
+             puts it in the table. #}
           <tr>
+            <th scope="col">Country</th>
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
-            <th scope="col">Country</th>
             <th scope="col">Region</th>
             <th scope="col" class="num">Percentage of target
               <span class="th-sub">doses &divide; target birth cohort</span></th>
@@ -378,9 +352,8 @@
           {% if not page.rows %}
             <tr>
               <td colspan="{{ 6 if show_below else 5 }}" class="vx-empty-row">
-                No country in this selection reached
-                {% if threshold and threshold.threshold_pct is not none %}the
-                  {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}its target{% endif %}.
+                No country in this selection reached the
+                {{ fmt_pct(threshold_pct, 0) }} target.
                 Try a wider selection or a different year.
               </td>
             </tr>
@@ -393,16 +366,14 @@
                  wrapped to four lines in every row and tripled the row height
                  for a value most rows repeat; it stays in the tooltip and in
                  the download. #}
-              <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
-              <td class="num">{{ r.year }}</td>
-              {# Third column, but still the row's header cell: it is what names
-                 the row, and HTML puts no constraint on where that sits. #}
               <th scope="row" class="vx-cell-key">
                 {{ r.country_name }}
                 {% if r.unmatched_territory %}
                   <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
                 {% endif %}
               </th>
+              <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
+              <td class="num">{{ r.year }}</td>
               <td>{{ fix_region(r.region_name) }}</td>
               {# With the filter on (the default) this is always a real figure
                  at or above the threshold, because the query returns nothing
@@ -468,17 +439,17 @@
 
       <dt>Threshold</dt>
       <dd>
+        {{ fmt_pct(threshold_pct, 0) }} for every vaccine on this page. WHO
+        sets its own figure for each disease: 95% for measles, 90% for
+        diphtheria-tetanus-pertussis and 80% for rubella.
         {% if threshold and threshold.threshold_pct is not none %}
-          {{ fmt_pct(threshold.threshold_pct, 0) }} for
-          {{ threshold.disease_name }}.
-          {{ threshold.threshold_note }}
+          For {{ threshold.disease_name }} it is
+          {{ fmt_pct(threshold.threshold_pct, 0) }}. {{ threshold.threshold_note }}
           <span class="citation">Source: {{ threshold.threshold_source }}
             {% if threshold.threshold_url %}
               <a href="{{ threshold.threshold_url }}" rel="noopener">Read it</a>
             {% endif %}
           </span>
-        {% else %}
-          Select a single antigen to see the threshold that applies to it.
         {% endif %}
       </dd>
 

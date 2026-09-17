@@ -53,6 +53,13 @@ SORT_LABELS = [
 ]
 DEFAULT_SORT = "coverage_desc"
 
+# 2A measures every antigen against one 90% bar, the benchmark the brief names:
+# "all countries that have met at least 90% of their vaccination targets".
+# WHO's own targets differ by disease -- 95% measles, 90% DTP, 80% rubella --
+# and they stay in herd_immunity_threshold, are still read for the method note,
+# and are still what 3A filters on. This page simply does not rank against them.
+BRIEF_THRESHOLD = 90.0
+
 # With "show countries below the target too" on, the table holds rows on both
 # sides of the bar, so "margin above" is the wrong word for half of them.
 GAP_LABELS_BELOW = {
@@ -148,7 +155,7 @@ def index():
             antigen=None, year=None, region=None, country=None,
             sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
             rsort_active=DEFAULT_REGION_SORT, region_sort_labels=REGION_SORT_LABELS,
-            show_below=None, threshold_pct=None,
+            show_below=None, threshold_pct=BRIEF_THRESHOLD,
             summary=None, region_view=[], rows=[], threshold=None,
             conflict=None, rejected=[], fix_region=fix_region,
             page=db.paginate([], None), table_args={}, pdf_ok=False,
@@ -214,7 +221,10 @@ def index():
 
     params = {"antigen": antigen, "year": year,
               "region": region, "country": country,
-              "threshold": threshold["threshold_pct"] if threshold else None,
+              # One bar for every antigen, so the regional counts, the outcome
+              # verdict and the country filter all measure the same thing.
+              "threshold": BRIEF_THRESHOLD,
+              "met_threshold": BRIEF_THRESHOLD,
               # Table 1 lists only the countries that met their target, which
               # is the table the brief describes. The checkbox passes None to
               # list everyone again -- the query keeps both shapes.
@@ -232,17 +242,6 @@ def index():
     region_sort_labels = [o for o in REGION_SORT_LABELS
                           if o[0] in VISIBLE_REGION_SORTS]
 
-    # Both directions, not just the descending one: "fewest meeting the target"
-    # is equally meaningless when there is no target to meet.
-    THRESHOLD_SORTS = ("met", "met_asc")
-    if threshold is None:
-        region_sort_labels = [o for o in region_sort_labels
-                              if o[0] not in THRESHOLD_SORTS]
-        if rsort_active in THRESHOLD_SORTS:
-            # NOT DEFAULT_REGION_SORT -- that is "met", the very thing being
-            # withdrawn. Region name is the one column still on screen.
-            rsort_active = "region"
-            region_order_by = REGION_SORT_KEYS["region"]
 
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
     outcome = db.query_one(db.load_query("coverage_outcome"), params)
@@ -318,7 +317,7 @@ def index():
         antigen=antigen, year=year, region=region, country=country,
         sort_active=sort_active, sort_labels=sort_labels,
         rsort_active=rsort_active, region_sort_labels=region_sort_labels,
-        show_below=show_below, threshold_pct=threshold["threshold_pct"] if threshold else None,
+        show_below=show_below, threshold_pct=BRIEF_THRESHOLD,
         summary=summary, outcome=outcome, region_view=region_view, rows=rows,
         page=page, table_args=table_args, pdf_ok=exports.pdf_available(),
         threshold=threshold, conflict=conflict, rejected=rejected,

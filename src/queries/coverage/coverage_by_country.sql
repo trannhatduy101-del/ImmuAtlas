@@ -32,8 +32,15 @@ SELECT
     coverage_above_100,
     threshold_pct,
     threshold_source,
-    herd_immunity_status,
-    ROUND(coverage_reported - threshold_pct, 2) AS gap_to_threshold,
+    -- Status and gap are measured against :met_threshold, the one bar this page
+    -- uses, not against the row's own WHO figure. If they disagreed, the pill
+    -- would call a country "below" while the filter had already let it through.
+    CASE
+      WHEN coverage_reported IS NULL                 THEN 'No figure reported'
+      WHEN coverage_reported >= :met_threshold       THEN 'At or above target'
+      ELSE 'Below target'
+    END                                          AS herd_immunity_status,
+    ROUND(coverage_reported - :met_threshold, 2) AS gap_to_threshold,
     CASE WHEN country_name IS NULL THEN 1 ELSE 0 END AS unmatched_territory
 FROM v_herd_immunity
 WHERE (:antigen IS NULL OR antigen    = :antigen)
@@ -41,9 +48,9 @@ WHERE (:antigen IS NULL OR antigen    = :antigen)
   AND (:country IS NULL OR country_id = :country)
   AND (:region  IS NULL OR region_id  = :region)
   -- Brief 2A, Table 1: "all countries that have MET at least 90% of their
-  -- vaccination targets". Each row is compared against ITS OWN threshold_pct,
-  -- never a literal 90: WHO sets 95 for measles, 90 for DTP and 80 for rubella,
-  -- so a hardcoded 90 would list measles countries that did not in fact meet
-  -- theirs. coverage_reported >= NULL is NULL, so a country that reported
-  -- nothing falls out on its own -- which is right, "no figure" is not "met".
-  AND (:met_only IS NULL OR coverage_reported >= threshold_pct)
+  -- vaccination targets". One bar for every antigen, bound as :met_threshold
+  -- rather than read from the row, because the brief names a single figure.
+  -- WHO's own per-disease targets stay in threshold_pct above and are cited in
+  -- the method note. coverage_reported >= NULL is NULL, so a country that
+  -- reported nothing falls out on its own: "no figure" is not "met".
+  AND (:met_only IS NULL OR coverage_reported >= :met_threshold)

@@ -3,14 +3,12 @@
 -- One defensible line for the reader: the average of the reporting national
 -- figures, and how many of them reached the threshold. Aggregated in SQL (never
 -- in Python), over the SAME filters as the country table. Blanks are excluded
--- rather than counted as zero. n_thresholds tells the page whether a single
--- threshold applies (one antigen) so the "X met" verdict is meaningful.
+-- rather than counted as zero. :threshold is the single bar this page measures
+-- against, so the verdict holds whether one antigen is selected or all of them.
 SELECT
     ROUND(AVG(coverage_reported), 1)                     AS avg_coverage,
     COUNT(coverage_reported)                             AS n_reporting,
-    COUNT(DISTINCT threshold_pct)                        AS n_thresholds,
-    MAX(threshold_pct)                                   AS threshold_pct,
-    SUM(CASE WHEN coverage_reported >= threshold_pct
+    SUM(CASE WHEN coverage_reported >= :threshold
              THEN 1 ELSE 0 END)                          AS n_met,
 
     -- The two above count ROWS, which is what the average and the chart need.
@@ -26,7 +24,7 @@ SELECT
     -- page: across several years a country counts as having met the threshold
     -- if it did so in at least one of them.
     COUNT(DISTINCT country_id)                           AS n_countries_reporting,
-    COUNT(DISTINCT CASE WHEN coverage_reported >= threshold_pct
+    COUNT(DISTINCT CASE WHEN coverage_reported >= :threshold
                         THEN country_id END)             AS n_countries_met
 FROM v_herd_immunity
 WHERE (:antigen IS NULL OR antigen    = :antigen)
