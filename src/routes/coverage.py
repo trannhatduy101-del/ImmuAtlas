@@ -106,7 +106,6 @@ def index():
         years = db.query(db.load_query("filter_years"))
         regions = db.query(db.load_query("filter_regions"))
         countries = db.query(db.load_query("filter_countries"))
-        defaults = db.query_one(db.load_query("coverage_defaults"))
     except db.DatabaseMissing as exc:
         return render_template("pages/2a_coverage.html", db_missing=str(exc)), 503
 
@@ -136,24 +135,22 @@ def index():
             fmt_num=db.fmt_num,
         )
 
-    # An absent parameter falls back to the default; an invalid one falls back
-    # to no filter. Those are different, and conflating them would silently
-    # widen a selection the visitor thought was narrow.
+    # Absent and empty both mean "no filter". They used to differ -- an absent
+    # antigen fell back to a default one -- and that quietly changed the result
+    # under the reader: neither url_for() nor hidden_args() can express "present
+    # but empty", so choosing All antigens dropped the parameter from every link
+    # on the page, and the next click came back as the default vaccine. The two
+    # states are indistinguishable in a URL, so they have to mean the same
+    # thing. An invalid value is still different, and still reported.
     rejected = []
 
-    if "antigen" in request.args:
-        antigen, bad = db.validate(request.args.get("antigen"), valid_antigens)
-        if bad:
-            rejected.append("antigen")
-    else:
-        antigen = defaults["default_antigen"]
+    antigen, bad = db.validate(request.args.get("antigen"), valid_antigens)
+    if bad:
+        rejected.append("antigen")
 
-    if "year" in request.args:
-        year, bad = db.validate(request.args.get("year"), valid_years, int)
-        if bad:
-            rejected.append("year")
-    else:
-        year = defaults["default_year"]
+    year, bad = db.validate(request.args.get("year"), valid_years, int)
+    if bad:
+        rejected.append("year")
 
     region, bad = db.validate(request.args.get("region"), valid_regions, int)
     if bad:
@@ -190,10 +187,14 @@ def index():
     # With no threshold there is no Met target column, and n_met_threshold is 0
     # for every region -- so offering that sort would be a control that visibly
     # does nothing. Drop the option, and fall back if it was the chosen one.
+    # Both directions, not just the descending one: "fewest meeting the target"
+    # is equally meaningless when there is no target to meet.
+    THRESHOLD_SORTS = ("met", "met_asc")
     region_sort_labels = REGION_SORT_LABELS
     if threshold is None:
-        region_sort_labels = [o for o in REGION_SORT_LABELS if o[0] != "met"]
-        if rsort_active == "met":
+        region_sort_labels = [o for o in REGION_SORT_LABELS
+                              if o[0] not in THRESHOLD_SORTS]
+        if rsort_active in THRESHOLD_SORTS:
             rsort_active = DEFAULT_REGION_SORT
             region_order_by = REGION_SORT_KEYS[DEFAULT_REGION_SORT]
 
