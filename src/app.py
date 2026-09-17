@@ -7,8 +7,7 @@ routes lived here every change would collide, and the git history would not
 show who wrote what. Both of those are graded (the project spec section 3 and 12).
 
 Run:
-    python rebuild_db.py
-    flask --app app run --debug
+    python run.py
 """
 
 import os
@@ -45,7 +44,7 @@ def ensure_database():
         import rebuild_db
         rebuild_db.main()
     except Exception as exc:
-        print("Automatic build failed (%s). Run: python rebuild_db.py" % exc)
+        print("Automatic build failed (%s). Run: python src/rebuild_db.py" % exc)
 
 
 def create_app():
@@ -154,13 +153,13 @@ def create_app():
     return app
 
 
-# `flask --app app run --debug` picks this up.
+# `flask --app run run --debug` and run.py both pick this up.
 app = create_app()
 
 
 if __name__ == "__main__":
-    # So that `python app.py` works too. The documented way to start this is
-    # `flask --app app run --debug`, but typing `python app.py` is the reflex,
-    # and without this block that command builds the app and exits in silence,
-    # which looks exactly like a crash with no error.
+    # run.py at the repository root is the documented way in, but running this
+    # file directly is a reflex, and without this block that command would build
+    # the app and exit in silence -- which looks exactly like a crash with no
+    # error message.
     app.run(debug=True)

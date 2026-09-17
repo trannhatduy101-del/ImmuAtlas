@@ -1,7 +1,7 @@
 """
 Rebuild the working database.
 
-    python rebuild_db.py
+    python src/rebuild_db.py
 
 immuatlas.db is a copy of the supplied read-only immunisation2.db with this
 project's schema, views and seed data applied on top. It is git-ignored on
@@ -160,7 +160,7 @@ def main(argv=None):
             print("  %s rowid %s has no matching %s row" % (table, rowid, parent))
         print("  The views resolve these to 'Not classified' rather than dropping them.")
     print("\nRebuilt %s from %s and sql/." % (OUTPUT_DB.name, SOURCE_DB.name))
-    print("You can now run: python app.py")
+    print("You can now run: python run.py")
     return 0
 
 

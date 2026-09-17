@@ -6,7 +6,7 @@ a browser will NOT show you: an off-by-one in the page slice looks like a
 perfectly normal table, and a missing byte-order mark looks fine until someone
 opens the CSV in Excel.
 
-    python test_helpers.py
+    python src/test_helpers.py
 """
 
 import db

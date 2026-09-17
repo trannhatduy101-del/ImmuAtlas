@@ -23,7 +23,7 @@ pip install -r requirements.txt
 ## Run
 
 ```bash
-python app.py
+python run.py
 ```
 
 Then open http://127.0.0.1:5000. That is the whole setup: on the first
@@ -33,7 +33,7 @@ takes a few seconds. Every start after that is immediate.
 For the auto-reloading development server instead:
 
 ```bash
-flask --app app run --debug
+flask --app run run --debug
 ```
 
 ## Rebuilding after you change `sql/`
@@ -45,7 +45,7 @@ missing, so you only need this command when you have edited something in
 `sql/` and want the change applied now:
 
 ```bash
-python rebuild_db.py
+python src/rebuild_db.py
 ```
 
 It applies `sql/schema_immuatlas.sql`, `sql/seed_immuatlas.sql` and
@@ -69,28 +69,30 @@ than crashing with a traceback.
 ## Project layout
 
 ```
-app.py             application factory, blueprint registration, error pages
-config.py          paths and site constants
-db.py              all SQLite access: connect/query helpers, named-query
-                   loader, safe ORDER BY whitelist, pagination, formatters
-exports.py         CSV and PDF for every result table, columns declared once
-rebuild_db.py      rebuilds immuatlas.db from immunisation2.db + sql/;
-                   app.py runs it automatically on the first start
-test_helpers.py    assert-based checks for db.py and exports.py; no framework,
-                   run it with: python test_helpers.py
+run.py             the only entry point: puts src/ on sys.path and starts Flask
+immunisation2.db   the supplied WHO data, read-only and never modified; the one
+                   file here that cannot be regenerated
 
-routes/            one module per page (see the table below)
-queries/           one .sql file per named query, loaded by db.load_query()
+src/               the application
+  app.py           application factory, blueprint registration, error pages
+  config.py        paths and site constants
+  db.py            all SQLite access: connect/query helpers, named-query
+                   loader, safe ORDER BY whitelist, pagination, formatters
+  exports.py       CSV and PDF for every result table, columns declared once
+  rebuild_db.py    rebuilds immuatlas.db from immunisation2.db + sql/;
+                   app.py runs it automatically on the first start
+  test_helpers.py  assert-based checks for db.py and exports.py; no framework,
+                   run it with: python src/test_helpers.py
+
+  routes/          one module per page (see the table below)
+  queries/         one .sql file per named query, loaded by db.load_query()
                    by file name alone, in per-page folders mirroring routes/:
                    shell/ filter/ landing/ mission/ coverage/ infections/
                    improvement/ above_average/
-sql/               schema, seed and provenance scripts, applied in that order
-templates/         base.html, the _controls.html macros shared by every result
+  sql/             schema, seed and provenance scripts, applied in that order
+  templates/       base.html, the _controls.html macros shared by every result
                    table, and one file per page under pages/
-static/            CSS, self-hosted fonts and images
-
-immunisation2.db   the supplied WHO data, read-only and never modified; the one
-                   file here that cannot be regenerated
+  static/          CSS, self-hosted fonts and images
 ```
 
 ## Pages

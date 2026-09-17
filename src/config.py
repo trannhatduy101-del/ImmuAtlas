@@ -2,15 +2,18 @@
 
 import os
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+# The application source lives in src/; the databases sit one level up, in the
+# repository root, where anyone opening the project sees them straight away.
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))   # src/
+ROOT_DIR = os.path.dirname(BASE_DIR)                    # repository root
 
 # Supplied WHO data. Read only, never modified, committed to the repository.
-SOURCE_DB = os.path.join(BASE_DIR, "immunisation2.db")
+SOURCE_DB = os.path.join(ROOT_DIR, "immunisation2.db")
 
 # Working database. Rebuilt from SOURCE_DB + sql/ by rebuild_db.py. Git-ignored
 # because it is binary and git cannot merge it; the state lives in sql/.
 # IMMUATLAS_DB overrides it for tests or a throwaway copy.
-DB_PATH = os.environ.get("IMMUATLAS_DB", os.path.join(BASE_DIR, "immuatlas.db"))
+DB_PATH = os.environ.get("IMMUATLAS_DB", os.path.join(ROOT_DIR, "immuatlas.db"))
 
 # One .sql file per named query (the project spec section 3).
 QUERIES_DIR = os.path.join(BASE_DIR, "queries")
