@@ -171,12 +171,6 @@
     </section>
   {% endif %}
 
-  <h2 class="section-head">Result &middot; biggest improvement</h2>
-  <p class="section-intro">
-    Countries ranked by the rise in their reported coverage. The case rate
-    beside each one shows whether the disease followed.
-  </p>
-
   {# ---- Vertical bar chart on the shared ImmuAtlas tokens and type: one
          column per country, its change
          in reported coverage. Bars above the line gained, bars below declined;
@@ -220,7 +214,8 @@
          + download), including the different dataset: did cases actually fall? ---- #}
   <div class="vx-table-block" id="rank-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
-      <span class="vx-table-title">The ranking, with reported case rates beside it</span>
+      <span class="vx-table-title">The ranking
+        <span class="vx-table-sub">The case rate beside each country shows whether the disease followed.</span></span>
       {# "Countries" is the page size here, so `n` is the size key. #}
       {{ table_controls('improvement.index', table_args, 'sort', sort_labels,
                         sort_active, anchor='#rank-table', page_key='page',

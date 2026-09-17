@@ -735,6 +735,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: linear-gradient(135deg, var(--accent) 0%, var(--bg-deep) 100%);
 }
 .vx-table-title { font-family: var(--font-body); font-size: .95rem; font-weight: 800; color: #fff; }
+/* One line under a table's name, for the sentence that used to sit in a
+   separate intro paragraph above it. */
+.vx-table-sub {
+  display: block; margin-top: .15rem;
+  font-weight: 400; font-size: .8rem; color: var(--ink-invert-muted);
+}
 .vx-download {
   flex: none;
   font-size: .8rem; font-weight: 700;
@@ -1368,8 +1374,16 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 /* Every region here sits in the high 80s or 90s, so the value labels land right
    on the threshold rule and the two collide. A padded chip in the page colour
-   lets the number sit over the line and stay readable. */
-.vbar-chart--scale .vbar-val {
+   lets the number sit over the line and stay readable.
+
+   Scoped through .vbar-fill for the weight, not for the meaning. Plain
+   `.vbar-chart--scale .vbar-val` is (0,2,0) and loses to 3A's
+   `.vbar-fill.is-down .vbar-val { bottom: -1.35rem }` at (0,3,0). A
+   below-target label then had BOTH top and bottom set, which stretches an
+   absolutely positioned box to the full height of its bar -- and this rule's
+   white background painted straight over the bar. Every below-target column
+   vanished. */
+.vbar-chart--scale .vbar-fill .vbar-val {
   top: -1.45rem; bottom: auto;
   background: var(--bg-card); padding: 0 .25rem; border-radius: 3px;
 }

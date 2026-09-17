@@ -254,11 +254,8 @@
     <a href="#country-table">By country</a>
   </nav>
 
-  <h2 class="section-head">Result &middot; countries meeting the target, by region</h2>
-  <p class="section-intro">
-    How many countries in each region reached the target.
-  </p>
-
+  {# The table's own header bar names it; a section heading and an intro
+     paragraph above it said the same thing twice more. #}
   <div class="vx-table-block" id="region-table">
     <div class="vx-table-header">
       {# The number is the threshold of the antigen actually selected, not a
@@ -270,6 +267,7 @@
          `rsort`, so sorting regions never disturbs the country table below. #}
       {{ table_controls('coverage.index', table_args, 'rsort',
                         region_sort_labels, rsort_active, anchor='#region-table') }}
+      {{ export_links('coverage.index', table_args, pdf_ok, {'table': 'region'}) }}
     </div>
     <div class="vx-table-wrap">
       <table class="vx-table">
@@ -309,15 +307,11 @@
   {# ---- Table 1: the countries that met their target. Five columns, the
          brief's; the birth cohort and doses-per-100 detail stay in the CSV and
          the method note rather than crowding the table. ---- #}
-  <h2 class="section-head">Result &middot; countries that met the target</h2>
-  <p class="section-intro">
-    Every country listed here reached the target for this vaccine. The checkbox
-    above adds the countries that did not.
-  </p>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">Countries reaching
-        {{ fmt_pct(threshold_pct, 0) }} vaccine coverage</span>
+        {{ fmt_pct(threshold_pct, 0) }} vaccine coverage
+        <span class="vx-table-sub">The checkbox above adds the countries that did not.</span></span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
                         size_key='per_page', sizes=page.sizes, size_active=page.size) }}

@@ -122,6 +122,25 @@ COLUMNS = [
 ]
 
 
+# The region table's download. It carries the columns the on-screen table
+# dropped when it was cut to the brief's four -- average coverage, how many
+# countries reported -- because a file is read away from the page that produced
+# it and cannot rely on a chart standing beside it.
+REGION_COLUMNS = [
+    ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
+    ("Countries that met the target", "n_met_threshold", db.fmt_int),
+    ("Countries in selection", "n_countries", db.fmt_int),
+    ("Countries reporting", "n_reporting", db.fmt_int),
+    ("Average coverage % (weighted)", "avg_weighted", db.fmt_num),
+    ("Average coverage % (unweighted)", "avg_unweighted", db.fmt_num),
+]
+
+# Which table a download is asking for. Two tables on one page means the URL has
+# to say; anything else falls back to the country table, the one the page leads
+# with.
+EXPORT_TABLES = {"region", "country"}
+
+
 def fix_region(name):
     return REGION_DISPLAY_FIX.get(name, name)
 
@@ -195,6 +214,10 @@ def index():
     if bad:
         rejected.append("below-target filter")
 
+    export_table, bad = db.validate(request.args.get("table"), EXPORT_TABLES)
+    if bad:
+        rejected.append("download table")
+
     sort_labels = ([(k, GAP_LABELS_BELOW.get(k, v)) for k, v in SORT_LABELS]
                    if show_below else SORT_LABELS)
 
@@ -234,6 +257,24 @@ def index():
                           if o[0] in VISIBLE_REGION_SORTS]
 
 
+    # The region query is a UNION ALL, so its own ORDER BY has to sit outside
+    # the compound select -- hence the subquery wrapper.
+    region_sql = ("SELECT * FROM (" + db.load_query("coverage_by_region")
+                  + ") ORDER BY " + region_order_by)
+
+    # A download of the region table needs only that query, so it returns here
+    # rather than falling through and fetching every country as well.
+    if export_table == "region":
+        response = exports.send(
+            request.args.get("format"),
+            "coverage_regions_%s_%s" % (antigen or "all", year or "all"),
+            "Countries meeting the target, by region",
+            "%s - %s" % (antigen or "all antigens", year or "all years"),
+            REGION_COLUMNS, db.query(region_sql, params),
+        )
+        if response is not None:
+            return response
+
     # The only concatenation allowed near SQL in this project. order_by can only
     # be one of the literal strings in SORT_KEYS.
     rows = db.query(db.load_query("coverage_by_country") + " ORDER BY " + order_by,
@@ -256,11 +297,7 @@ def index():
 
     summary = db.query_one(db.load_query("coverage_selection_summary"), params)
     outcome = db.query_one(db.load_query("coverage_outcome"), params)
-    # The region query is a UNION ALL, so its own ORDER BY has to sit outside
-    # the compound select -- hence the subquery wrapper.
-    region_rows = db.query(
-        "SELECT * FROM (" + db.load_query("coverage_by_region") + ") ORDER BY "
-        + region_order_by, params)
+    region_rows = db.query(region_sql, params)
 
     # WHO's own figure for this disease. Nothing on the page is filtered or
     # counted with it -- that is BRIEF_THRESHOLD's job -- it only fills the

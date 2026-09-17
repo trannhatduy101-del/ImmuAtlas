@@ -131,13 +131,19 @@
 {# CSV / PDF for the current selection. The PDF link only appears when fpdf2 is
    importable, so an environment without it shows a working CSV link rather
    than a link that returns an error. #}
-{% macro export_links(endpoint, args, pdf_ok=false) %}
+{# `extra` names which table is being downloaded when a page has more than one.
+   Without it both sets of links would build the same URL and the second table
+   could never be exported. Pages with a single table pass nothing. #}
+{% macro export_links(endpoint, args, pdf_ok=false, extra={}) %}
+  {# Merged in its own step: Jinja will not parse dict(a, **b, key=c), a `**`
+     followed by a keyword argument in one call. #}
+  {% set link_args = dict(args, **extra) %}
   <span class="vx-export">
     <a class="vx-download"
-       href="{{ url_for(endpoint, **dict(args, format='csv')) }}">CSV</a>
+       href="{{ url_for(endpoint, **dict(link_args, format='csv')) }}">CSV</a>
     {% if pdf_ok %}
       <a class="vx-download"
-         href="{{ url_for(endpoint, **dict(args, format='pdf')) }}">PDF</a>
+         href="{{ url_for(endpoint, **dict(link_args, format='pdf')) }}">PDF</a>
     {% endif %}
   </span>
 {% endmacro %}
