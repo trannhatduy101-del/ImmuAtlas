@@ -774,11 +774,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    still on screen -- a bare "3" beside a region says nothing about whether that
    is most of it or almost none of it. */
 .vx-of { color: var(--ink-muted); font-weight: 400; font-size: .85em; }
-/* "All antigens" / "All years" in the region table's Antigen and Year columns.
-   Those two aggregate the whole selection, so when the visitor narrowed to
-   neither there is no single value to print -- and an empty cell would read as
-   missing data rather than as "everything". */
-.vx-all { color: var(--ink-muted); font-style: italic; }
 /* The one row a result table shows when nothing matched. Centred and muted so
    it reads as a sentence about the result, not as a data row. */
 .vx-empty-row { text-align: center; color: var(--ink-muted); padding: 1.1rem 1rem; }
@@ -1389,6 +1384,22 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .vbar-chart--scale .vbar-fill.is-nodata { background: var(--rule); }
 .vbar-chart--scale .vbar-fill.is-nodata .vbar-val { color: var(--none-ink); }
+/* Bars grow out of the baseline on load, one after the next. The height each
+   bar ends at is its inline style, so the animation interpolates from 0 up to
+   whatever that is -- no JavaScript and no second copy of the number.
+
+   `backwards`, not `both`: backwards holds the FIRST frame (height 0) through
+   the stagger delay, then hands the bar back to its own height when the
+   animation ends. `forwards` would pin it to the animation's final computed
+   height instead, and every bar collapsed to the 3px min-height. */
+@keyframes vbar-grow { from { height: 0; } }
+.vbar-chart--scale .vbar-fill {
+  animation: vbar-grow .55s var(--ease-out) backwards;
+  animation-delay: calc(var(--i, 0) * 55ms);
+}
+@media (prefers-reduced-motion: reduce) {
+  .vbar-chart--scale .vbar-fill { animation: none; }
+}
 
 .vbar-names { list-style: none; margin: .7rem 0 0; padding: 0; display: flex; gap: .6rem; }
 .vbar-names li {

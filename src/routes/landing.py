@@ -136,9 +136,12 @@ def index():
         # met_threshold is None here on purpose: this call deliberately spans
         # every antigen, and 1A shows no "met the target" figure, so there is no
         # bar to measure against. n_met_threshold comes back 0 and is not shown.
+        # detail None: one row per region for the whole dataset, which is the
+        # shape this block draws. 2A passes a value to split it by antigen and
+        # year instead.
         regions = db.query(region_sql, {"antigen": None, "year": None,
                                         "country": None, "region": None,
-                                        "met_threshold": None})
+                                        "met_threshold": None, "detail": None})
     except db.DatabaseMissing as exc:
         # An honest empty state, never a blank page and never a stale number.
         return render_template("pages/1a_landing.html", db_missing=str(exc)), 503

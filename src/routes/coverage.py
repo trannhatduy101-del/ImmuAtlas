@@ -95,7 +95,10 @@ REGION_SORT_LABELS = [
 # The table's own subject: how many of each region's countries cleared the bar.
 # "coverage_desc" used to be the default, but average coverage is no longer one
 # of the four columns on screen.
-DEFAULT_REGION_SORT = "met"
+# Weakest combinations first: with the table split by antigen and year, the
+# first page is where coverage is lowest, which is the question this page is
+# for. The key already pushes rows with no reported average to the end.
+DEFAULT_REGION_SORT = "coverage_asc"
 
 # A typo in the source data, corrected for display only. Never
 # rewrite the supplied table.
@@ -128,6 +131,10 @@ COLUMNS = [
 # it and cannot rely on a chart standing beside it.
 REGION_COLUMNS = [
     ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
+    # The rows are one region per vaccine per year, so the file has to say which
+    # vaccine and which year or 976 region names mean nothing.
+    ("Antigen", "antigen", str),
+    ("Year", "year", str),
     ("Countries that met the target", "n_met_threshold", db.fmt_int),
     ("Countries in selection", "n_countries", db.fmt_int),
     ("Countries reporting", "n_reporting", db.fmt_int),
@@ -175,9 +182,11 @@ def index():
             sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
             rsort_active=DEFAULT_REGION_SORT, region_sort_labels=REGION_SORT_LABELS,
             show_below=None, threshold_pct=BRIEF_THRESHOLD,
-            summary=None, region_view=[], rows=[], threshold=None,
+            summary=None, region_view=[], chart_view=[], rows=[], threshold=None,
+            disease_of={},
             conflict=None, rejected=[], fix_region=fix_region,
-            page=db.paginate([], None), table_args={}, pdf_ok=False,
+            page=db.paginate([], None), rpage=db.paginate([], None),
+            table_args={}, pdf_ok=False,
             fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,
             fmt_num=db.fmt_num,
         )
@@ -239,6 +248,11 @@ def index():
               # counts, the outcome verdict and the country filter all measure
               # the same thing.
               "met_threshold": BRIEF_THRESHOLD,
+              # One row per region per antigen per year. Rolled up across the
+              # whole dataset, "countries that met the target" counts a country
+              # that managed it in any single year, and every region reads close
+              # to 100%. 1A passes None and keeps the rolled-up shape.
+              "detail": 1,
               # Table 1 lists only the countries that met their target, which
               # is the table the brief describes. The checkbox passes None to
               # list everyone again -- the query keeps both shapes.
@@ -299,6 +313,13 @@ def index():
     outcome = db.query_one(db.load_query("coverage_outcome"), params)
     region_rows = db.query(region_sql, params)
 
+    # The chart draws one column per region, so it needs the rolled-up shape --
+    # a different query result from the table above it, which is why the two no
+    # longer share a sort order.
+    chart_rows = db.query(
+        "SELECT * FROM (" + db.load_query("coverage_by_region") + ")",
+        dict(params, detail=None))
+
     # WHO's own figure for this disease. Nothing on the page is filtered or
     # counted with it -- that is BRIEF_THRESHOLD's job -- it only fills the
     # citation in the method note, so it is looked up after the export branch
@@ -314,6 +335,11 @@ def index():
     page = db.paginate(rows, request.args.get("page"), request.args.get("per_page"))
     if page["rejected"]:
         rejected.append("page or rows-per-page")
+
+    # Its own page number, so paging one table never moves the other.
+    rpage = db.paginate(region_rows, request.args.get("rpage"))
+    if rpage["rejected"]:
+        rejected.append("region table page")
 
     # Every link and form on the page builds its URL from this dict, so the
     # pager, the two tables' controls and the export links cannot disagree.
@@ -339,16 +365,31 @@ def index():
                 "region": fix_region(region_name),
             }
 
-    # Bars are drawn as a percentage width. Turning a rate into a width is
-    # display formatting, so it belongs here and not in the SQL.
-    region_view = []
-    for r in region_rows:
+    # Chart geometry. Turning a rate into a bar height is display formatting,
+    # so it belongs here and not in the SQL.
+    #
+    # Lowest coverage on the left. Sorted ascending the colours group
+    # themselves -- below-target bars to the left, at-or-above to the right --
+    # which is what replaced the threshold rule and the colour key.
+    #
+    # "Not classified" is left out. It is nine territories with no row in the
+    # Country table, not a region, and charting it beside real regions invites
+    # the reader to compare them. The TABLE still lists it, labelled, so the
+    # anomaly is disclosed rather than dropped.
+    chart_view = []
+    for r in chart_rows:
         weighted = r["avg_weighted"]
-        region_view.append({
+        if weighted is None or r["region_id"] is None:
+            continue
+        chart_view.append({
             "row": r,
             "name": fix_region(r["region_name"]),
-            "bar_pct": min(100.0, float(weighted)) if weighted is not None else 0.0,
+            "bar_pct": min(100.0, float(weighted)),
         })
+    chart_view.sort(key=lambda item: item["row"]["avg_weighted"])
+
+    region_view = [{"row": r, "name": fix_region(r["region_name"])}
+                   for r in rpage["rows"]]
 
     return render_template(
         "pages/2a_coverage.html",
@@ -358,8 +399,13 @@ def index():
         sort_active=sort_active, sort_labels=sort_labels,
         rsort_active=rsort_active, region_sort_labels=region_sort_labels,
         show_below=show_below, threshold_pct=BRIEF_THRESHOLD,
-        summary=summary, outcome=outcome, region_view=region_view, rows=rows,
-        page=page, table_args=table_args, pdf_ok=exports.pdf_available(),
+        # antigen code -> disease, so the region table can print "MCV1 . Measles"
+        # without a per-row lookup in the template.
+        disease_of={a["antigen"]: a["disease_name"] for a in antigens},
+        summary=summary, outcome=outcome, region_view=region_view,
+        chart_view=chart_view, rows=rows,
+        page=page, rpage=rpage, table_args=table_args,
+        pdf_ok=exports.pdf_available(),
         threshold=threshold, conflict=conflict, rejected=rejected,
         fix_region=fix_region,
         fmt_int=db.fmt_int, fmt_big=db.fmt_big, fmt_pct=db.fmt_pct,

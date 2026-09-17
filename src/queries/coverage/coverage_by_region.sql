@@ -39,6 +39,14 @@
 SELECT
     r.RegionID                                    AS region_id,
     r.region                                      AS region_name,
+    -- :detail switches how fine the grouping is, in the one place that decides
+    -- it. NULL rolls the whole selection into one row per region, which is what
+    -- 1A wants. Any value splits it by antigen and year, which is what 2A wants:
+    -- rolled up across 25 years and 5 vaccines, "countries that met the target"
+    -- counts a country if it managed it in ANY of them, and nearly every region
+    -- then reads 100%. Per antigen per year the figure means what it says.
+    CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END   AS antigen,
+    CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END   AS year,
     COUNT(DISTINCT vc.country_id)                 AS n_countries,
     COUNT(vc.coverage_reported)                   AS n_reporting,
     ROUND(AVG(vc.coverage_reported), 2)           AS avg_unweighted,
@@ -59,7 +67,9 @@ LEFT JOIN v_coverage vc
       AND (:year    IS NULL OR vc.year       = :year)
       AND (:country IS NULL OR vc.country_id = :country)
 WHERE (:region IS NULL OR r.RegionID = :region)
-GROUP BY r.RegionID, r.region
+GROUP BY r.RegionID, r.region,
+         CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END,
+         CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END
 
 UNION ALL
 
@@ -68,6 +78,8 @@ UNION ALL
 -- (the project spec 4.4). Suppressed when a specific region is being viewed.
 SELECT
     NULL, 'Not classified',
+    CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END,
+    CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END,
     COUNT(DISTINCT vc.country_id),
     COUNT(vc.coverage_reported),
     ROUND(AVG(vc.coverage_reported), 2),
@@ -86,4 +98,6 @@ WHERE vc.region_id IS NULL
   AND (:antigen IS NULL OR vc.antigen    = :antigen)
   AND (:year    IS NULL OR vc.year       = :year)
   AND (:country IS NULL OR vc.country_id = :country)
+GROUP BY CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END,
+         CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END
 HAVING COUNT(*) > 0

@@ -206,38 +206,32 @@
     <h2 class="section-head">Result &middot; coverage by region</h2>
     <div class="vbar-chart vbar-chart--scale">
       <p class="vbar-cap">
-        Average reported coverage in each region. The dashed line marks the
-        {{ fmt_pct(threshold_pct, 0) }} target.
+        Average reported coverage in each region, lowest first. Regions at or
+        above the {{ fmt_pct(threshold_pct, 0) }} target are blue. The nine
+        territories with no region of their own are listed in the table below
+        rather than charted here.
       </p>
-      <div class="vbar-legend" aria-hidden="true">
-          <span class="vbar-key vbar-key--up">at or above the target</span>
-        <span class="vbar-key vbar-key--down">below the target</span>
-      </div>
       <div class="vbar-scroll">
         <div class="vbar-plot">
           {# The same absolutely-positioned rule 3A uses for its zero line,
              placed at the threshold instead. #}
-          <div class="vbar-zero" style="bottom: {{ [threshold_pct, 100]|min }}%"></div>
           <ol class="vbar-cols">
-            {% for item in region_view %}
+            {% for item in chart_view %}
               {% set v = item.row.avg_weighted %}
-              {% set rmet = v is not none and v >= threshold_pct %}
-              <li class="vbar-col"
-                  title="{{ item.name }}: {% if v is not none %}{{ fmt_pct(v) }}{% else %}no data{% endif %}">
-                {# A region with no figure is neither above nor below: painting
-                   it "below" would assert a measurement nobody made. #}
-                <span class="vbar-fill {% if v is none %}is-nodata{% elif rmet %}is-up{% else %}is-down{% endif %}"
-                      style="height: {{ item.bar_pct }}%;">
-                  {# The number is on the bar, so colour is never the only
-                     thing saying whether a region cleared the bar. #}
-                  <span class="vbar-val">{% if v is not none %}{{ fmt_pct(v) }}{% else %}&mdash;{% endif %}</span>
+              <li class="vbar-col" title="{{ item.name }}: {{ fmt_pct(v) }}">
+                {# --i staggers the grow-in, one column after another. #}
+                <span class="vbar-fill {{ 'is-up' if v >= threshold_pct else 'is-down' }}"
+                      style="height: {{ item.bar_pct }}%; --i: {{ loop.index0 }};">
+                  {# The number is on the bar, so colour is never the only thing
+                     saying whether a region cleared the target. #}
+                  <span class="vbar-val">{{ fmt_pct(v) }}</span>
                 </span>
               </li>
             {% endfor %}
           </ol>
         </div>
         <ol class="vbar-names">
-          {% for item in region_view %}<li>{{ item.name }}</li>{% endfor %}
+          {% for item in chart_view %}<li>{{ item.name }}</li>{% endfor %}
         </ol>
       </div>
     </div>
@@ -254,8 +248,7 @@
     <a href="#country-table">By country</a>
   </nav>
 
-  {# The table's own header bar names it; a section heading and an intro
-     paragraph above it said the same thing twice more. #}
+  <h2 class="section-head">Result &middot; countries meeting the target, by region</h2>
   <div class="vx-table-block" id="region-table">
     <div class="vx-table-header">
       {# The number is the threshold of the antigen actually selected, not a
@@ -263,20 +256,20 @@
          hardcoded 90 would be wrong on the default view. #}
       <span class="vx-table-title">Countries reaching the
         {{ fmt_pct(threshold_pct, 0) }} target, by region</span>
-      {# Seven rows, so this table gets a sort but no pager. Its parameter is
-         `rsort`, so sorting regions never disturbs the country table below. #}
+      {# `rsort` and `rpage`, not `sort` and `page`: this table and the country
+         table each own their query parameters, so sorting or paging one never
+         moves the other. #}
       {{ table_controls('coverage.index', table_args, 'rsort',
-                        region_sort_labels, rsort_active, anchor='#region-table') }}
+                        region_sort_labels, rsort_active, anchor='#region-table',
+                        page_key='rpage') }}
       {{ export_links('coverage.index', table_args, pdf_ok, {'table': 'region'}) }}
     </div>
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
-          {# Region | Antigen | Year | Countries met the target. The region
-             leads because it is what each row is about. This table aggregates
-             the whole selection, so Antigen and Year carry the value the
-             visitor chose rather than a per-row figure, and when they chose
-             neither they say so in words instead of sitting blank. #}
+          {# Region | Antigen | Year | Countries met the target. One row per
+             region per vaccine per year, so all four columns carry a real
+             value whatever the filter is set to. #}
           <tr>
             <th scope="col">Region</th>
             <th scope="col">Antigen</th>
@@ -286,18 +279,22 @@
           </tr>
         </thead>
         <tbody>
-          {% set a_row = antigens | selectattr('antigen','equalto',antigen) | first if antigen else none %}
           {% for item in region_view %}
             <tr>
               <th scope="row" class="vx-cell-key">{{ item.name }}</th>
-              <td{% if a_row %} title="{{ a_row.antigen_name }}"{% endif %}>{% if a_row %}{{ antigen }} &middot; {{ a_row.disease_name }}{% else %}<span class="vx-all">All antigens</span>{% endif %}</td>
-              <td class="num">{% if year %}{{ year }}{% else %}<span class="vx-all">All years</span>{% endif %}</td>
+              <td>{{ item.row.antigen }}{% if disease_of.get(item.row.antigen) %} &middot; {{ disease_of[item.row.antigen] }}{% endif %}</td>
+              <td class="num">{{ item.row.year }}</td>
               <td class="num">{{ fmt_int(item.row.n_met_threshold) }}
                 <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span></td>
             </tr>
           {% endfor %}
         </tbody>
       </table>
+    </div>
+    <div class="vx-table-foot">
+      <span class="vx-foot-count">{{ page_count(rpage, 'rows') }}</span>
+      {{ pager(rpage, 'coverage.index', table_args, page_key='rpage',
+               anchor='#region-table') }}
     </div>
     <div class="vx-table-foot vx-table-foot--jump">
       <a href="#country-table">By country &darr;</a>
@@ -307,6 +304,7 @@
   {# ---- Table 1: the countries that met their target. Five columns, the
          brief's; the birth cohort and doses-per-100 detail stay in the CSV and
          the method note rather than crowding the table. ---- #}
+  <h2 class="section-head">Result &middot; countries that met the target</h2>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">Countries reaching
