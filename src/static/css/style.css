@@ -1355,6 +1355,27 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .vbar-fill.is-up .vbar-val   { top: -1.35rem; }
 .vbar-fill.is-down .vbar-val { bottom: -1.35rem; }
+/* 2A's variant: a plain 0-100 scale instead of 3A's diverging one. Every bar
+   grows from the baseline, and .vbar-zero -- an absolutely positioned rule that
+   3A puts at its zero line -- is reused here as the herd immunity threshold.
+   Both charts therefore share one set of markup and one set of rules. */
+.vbar-chart--scale .vbar-fill { top: auto; bottom: 0; border-radius: 6px 6px 2px 2px; }
+.vbar-chart--scale .vbar-fill.is-down { border-radius: 6px 6px 2px 2px; }
+/* The threshold is a stated benchmark, not an axis: dashed and in the accent so
+   it reads as "the line to clear" rather than as part of the grid. */
+.vbar-chart--scale .vbar-zero {
+  border-top: 2px dashed var(--accent); opacity: .75;
+}
+/* Every region here sits in the high 80s or 90s, so the value labels land right
+   on the threshold rule and the two collide. A padded chip in the page colour
+   lets the number sit over the line and stay readable. */
+.vbar-chart--scale .vbar-val {
+  top: -1.45rem; bottom: auto;
+  background: var(--bg-card); padding: 0 .25rem; border-radius: 3px;
+}
+.vbar-chart--scale .vbar-fill.is-nodata { background: var(--rule); }
+.vbar-chart--scale .vbar-fill.is-nodata .vbar-val { color: var(--none-ink); }
+
 .vbar-names { list-style: none; margin: .7rem 0 0; padding: 0; display: flex; gap: .6rem; }
 .vbar-names li {
   flex: 1 0 3.6rem; min-width: 0; text-align: center;

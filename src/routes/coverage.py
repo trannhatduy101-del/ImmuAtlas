@@ -39,8 +39,9 @@ SORT_KEYS = {
 SORT_LABELS = [
     ("coverage_desc", "Percentage of target: high to low"),
     ("coverage_asc",  "Percentage of target: low to high"),
-    # Every row in this table cleared its threshold, so the only gap left to
-    # order by is the margin ABOVE it.
+    # Default view: every row cleared its threshold, so the only gap left to
+    # order by is the margin ABOVE it. GAP_LABELS_BELOW swaps these two back
+    # when the reader asks to see the countries under the bar as well.
     ("gap",           "Margin above the target: smallest first"),
     ("gap_desc",      "Margin above the target: largest first"),
     # "birth cohort" is the epidemiology term; the general-public persona reads
@@ -51,6 +52,13 @@ SORT_LABELS = [
     ("region",        "Region, then country: alphabetical"),
 ]
 DEFAULT_SORT = "coverage_desc"
+
+# With "show countries below the target too" on, the table holds rows on both
+# sides of the bar, so "margin above" is the wrong word for half of them.
+GAP_LABELS_BELOW = {
+    "gap":      "Gap to the target: furthest below",
+    "gap_desc": "Gap to the target: furthest above",
+}
 
 # The region table is seven rows, so it gets a sort of its own but no pager.
 # Its parameter is `rsort`, not `sort`: two controls sharing one name would put
@@ -140,6 +148,7 @@ def index():
             antigen=None, year=None, region=None, country=None,
             sort_active=DEFAULT_SORT, sort_labels=SORT_LABELS,
             rsort_active=DEFAULT_REGION_SORT, region_sort_labels=REGION_SORT_LABELS,
+            show_below=None, threshold_pct=None,
             summary=None, region_view=[], rows=[], threshold=None,
             conflict=None, rejected=[], fix_region=fix_region,
             page=db.paginate([], None), table_args={}, pdf_ok=False,
@@ -171,6 +180,17 @@ def index():
     if bad:
         rejected.append("country")
 
+    # A single opt-in value. Anything else is rejected rather than coerced, so a
+    # hand-typed ?show_below=maybe cannot quietly widen someone's selection.
+    # Off by default: the table then holds only the countries that met their
+    # target, which is the table the brief describes.
+    show_below, bad = db.validate(request.args.get("show_below"), {"1"})
+    if bad:
+        rejected.append("below-target filter")
+
+    sort_labels = ([(k, GAP_LABELS_BELOW.get(k, v)) for k, v in SORT_LABELS]
+                   if show_below else SORT_LABELS)
+
     sort = request.args.get("sort")
     order_by = db.safe_order_by(sort, SORT_KEYS, DEFAULT_SORT)
     sort_active = sort if sort in SORT_KEYS else DEFAULT_SORT
@@ -195,10 +215,10 @@ def index():
     params = {"antigen": antigen, "year": year,
               "region": region, "country": country,
               "threshold": threshold["threshold_pct"] if threshold else None,
-              # Table 1 lists only the countries that met their target, which is
-              # what the brief asks it to be. Pass None here to list everyone
-              # again -- the query keeps both shapes.
-              "met_only": 1}
+              # Table 1 lists only the countries that met their target, which
+              # is the table the brief describes. The checkbox passes None to
+              # list everyone again -- the query keeps both shapes.
+              "met_only": None if show_below else 1}
 
     # With no threshold there is no Met target column, and n_met_threshold is 0
     # for every region -- so offering that sort would be a control that visibly
@@ -261,7 +281,7 @@ def index():
     table_args = {
         "antigen": antigen, "year": year, "region": region, "country": country,
         "sort": sort_active, "per_page": page["size"], "rsort": rsort_active,
-        "submitted": 1,
+        "submitted": 1, "show_below": show_below,
     }
 
     # Is the selected country actually in the selected region? If not the result
@@ -296,8 +316,9 @@ def index():
         db_missing=None, submitted=True,
         antigens=antigens, years=years, regions=regions, countries=countries,
         antigen=antigen, year=year, region=region, country=country,
-        sort_active=sort_active, sort_labels=SORT_LABELS,
+        sort_active=sort_active, sort_labels=sort_labels,
         rsort_active=rsort_active, region_sort_labels=region_sort_labels,
+        show_below=show_below, threshold_pct=threshold["threshold_pct"] if threshold else None,
         summary=summary, outcome=outcome, region_view=region_view, rows=rows,
         page=page, table_args=table_args, pdf_ok=exports.pdf_available(),
         threshold=threshold, conflict=conflict, rejected=rejected,

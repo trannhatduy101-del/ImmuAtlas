@@ -62,6 +62,20 @@
         {% endfor %}
       </select>
     </div>
+    {# Off by default, so the page opens on the table the brief describes: only
+       the countries that met their target. On, it answers the other half of the
+       question -- who is still short -- which is what Grace comes here for.
+
+       "every country", not "below the target too": switching this on also
+       brings back the countries that reported no figure at all, and those are
+       not below the target, they are unknown. #}
+    <div class="field field-check">
+      <label for="f-below">
+        <input type="checkbox" id="f-below" name="show_below" value="1"
+               {% if show_below %}checked{% endif %}>
+        Show every country, not only those that met the target
+      </label>
+    </div>
     <div class="field field-actions">
       <button type="submit">Apply</button>
       <a class="reset" href="{{ url_for('coverage.index') }}">Reset</a>
@@ -188,6 +202,67 @@
     </section>
   {% endif %}
 
+  {# ---- Coverage by region. The brief asks the page to "summarise data to show
+         vaccination rates and herd immunity levels per region"; the region
+         table below carries the herd immunity half (how many countries cleared
+         the bar), and this carries the rates half. It reuses the bar-chart
+         markup and CSS 3A already owns, and the geometry the route already
+         computes for region_view -- no new query, no new component. ---- #}
+  {% if region_view %}
+    <h2 class="section-head">Result &middot; coverage by region</h2>
+    <div class="vbar-chart vbar-chart--scale">
+      <p class="vbar-cap">
+        Reported coverage for each region, averaged across its countries and
+        <strong>weighted by the birth cohort</strong> each national figure
+        applies to &mdash; so one large country does not speak for a whole
+        region.
+        {% if threshold_pct is not none %}
+          The line across the plot is the {{ fmt_pct(threshold_pct, 0) }} coverage
+          WHO says is needed to stop transmission of this disease.
+        {% else %}
+          No line is drawn: the threshold differs by disease, so there is no
+          single bar to measure every region against until one antigen is
+          chosen.
+        {% endif %}
+      </p>
+      {% if threshold_pct is not none %}
+        <div class="vbar-legend" aria-hidden="true">
+          <span class="vbar-key vbar-key--up">at or above the target</span>
+          <span class="vbar-key vbar-key--down">below the target</span>
+        </div>
+      {% endif %}
+      <div class="vbar-scroll">
+        <div class="vbar-plot">
+          {# The same absolutely-positioned rule 3A uses for its zero line,
+             placed at the threshold instead. #}
+          {% if threshold_pct is not none %}
+            <div class="vbar-zero" style="bottom: {{ [threshold_pct, 100]|min }}%"></div>
+          {% endif %}
+          <ol class="vbar-cols">
+            {% for item in region_view %}
+              {% set v = item.row.avg_weighted %}
+              {% set rmet = threshold_pct is not none and v is not none and v >= threshold_pct %}
+              <li class="vbar-col"
+                  title="{{ item.name }}: {% if v is not none %}{{ fmt_pct(v) }}{% else %}no data{% endif %}">
+                {# A region with no figure is neither above nor below: painting
+                   it "below" would assert a measurement nobody made. #}
+                <span class="vbar-fill {% if v is none %}is-nodata{% elif rmet or threshold_pct is none %}is-up{% else %}is-down{% endif %}"
+                      style="height: {{ item.bar_pct }}%;">
+                  {# The number is on the bar, so colour is never the only
+                     thing saying whether a region cleared the bar. #}
+                  <span class="vbar-val">{% if v is not none %}{{ fmt_pct(v) }}{% else %}&mdash;{% endif %}</span>
+                </span>
+              </li>
+            {% endfor %}
+          </ol>
+        </div>
+        <ol class="vbar-names">
+          {% for item in region_view %}<li>{{ item.name }}</li>{% endfor %}
+        </ol>
+      </div>
+    </div>
+  {% endif %}
+
   {# ---- Table 1: by region ---- #}
   {# Usability testing: "table is too long and navigate between tables are
      difficult". The two anchors already existed for the sort forms to return
@@ -294,6 +369,10 @@
             <th scope="col">Region</th>
             <th scope="col" class="num">Percentage of target
               <span class="th-sub">doses &divide; target birth cohort</span></th>
+            {# Only with the countries below the bar in view. Without them every
+               row has the same status, and a column of one repeated word is
+               noise. #}
+            {% if show_below %}<th scope="col">Status</th>{% endif %}
           </tr>
         </thead>
         <tbody>
@@ -302,7 +381,7 @@
              so beats an empty tbody, which reads as something broken. #}
           {% if not page.rows %}
             <tr>
-              <td colspan="5" class="vx-empty-row">
+              <td colspan="{{ 6 if show_below else 5 }}" class="vx-empty-row">
                 No country in this selection reached
                 {% if threshold and threshold.threshold_pct is not none %}the
                   {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}its target{% endif %}.
@@ -329,15 +408,28 @@
                 {% endif %}
               </th>
               <td>{{ fix_region(r.region_name) }}</td>
-              {# Always a real figure and always at or above the threshold: the
-                 query only returns rows that met it, and a country with no
-                 figure cannot have met anything. #}
+              {# With the filter on (the default) this is always a real figure
+                 at or above the threshold, because the query returns nothing
+                 else. With it off the table also holds countries that fell
+                 short and countries that reported nothing at all. #}
+              {% set cmet = r.gap_to_threshold is not none and r.gap_to_threshold >= 0 %}
               <td class="num">
-                <span class="cov-cell">
-                  <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
-                  <span class="cov-bar is-met"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
-                </span>
+                {% if r.coverage_reported is not none %}
+                  <span class="cov-cell">
+                    <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
+                    <span class="cov-bar {{ 'is-met' if cmet else 'is-below' }}"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
+                  </span>
+                {% else %}&mdash;{% endif %}
               </td>
+              {% if show_below %}
+                <td>
+                  {% if r.gap_to_threshold is not none %}
+                    <span class="vx-pill vx-pill--{{ 'up' if cmet else 'down' }}">{{ r.herd_immunity_status }}</span>
+                  {% else %}
+                    <span class="vx-pill vx-pill--none">{{ r.herd_immunity_status }}</span>
+                  {% endif %}
+                </td>
+              {% endif %}
             </tr>
           {% endfor %}
         </tbody>
