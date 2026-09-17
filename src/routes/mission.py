@@ -6,13 +6,41 @@ the full persona model (persona + its five child tables) instead of the
 Python constant that used to hold the copy.
 """
 
+import glob
+import os
 from collections import defaultdict
 
 from flask import Blueprint, render_template
 
+import config
 import db
 
 bp = Blueprint("mission", __name__)
+
+# Which photo belongs to whom. A path on disk, not a database column: the brief
+# requires the NAMES and STUDENT NUMBERS to come from the database, and they do
+# -- a photograph is an asset like the persona portraits beside it. Keeping it
+# out of the schema also means a teammate whose immuatlas.db predates this
+# change still sees the photos, instead of silently missing a column.
+TEAM_PHOTOS = {
+    "s4160446": "duy-photo",
+    "s4138996": "huy-photo",
+}
+
+
+def team_photo(student_number):
+    """static/ path of this member's photo, or None if the file is not there.
+
+    Matched by stem rather than by full filename so the image can be dropped in
+    as .webp, .jpg or .png without touching this file, and a missing photo
+    falls back to the text-only card instead of a broken image icon.
+    """
+    stem = TEAM_PHOTOS.get(student_number)
+    if not stem:
+        return None
+    pattern = os.path.join(config.BASE_DIR, "static", "img", stem + ".*")
+    found = sorted(glob.glob(pattern))
+    return "img/" + os.path.basename(found[0]) if found else None
 
 ATTRIBUTE_CATEGORIES = ("personality", "profile", "source_used",
                         "trust_criterion", "motivation")
@@ -82,6 +110,6 @@ def index():
     return render_template(
         "pages/1b_mission.html",
         db_missing=None,
-        team_members=team_members,
+        team_members=team_members, team_photo=team_photo,
         personas=personas,
     )

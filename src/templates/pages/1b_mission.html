@@ -245,9 +245,18 @@
           {# Never print a fake student number as though it were real. #}
           <p class="todo">Sub-Task {{ member['sub_task'] }}: name and student number not filled in yet</p>
         {% else %}
-          <h3>{{ member['full_name'] }}</h3>
-          <p class="team-id">{{ member['student_number'] }} &middot; Sub-Task {{ member['sub_task'] }}</p>
-          {% if member['responsibility'] %}<p>{{ member['responsibility'] }}</p>{% endif %}
+          {% set photo = team_photo(member['student_number']) %}
+          {% if photo %}
+            {# Decorative: the name is right beside it, so an alt text repeating
+               the name would just be read out twice by a screen reader. #}
+            <img class="team-photo" src="{{ url_for('static', filename=photo) }}"
+                 alt="" width="96" height="120" loading="lazy">
+          {% endif %}
+          <div class="team-text">
+            <h3>{{ member['full_name'] }}</h3>
+            <p class="team-id">{{ member['student_number'] }} &middot; Sub-Task {{ member['sub_task'] }}</p>
+            {% if member['responsibility'] %}<p>{{ member['responsibility'] }}</p>{% endif %}
+          </div>
         {% endif %}
       </div>
     {% endfor %}

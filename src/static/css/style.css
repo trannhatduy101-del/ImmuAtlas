@@ -626,7 +626,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 1.2rem;
-  max-width: 44rem;
+  max-width: 40rem;
   /* Capped width AND centred. Without the auto margin the box keeps its 44rem
      cap but sits flush left in the 68rem wrap, which reads as a layout bug on
      every page that shows a prompt or an empty result. */
@@ -1154,7 +1154,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 0;
   display: grid;
   gap: .85rem;
-  max-width: 60rem;
+  /* Narrow enough that the paragraph inside fills its card. At 60rem the text
+     stopped at its own 62ch measure and left a third of every card empty on
+     the right, so justified text sat in a box two-thirds too wide for it. The
+     card now ends where the line ends. */
+  max-width: 40rem;
 }
 .guide-steps > li {
   counter-increment: guide-step;
@@ -1187,7 +1191,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   margin: 0;
   color: var(--ink-muted);
   font-size: .92rem;
-  max-width: 62ch;
+  /* No measure cap of its own: the list above is the measure now, so the
+     paragraph runs to both edges of the card it sits in. */
 }
 /* Narrow screens: the number moves above the step rather than squeezing the
    text into a column too thin to read. */
@@ -1347,6 +1352,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .team-member {
   border: 1px solid var(--rule); border-radius: var(--radius-md); background: var(--bg-card);
   padding: 1.1rem 1.2rem; box-shadow: var(--shadow-md);
+  display: flex; align-items: flex-start; gap: 1rem;
+}
+.team-text { min-width: 0; }
+/* Fixed box with object-fit, so two photographs shot at different crops still
+   line up as a pair. 4:5 is the passport-style ratio both were taken at. */
+.team-photo {
+  flex: 0 0 auto; width: 96px; height: 120px;
+  object-fit: cover; object-position: center top;
+  border-radius: var(--radius-md); background: var(--bg-sunk);
+}
+@media (max-width: 30rem) {
+  .team-member { flex-direction: column; align-items: center; text-align: center; }
 }
 .team-member h3 { font-size: 1rem; margin: 0 0 .2rem; color: var(--accent); }
 .team-member p { margin: .15rem 0; font-size: .9rem; color: var(--ink-muted); }
