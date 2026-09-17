@@ -77,6 +77,23 @@
 
   <main id="main" class="wrap">
     {% block main %}{% endblock %}
+
+    {# ---- Where to read next. The trail is declared once in routes/__init__.py
+           (NEXT_STEP) and rendered here, so the four data pages carry it
+           without any of them knowing about it. 1A and 1B are not in the
+           table: 1A closes with a grid of every page, 1B with its guide. ---- #}
+    {% if next_step %}
+      <a class="next-step" href="{{ url_for(next_step.endpoint) }}">
+        <span class="next-step-kicker">Next</span>
+        <span class="next-step-body">
+          <span class="next-step-title">{{ next_step.code }} &middot; {{ next_step.label }}</span>
+          <span class="next-step-blurb">{{ next_step.blurb }}</span>
+        </span>
+        {# Decorative: the link already reads as a link, and a screen reader
+           announcing "right arrow" after the title adds nothing. #}
+        <span class="next-step-go" aria-hidden="true">&rarr;</span>
+      </a>
+    {% endif %}
   </main>
 
   {# ---- Footer. Identical on all six pages. ---- #}

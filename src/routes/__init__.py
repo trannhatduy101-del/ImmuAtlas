@@ -45,3 +45,22 @@ ALL_PAGES = [
     ("improvement.index",   "Biggest improvement",     "3A", "Sub-Task A", True),
     ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", True),
 ]
+
+
+# The card that closes each data page: where to read next, in the same order as
+# ALL_PAGES above, so the trail is declared in one place rather than hard-coded
+# into four templates. 1A already closes with a grid of every page and 1B with
+# its step-by-step guide, so the trail starts at 2A. 3B is the last page, so it
+# points back to the start instead of leaving the reader at a dead end.
+#
+# current endpoint -> (next endpoint, sub-task code, label, one line)
+NEXT_STEP = {
+    "coverage.index": ("infections.index", "2B", "Infections by economic status",
+                       "The other half of the picture: who is still getting sick."),
+    "infections.index": ("improvement.index", "3A", "Biggest improvement",
+                         "Pick two years and rank who gained the most coverage."),
+    "improvement.index": ("above_average.index", "3B", "Above the global rate",
+                          "Countries reporting more cases per 100,000 than the world."),
+    "above_average.index": ("landing.index", "1A", "Home",
+                            "That is the whole tour. Back to the headline figures."),
+}

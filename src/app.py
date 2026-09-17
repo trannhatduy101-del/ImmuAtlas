@@ -104,9 +104,15 @@ def create_app():
         in routes/__init__.py rather than an edit in three files.
         """
         from flask import request
-        from routes import PRIMARY_NAV, ALL_PAGES
+        from routes import PRIMARY_NAV, ALL_PAGES, NEXT_STEP
 
         current = next((n for n in ALL_PAGES if n[0] == request.endpoint), None)
+
+        # A dict rather than the raw tuple, so base.html reads
+        # next_step.label instead of next_step[2].
+        step = NEXT_STEP.get(request.endpoint)
+        next_step = (dict(zip(("endpoint", "code", "label", "blurb"), step))
+                     if step else None)
 
         # The footer citation comes from research_source, not from a constant.
         # config.SOURCE_NAME is only the fallback for the state where there is
@@ -126,6 +132,7 @@ def create_app():
         return {
             "primary_nav": PRIMARY_NAV,
             "all_pages": ALL_PAGES,
+            "next_step": next_step,
             "sources": sources,
             "team": team,
             "social_links": config.SOCIAL_LINKS,

@@ -797,6 +797,49 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* Method note ------------------------------------------------------------- */
 
+/* ---------------------------------------------------------------------------
+   "Read next" card, closing every data page. The whole card is one <a>, so the
+   hit area is the full box and the keyboard gets a single tab stop -- a title
+   link plus a separate arrow link would be two stops to the same place.
+   --------------------------------------------------------------------------- */
+.next-step {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 2rem 0 0;
+  padding: 1rem 1.2rem;
+  background: var(--bg-card);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: var(--ink);
+  transition: border-color .15s var(--ease-out), box-shadow .15s var(--ease-out);
+}
+.next-step:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
+.next-step-kicker {
+  flex: none;
+  font-size: .68rem; font-weight: 800; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--accent-ink); background: var(--accent);
+  padding: .2rem .5rem; border-radius: 999px;
+}
+.next-step-body { min-width: 0; }
+.next-step-title { display: block; font-weight: 700; color: var(--accent); }
+.next-step-blurb {
+  display: block; margin-top: .1rem;
+  font-size: .9rem; color: var(--ink-muted);
+  /* Left-aligned on purpose: the page justifies its body copy, but a single
+     short line stretched to both edges opens rivers between the words. */
+  text-align: left;
+}
+.next-step-go {
+  margin-left: auto; flex: none;
+  font-size: 1.2rem; color: var(--accent);
+  transition: transform .15s var(--ease-out);
+}
+.next-step:hover .next-step-go { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .next-step, .next-step-go { transition: none; }
+  .next-step:hover .next-step-go { transform: none; }
+}
+
 .method-note {
   margin-top: 2rem;
   /* Hairline box only. Dropped the thick accent left-stripe so this note does
