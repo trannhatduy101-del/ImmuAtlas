@@ -194,7 +194,8 @@
       <p class="vbar-cap">
         Average reported coverage in each region, lowest first. Regions at or
         above the {{ fmt_pct(threshold_pct, 0) }} target are blue. The nine
-        territories with no region of their own are listed in the table below
+        territories with no region of their own are not a region, so they are
+        counted on the &ldquo;Not classified&rdquo; row of the regional table
         rather than charted here.
       </p>
       <div class="vbar-scroll">
@@ -323,8 +324,10 @@
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
             <th scope="col">Region</th>
-            <th scope="col" class="num">Percentage of target
-              <span class="th-sub">doses &divide; target birth cohort</span></th>
+            {# No formula in the header: "doses / target birth cohort" is four
+               words of arithmetic in a space that has room for a label. The
+               method note under the table spells it out properly. #}
+            <th scope="col" class="num">Percentage of target</th>
           </tr>
         </thead>
         <tbody>

@@ -33,6 +33,11 @@ SELECT
     cs.country_id,
     cs.country_name,
     cs.region_name,
+    -- On the table since :antigen became optional. With "all antigens" a
+    -- country has one row per vaccine, and without this column those rows are
+    -- the same name repeated with different numbers beside it.
+    cs.antigen,
+    cs.antigen_name,
     RANK() OVER (
         ORDER BY ROUND(ce.coverage_reported - cs.coverage_reported, 2) DESC
     )                                                       AS improvement_rank,
@@ -66,22 +71,14 @@ LEFT JOIN v_infection ief
       ON ief.country_id = cs.country_id
      AND ief.inf_type   = cs.inf_type
      AND ief.year       = :end_year
-WHERE cs.antigen = :antigen
+-- :antigen NULL ranks every vaccine at once, one row per country per antigen.
+-- The rank then belongs to a country-and-vaccine pair, which is what the
+-- antigen column on the table says.
+WHERE (:antigen IS NULL OR cs.antigen   = :antigen)
+  AND (:region  IS NULL OR cs.region_id = :region)
   AND cs.year    = :start_year
   AND cs.coverage_reported IS NOT NULL
   AND ce.coverage_reported IS NOT NULL
-  -- Optional narrowing: keep only the countries that were still BELOW the herd
-  -- immunity threshold in the start year, which turns the page from "who gained
-  -- most" into "of the countries that had furthest to go, who gained most".
-  --
-  -- EXISTS against v_herd_immunity, so the threshold comparison is done by that
-  -- view and its result is what selects the sub-dataset here -- one query's
-  -- output choosing the rows of another, rather than a second copy of the
-  -- threshold logic living in this file.
-  --
-  -- NULL means "no narrowing", so the default ranking is untouched: the filter
-  -- can only ever remove rows the reader asked to remove.
-  --
   -- The table's search box. Bound, never spliced, so a reader typing % or _ is
   -- searching for those characters rather than writing a pattern of their own.
   -- SQLite's LIKE is case-insensitive for ASCII, so "viet" finds "Viet Nam"

@@ -36,6 +36,9 @@ SORT_KEYS = {
     # Sorts on the case rate the table actually SHOWS at the end year. Every
     # other case key orders by the change, which answers a different question.
     "cases_now":  "cases_end IS NULL, cases_end DESC,             country_name ASC",
+    # A column on the table since :antigen became optional.
+    "antigen":    "antigen ASC,  coverage_change DESC, country_name ASC",
+    "antigen_desc": "antigen DESC, coverage_change DESC, country_name ASC",
     "country":    "country_name ASC",
     "country_desc": "country_name DESC",
 }
@@ -49,6 +52,8 @@ SORT_LABELS = [
     ("cases_fell", "Case change: biggest fall"),
     ("cases_rose", "Case change: biggest rise"),
     ("cases_now",  "End case rate: high → low"),
+    ("antigen",    "Antigen: A – Z"),
+    ("antigen_desc", "Antigen: Z – A"),
     ("country",    "Country: A – Z"),
     ("country_desc", "Country: Z – A"),
 ]
@@ -70,6 +75,7 @@ CHART_BARS = 10
 COLUMNS = [
     ("Rank", "improvement_rank", db.fmt_int),
     ("Country", "country_name", str),
+    ("Antigen", "antigen_name", str),
     ("Region", "region_name", str),
     ("Coverage start %", "coverage_start", db.fmt_num),
     ("Coverage end %", "coverage_end", db.fmt_num),
@@ -86,7 +92,7 @@ COLUMNS = [
 ]
 
 
-def _rows_for(antigen, start_year, end_year, order_by, q=None):
+def _rows_for(antigen, start_year, end_year, order_by, region=None, q=None):
     """Run the ranked improvement query. `order_by` is a trusted SORT_KEYS
     fragment; every value the user supplied is a bound parameter.
 
@@ -100,11 +106,11 @@ def _rows_for(antigen, start_year, end_year, order_by, q=None):
     base = db.load_query("coverage_improvement")
     sql = "SELECT * FROM (" + base + ") ORDER BY " + order_by
     params = {"antigen": antigen, "start_year": start_year,
-              "end_year": end_year, "q": q}
+              "end_year": end_year, "region": region, "q": q}
     return db.query(sql, params)
 
 
-def _summary_for(antigen, start_year, end_year, q=None):
+def _summary_for(antigen, start_year, end_year, region=None, q=None):
     """Headline figures for the KPI row, aggregated in SQL over the eligible
     pool (never in Python): average and largest coverage gain, and how many
     countries also saw their reported case rate fall."""
@@ -117,7 +123,7 @@ def _summary_for(antigen, start_year, end_year, q=None):
     # Same parameters as the table: a headline computed over a different pool
     # from the rows underneath it is worse than no headline.
     return db.query_one(sql, {"antigen": antigen, "start_year": start_year,
-                              "end_year": end_year, "q": q})
+                              "end_year": end_year, "region": region, "q": q})
 
 
 def _gain_bars(rows):
@@ -189,7 +195,14 @@ def globe_paths(rows):
     its outline but takes the no-data grey, because leaving it off the map
     entirely would punch a hole in the world.
     """
-    coverage = {r["country_id"]: r["coverage_end"] for r in rows}
+    # Averaged per country, because with "all antigens" a country has one row
+    # per vaccine. A dict comprehension would have kept whichever row SQL
+    # happened to return last -- a colour chosen by accident.
+    ends = {}
+    for r in rows:
+        if r["coverage_end"] is not None:
+            ends.setdefault(r["country_id"], []).append(r["coverage_end"])
+    coverage = {iso: sum(v) / len(v) for iso, v in ends.items()}
     shapes = []
     for iso in sorted(worldmap.PATHS):
         value = coverage.get(iso)
@@ -209,11 +222,13 @@ def index():
     try:
         antigens = db.query(db.load_query("filter_antigens"))
         years = db.query(db.load_query("filter_years"))
+        regions = db.query(db.load_query("filter_regions"))
     except db.DatabaseMissing as exc:
         return render_template("pages/3a_improvement.html", db_missing=str(exc)), 503
 
     valid_antigens = {a["antigen"] for a in antigens}
     valid_years = {y["year"] for y in years}
+    valid_regions = {r["region_id"] for r in regions}
 
     # The dropdowns land pre-filled with a sensible default period, but nothing
     # is ranked until the visitor presses Rank (the form carries submitted=1).
@@ -225,13 +240,20 @@ def index():
 
     rejected = []
 
-    # Antigen and the two years are REQUIRED: the page leaves them unset so the
-    # visitor chooses them (the form marks them with a red * and HTML `required`).
-    # No silent default is filled in, so a ranking never appears for a period the
-    # visitor did not actually pick.
+    # Only the two years are REQUIRED. A ranking has to be of SOMETHING over a
+    # period, and there is no sensible default period to invent -- but "which
+    # vaccine" and "which part of the world" both have an honest all-inclusive
+    # answer, so both default to it rather than blocking the form.
     antigen, bad = db.validate(request.args.get("antigen"), valid_antigens)
     if bad:
         rejected.append("antigen")
+
+    # RegionID is a code like "TEA", not a number. Casting to int here
+    # threw on every real value, so the filter reported itself ignored and
+    # the selection silently stayed wide.
+    region, bad = db.validate(request.args.get("region"), valid_regions)
+    if bad:
+        rejected.append("region")
 
     start_year, bad = db.validate(request.args.get("start"), valid_years, int)
     if bad:
@@ -281,15 +303,18 @@ def index():
     # current selection. It holds validated values only -- never request.args,
     # which would round-trip a value the page just reported as rejected.
     table_args = {
-        "antigen": antigen, "start": start_year, "end": end_year,
+        "antigen": antigen, "region": region,
+        "start": start_year, "end": end_year,
         "n": count, "sort": sort_active, "submitted": 1, "q": query_text,
     }
 
     ctx = dict(
         db_missing=None,
-        antigens=antigens, years=years, end_years=end_years,
+        antigens=antigens, years=years, end_years=end_years, regions=regions,
         antigen=antigen, antigen_name=name_for.get(antigen),
-        disease_name=disease_for.get(antigen),
+        disease_name=disease_for.get(antigen), region=region,
+        region_name=next((r["region_name"] for r in regions
+                          if r["region_id"] == region), None),
         start_year=start_year, end_year=end_year,
         count=count, count_options=COUNT_OPTIONS,
         sort_active=sort_active, sort_labels=SORT_LABELS,
@@ -308,7 +333,7 @@ def index():
     # A required field left unchosen means the visitor hasn't really submitted a
     # selection yet -> show the "pick your fields" prompt rather than an empty
     # result that looks like a data gap.
-    missing_required = antigen is None or start_year is None or end_year is None
+    missing_required = start_year is None or end_year is None
     if not submitted or missing_required:
         ctx["submitted"] = False
         return render_template("pages/3a_improvement.html", **ctx)
@@ -316,16 +341,17 @@ def index():
         return render_template("pages/3a_improvement.html", **ctx)
 
     # The whole eligible pool, ordered by the reader's chosen sort.
-    rows = _rows_for(antigen, start_year, end_year, order_by, query_text)
+    rows = _rows_for(antigen, start_year, end_year, order_by, region, query_text)
     ctx["rows"] = rows
 
     # An export is the full pool, never the page on screen -- the old version
     # could only ever hand over the top N.
     response = exports.send(
         request.args.get("format"),
-        "improvement_%s_%s-%s" % (antigen, start_year, end_year),
+        "improvement_%s_%s-%s" % (antigen or "all", start_year, end_year),
         "Biggest improvement in coverage",
-        "%s - %s to %s" % (name_for.get(antigen, antigen), start_year, end_year),
+        "%s - %s to %s" % (name_for.get(antigen, "all antigens"),
+                           start_year, end_year),
         COLUMNS, rows,
     )
     if response is not None:
@@ -347,7 +373,7 @@ def index():
 
     ctx["page"] = page
     ctx["eligible"] = page["total"]
-    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year,
+    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year, region,
                                       query_text)
 
     # The single biggest gainer, for the KPI row, regardless of the table sort.
@@ -363,7 +389,7 @@ def index():
     # ranking, and a search box narrowing the table should not silently redraw
     # what "the top ten" means.
     top_rows = _rows_for(antigen, start_year, end_year,
-                         SORT_KEYS["gain_desc"])[:CHART_BARS]
+                         SORT_KEYS["gain_desc"], region)[:CHART_BARS]
     ctx["bars"] = _gain_bars(top_rows)
     ctx["globe"] = globe_paths(rows)
     ctx["chart_n"] = len(top_rows)

@@ -20,17 +20,21 @@
 {% else %}
 
 {# ---- Filters. GET, so the ranking lives in the URL and can be shared. ---- #}
-<h2 class="section-head">Choose a period and an antigen</h2>
+<h2 class="section-head">Choose a period</h2>
 <form class="filters" method="get" action="{{ url_for('improvement.index') }}">
   {# Marks the request as a real submission, so a fresh visit shows the prompt
      rather than a pre-run ranking. #}
   <input type="hidden" name="submitted" value="1">
   {# All controls on one line, like a search bar. #}
   <div class="filter-bar">
+    {# Not required, and not defaulted to one vaccine either: "all antigens"
+       ranks every country-and-vaccine pair, which the antigen column on the
+       table spells out. Only the two years have no honest all-inclusive
+       answer, so only they carry `required`. #}
     <div class="field">
-      <label for="f-antigen">Antigen <span class="req" aria-hidden="true">*</span></label>
-      <select id="f-antigen" name="antigen" required>
-        <option value="">Select an antigen</option>
+      <label for="f-antigen">Antigen</label>
+      <select id="f-antigen" name="antigen">
+        <option value="">All antigens</option>
         {% for a in antigens %}
           <option value="{{ a.antigen }}" {% if a.antigen == antigen %}selected{% endif %}>{{ a.antigen_name }}</option>
         {% endfor %}
@@ -64,6 +68,15 @@
         {% endif %}
       </select>
     </div>
+    <div class="field">
+      <label for="f-region">Region</label>
+      <select id="f-region" name="region">
+        <option value="">All regions</option>
+        {% for r in regions %}
+          <option value="{{ r.region_id }}" {% if r.region_id == region %}selected{% endif %}>{{ r.region_name }}</option>
+        {% endfor %}
+      </select>
+    </div>
     <div class="field field-actions">
       <button type="submit">Rank</button>
       <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
@@ -81,11 +94,16 @@
 {% if not submitted %}
   <div class="empty-state prompt-state">
     <h2>Set a period, then rank</h2>
-    <p>Choose an antigen and a start and end year above, pick how many countries
-       to rank, then press <strong>Rank</strong>. The comparison chart and the
-       ranking table appear here.</p>
+    <p>Choose a start and end year above, then press <strong>Rank</strong>.
+       Narrow to one antigen or one region if you want to; both cover everything
+       by default. The comparison chart and the ranking table appear here.</p>
   </div>
 {% else %}
+
+{# With one antigen a row is a country. With all of them a country has a row per
+   vaccine, so calling the count "countries" would overstate it. #}
+{% set unit = 'countries' if antigen else 'country–vaccine pairs' %}
+{% set vaccine = antigen_name or 'any vaccine' %}
 
 {% if rejected %}
   <div class="rejected-note" role="status">
@@ -105,21 +123,30 @@
   </div>
 {% elif rows | length == 0 %}
   <div class="empty-state">
-    <h2>No country reported this antigen in both years</h2>
-    <p>Nothing can be ranked: no country has a reported {{ antigen_name }} figure
-       in both {{ start_year }} and {{ end_year }}. Try a different antigen or a
-       later start year.</p>
+    <h2>Nothing to rank for this period</h2>
+    <p>No country reported {{ vaccine }} in both {{ start_year }} and
+       {{ end_year }}{% if region_name %} in {{ region_name }}{% endif %}.
+       Try a wider selection or a later start year.</p>
   </div>
 {% else %}
 
   <p class="selection-line">
     Showing <strong>{{ page.first }}&ndash;{{ page.last }}</strong> of
-    <strong>{{ fmt_int(eligible) }}</strong> countries that reported
-    {{ antigen_name }} in both {{ start_year }} and {{ end_year }}, ranked by
+    <strong>{{ fmt_int(eligible) }}</strong> {{ unit }} that reported
+    {{ vaccine }} in both {{ start_year }} and {{ end_year }}{% if region_name %}
+    in {{ region_name }}{% endif %}, ranked by
     {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
     Every ranked country is reachable through the pages below, and a download
     contains all {{ fmt_int(eligible) }} of them.
   </p>
+
+  {% if region_name %}
+    {# RANK() is a window function, so it runs after the region filter: these
+       ranks number this region, not the world. Left unsaid, a reader who knows
+       who leads globally would think the numbers were broken. #}
+    <p class="filter-note"><strong>#1</strong> is the biggest gain within
+      {{ region_name }} rather than across every region.</p>
+  {% endif %}
 
   {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
          so the two Sub-Task A result pages read as one product. The biggest
@@ -129,8 +156,10 @@
   {% if imp_summary and top_gainer %}
     <section class="outcome-verdict">
       <p class="ov-context">
-        {{ antigen_name }} &middot; {{ start_year }}&ndash;{{ end_year }} &middot;
-{{ fmt_int(eligible) }} ranked countries
+        {{ antigen_name or 'All antigens' }} &middot;
+        {{ region_name or 'All regions' }} &middot;
+        {{ start_year }}&ndash;{{ end_year }} &middot;
+        {{ fmt_int(eligible) }} ranked
       </p>
       <div class="ov-main">
         <span class="ov-fig">{{ '%+.1f'|format(top_gainer.coverage_change) }}</span>
@@ -148,7 +177,7 @@
           </p>
         </div>
       </div>
-      <p class="ov-note">Calculated against the children each country aimed to reach. Only countries that reported {{ antigen_name }} in both years are ranked.</p>
+      <p class="ov-note">Calculated against the children each country aimed to reach. Only countries that reported {{ vaccine }} in both years are ranked.</p>
     </section>
   {% endif %}
 
@@ -182,7 +211,7 @@
         <strong>Reported coverage in {{ end_year }}</strong>, not the change
         above it. Blue is at or above the {{ fmt_pct(globe_target, 0) }} target,
         orange is below, grey is a country with no figure for
-        {{ antigen_name }} in both years. The sphere is a flat map wrapped on a
+        {{ vaccine }} in both years. The sphere is a flat map wrapped on a
         circle, so it distorts towards the edges; the table below carries the
         figures.
         <span class="citation">Outlines: {{ globe_credit }}</span>
@@ -198,7 +227,7 @@
   <div class="vbar-chart">
     <p class="vbar-cap">
       The <strong>{{ chart_n }} largest risers</strong> among
-      {{ fmt_int(eligible) }} ranked countries, <strong>{{ start_year }}</strong>
+      {{ fmt_int(eligible) }} ranked {{ unit }}, <strong>{{ start_year }}</strong>
       to <strong>{{ end_year }}</strong>. Bars above the line rose and those
       below it fell. The outlined column leads the ranking. Sorting the table
       does not change this selection.
@@ -214,7 +243,7 @@
         <ol class="vbar-cols">
           {% for b in bars.bars %}
             <li class="vbar-col"
-                title="{{ b.row.country_name }}: {{ '%+.1f'|format(b.row.coverage_change) }} percentage points">
+                title="{{ b.row.country_name }} {{ b.row.antigen }}: {{ '%+.1f'|format(b.row.coverage_change) }} percentage points">
               <span class="vbar-fill {{ 'is-up' if b.up else 'is-down' }}{{ ' is-top' if b.is_top }}"
                     style="top: {{ b.top_pct }}%; height: {{ b.height_pct }}%;">
                 <span class="vbar-val">{{ '%+.1f'|format(b.row.coverage_change) }}</span>
@@ -224,7 +253,9 @@
         </ol>
       </div>
       <ol class="vbar-names">
-        {% for b in bars.bars %}<li>{{ b.row.country_name }}</li>{% endfor %}
+        {# The vaccine code goes under the name when every antigen is in play,
+           or two bars read as the same country twice. #}
+        {% for b in bars.bars %}<li>{{ b.row.country_name }}{% if not antigen %}<span class="vbar-name-sub">{{ b.row.antigen }}</span>{% endif %}</li>{% endfor %}
       </ol>
     </div>
   </div>
@@ -249,6 +280,7 @@
           <tr>
             <th scope="col" class="num">#</th>
             <th scope="col">Country</th>
+            <th scope="col">Antigen</th>
             {# The brief's own example for this task: country, the increase,
                the start year, the end year. The raw start and end coverage
                figures left the table with it -- they are the pair that printed
@@ -271,6 +303,7 @@
                 <span class="vx-key-name">{{ r.country_name }}</span>
                 <span class="vx-sub">{{ r.region_name }}</span>
               </th>
+              <td title="{{ r.antigen_name }}">{{ r.antigen }}</td>
               <td class="num">
                 <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}%</span>
               </td>
@@ -303,7 +336,7 @@
     </div>
     <div class="vx-table-foot">
       <span class="vx-foot-count">
-        {{ page_count(page, 'countries') }}
+        {{ page_count(page, unit) }}
       </span>
       {{ pager(page, 'improvement.index', table_args, anchor='#rank-table') }}
     </div>
@@ -317,7 +350,7 @@
       <dt>Coverage</dt>
       <dd>
         The share of its target group a country reached with
-        {{ antigen_name }}, as reported to WHO. The change is the end year
+        {{ vaccine }}, as reported to WHO. The change is the end year
         figure minus the start year figure, measured in percentage points.
       </dd>
       <dt>Who is ranked</dt>
@@ -345,7 +378,8 @@
       <dt>Did cases actually fall?</dt>
       <dd>
         The final column draws on a <strong>separate dataset</strong>: reported
-        {{ disease_name }} cases per 100,000 people across the same years.
+        {{ disease_name or "the matching disease's" }} cases per 100,000 people
+        across the same years.
         Coverage and case rates can rise together. Reported case numbers also
         reflect how actively a country looks for cases, so they are best read as
         an indication rather than a conclusion.

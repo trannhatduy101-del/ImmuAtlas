@@ -609,7 +609,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Empty states ------------------------------------------------------------ */
 
 .empty-state {
-  background: var(--bg-sunk);
+  /* White, not --bg-sunk: sunk is within a few percent of the page background,
+     so the box had a border and nothing else -- on a page that is mostly empty
+     while it waits for a selection, that reads as a stray outline rather than
+     the one thing the reader is meant to act on. */
+  background: var(--bg-card);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   padding: 1.2rem;
@@ -1376,7 +1380,14 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--bg-card); border: 1px solid var(--rule); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
-.vbar-cap { margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted); max-width: 72ch; }
+/* Centred on the plot it introduces, and narrower than 72ch so it breaks into
+   even lines instead of one long measure pinned to the left edge of a centred
+   chart. text-align also takes it out of the global justify rule, which is
+   written with :where() and so loses to any class. */
+.vbar-cap {
+  margin: 0 auto .8rem; font-size: .9rem; color: var(--ink-muted);
+  max-width: 60ch; text-align: center;
+}
 .vbar-legend { display: flex; gap: 1.2rem; margin: 0 0 1rem; font-size: .78rem; color: var(--ink-muted); }
 .vbar-key { display: inline-flex; align-items: center; gap: .4rem; }
 .vbar-key::before { content: ""; width: .9rem; height: .6rem; border-radius: 2px; }
@@ -1466,6 +1477,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vbar-names li {
   flex: 1 0 3.6rem; min-width: 0; text-align: center;
   font-size: .76rem; color: var(--ink-muted); overflow-wrap: anywhere;
+}
+/* The vaccine code under the country name, shown only when the ranking covers
+   every antigen and two bars can otherwise carry the same label. */
+.vbar-name-sub {
+  display: block; font-size: .68rem; letter-spacing: .02em;
+  color: var(--ink-faint, var(--ink-muted)); opacity: .8;
 }
 
 /* Per-table sort / rows-per-page, sitting in the table's own gradient header so

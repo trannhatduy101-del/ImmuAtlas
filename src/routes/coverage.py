@@ -233,7 +233,10 @@ def index():
     if bad:
         rejected.append("year")
 
-    region, bad = db.validate(request.args.get("region"), valid_regions, int)
+    # RegionID is a code like "TEA", not a number. Casting to int here
+    # threw on every real value, so the filter reported itself ignored and
+    # the selection silently stayed wide.
+    region, bad = db.validate(request.args.get("region"), valid_regions)
     if bad:
         rejected.append("region")
     country, bad = db.validate(request.args.get("country"), valid_countries)
