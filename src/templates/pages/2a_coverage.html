@@ -266,8 +266,8 @@
      scroll. #}
   <nav class="table-jump" aria-label="Result tables">
     <span>Jump to</span>
-    <a href="#region-table">Region table</a>
-    <a href="#country-table">Country table</a>
+    <a href="#region-table">By region</a>
+    <a href="#country-table">By country</a>
   </nav>
 
   <h2 class="section-head">Result &middot; countries meeting the target, by region</h2>
@@ -278,7 +278,12 @@
   {% set has_t = threshold and threshold.threshold_pct is not none %}
   <div class="vx-table-block" id="region-table">
     <div class="vx-table-header">
-      <span class="vx-table-title">Region table</span>
+      {# The number is the threshold of the antigen actually selected, not a
+         fixed 90: WHO sets 95 for measles, 90 for DTP and 80 for rubella, so a
+         hardcoded 90 would be wrong on the default view. #}
+      <span class="vx-table-title">Countries reaching
+        {% if has_t %}the {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}their target{% endif %},
+        by region</span>
       {# Seven rows, so this table gets a sort but no pager. Its parameter is
          `rsort`, so sorting regions never disturbs the country table below. #}
       {{ table_controls('coverage.index', table_args, 'rsort',
@@ -287,33 +292,34 @@
     <div class="vx-table-wrap">
       <table class="vx-table">
         <thead>
-          {# Brief 2A, Table 2, column for column: Antigen | Year | Countries
-             that met the target | Region. This table aggregates the whole
-             selection, so Antigen and Year carry the value the visitor chose
-             rather than a per-row figure -- and when they chose neither, they
-             say so in words instead of sitting blank. #}
+          {# Region | Antigen | Year | Countries met the target. The region
+             leads because it is what each row is about. This table aggregates
+             the whole selection, so Antigen and Year carry the value the
+             visitor chose rather than a per-row figure, and when they chose
+             neither they say so in words instead of sitting blank. #}
           <tr>
+            <th scope="col">Region</th>
             <th scope="col">Antigen</th>
             <th scope="col" class="num">Year</th>
             <th scope="col" class="num">Countries that met
               {% if has_t %}the {{ fmt_pct(threshold.threshold_pct, 0) }} target{% else %}their target{% endif %}</th>
-            <th scope="col">Region</th>
           </tr>
         </thead>
         <tbody>
           {% set a_row = antigens | selectattr('antigen','equalto',antigen) | first if antigen else none %}
           {% for item in region_view %}
             <tr>
+              <th scope="row" class="vx-cell-key">{{ item.name }}</th>
               <td{% if a_row %} title="{{ a_row.antigen_name }}"{% endif %}>{% if a_row %}{{ antigen }} &middot; {{ a_row.disease_name }}{% else %}<span class="vx-all">All antigens</span>{% endif %}</td>
               <td class="num">{% if year %}{{ year }}{% else %}<span class="vx-all">All years</span>{% endif %}</td>
-              {# An em dash, not 0, without a single antigen: the thresholds
-                 differ by disease, so there is no one bar to count against and
-                 "0" would assert that no region has any country meeting one. #}
+              {# An em dash rather than 0 when no single antigen is chosen: the
+                 thresholds differ by disease, so there is no one bar to count
+                 against, and 0 would assert that no region has a country
+                 meeting one. #}
               <td class="num">
                 {% if has_t %}{{ fmt_int(item.row.n_met_threshold) }} <span class="vx-of">of {{ fmt_int(item.row.n_countries) }}</span>
                 {% else %}&mdash;{% endif %}
               </td>
-              <th scope="row" class="vx-cell-key">{{ item.name }}</th>
             </tr>
           {% endfor %}
         </tbody>
@@ -323,7 +329,7 @@
       <div class="vx-table-foot">Select a single antigen to compare each region against its disease threshold.</div>
     {% endif %}
     <div class="vx-table-foot vx-table-foot--jump">
-      <a href="#country-table">Country table &darr;</a>
+      <a href="#country-table">By country &darr;</a>
     </div>
   </div>
 
@@ -337,7 +343,8 @@
   </p>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
-      <span class="vx-table-title">Country table</span>
+      <span class="vx-table-title">Countries reaching
+        {% if threshold and threshold.threshold_pct is not none %}{{ fmt_pct(threshold.threshold_pct, 0) }} vaccine coverage{% else %}their vaccine coverage target{% endif %}</span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
                         size_key='per_page', sizes=page.sizes, size_active=page.size) }}
@@ -431,7 +438,7 @@
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>
     <div class="vx-table-foot vx-table-foot--jump">
-      <a href="#region-table">&uarr; Region table</a>
+      <a href="#region-table">&uarr; By region</a>
     </div>
   </div>
 
