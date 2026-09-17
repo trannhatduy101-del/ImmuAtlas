@@ -81,8 +81,19 @@
     {# ---- Where to read next. The trail is declared once in routes/__init__.py
            (NEXT_STEP) and rendered here, so the four data pages carry it
            without any of them knowing about it. 1A and 1B are not in the
-           table: 1A closes with a grid of every page, 1B with its guide. ---- #}
-    {% if next_step %}
+           table: 1A closes with a grid of every page, 1B with its guide.
+
+           Only once there is something to have read. 2A and 3A open on a
+           "choose your filters" prompt and pass submitted=False until the
+           visitor applies one; 2B and 3B have no such state and never set the
+           variable at all, so `default(true)` reads as "a page that does not
+           declare a prompt state always has results". Anyone adding a prompt
+           to those two pages must pass `submitted` for this to keep holding.
+
+           It DOES still show on an empty result -- nothing matched, or the
+           country is not in the chosen region. That is the moment a reader is
+           most stuck, and a way onward beats a dead end. ---- #}
+    {% if next_step and not db_missing and submitted | default(true) %}
       <a class="next-step" href="{{ url_for(next_step.endpoint) }}">
         <span class="next-step-kicker">Next</span>
         <span class="next-step-body">
