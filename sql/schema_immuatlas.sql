@@ -70,7 +70,6 @@ CREATE TABLE IF NOT EXISTS persona (
     success_criterion TEXT,      -- what "done" looks like for them
     counterfactual  TEXT,        -- what happens if this site did not exist
     image_path      TEXT,
-    image_credit    TEXT,        -- required if the photo is licensed
     owner_student   TEXT,        -- which team member owns this persona
     display_order   INTEGER DEFAULT 0,
     FOREIGN KEY (group_id) REFERENCES user_group(group_id)

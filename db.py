@@ -21,6 +21,7 @@ section 7 hold everywhere in this file, and they are the whole reason it exists:
 Rebuild the working database with `python rebuild_db.py` after changing sql/.
 """
 
+import glob
 import os
 import re
 import sqlite3
@@ -95,10 +96,16 @@ _QUERY_NAME = re.compile(r"^[a-z0-9_]+$")
 
 
 def load_query(name):
-    """Return the SQL text of queries/<name>.sql, cached after the first read.
+    """Return the SQL text of the named query file, cached after the first read.
 
     Named queries live in their own files so the SQL stays reviewable and can be
     pointed at during the presentation, which is what Level 3 is marked on.
+
+    The files sit in per-page folders under queries/ that mirror routes/ --
+    queries/coverage/, queries/mission/ and so on -- because thirty-two files in
+    one flat directory is a wall, not a list. The name here is still just the
+    file's stem, so the folder a query lives in is a filing decision and never
+    something a caller has to know: moving one between folders changes no code.
 
     Because a query lives in a static file it cannot assemble its own WHERE
     clause. Handle an optional filter by making every filter always present and
@@ -117,8 +124,21 @@ def load_query(name):
     if not _QUERY_NAME.match(name or ""):
         raise ValueError("bad query name %r: use lowercase, digits and _" % name)
     if name not in _QUERY_CACHE:
-        path = os.path.join(config.QUERIES_DIR, name + ".sql")
-        with open(path, encoding="utf-8") as handle:
+        matches = glob.glob(
+            os.path.join(config.QUERIES_DIR, "**", name + ".sql"), recursive=True
+        )
+        if not matches:
+            raise FileNotFoundError(
+                "no query named %r under %s" % (name, config.QUERIES_DIR)
+            )
+        if len(matches) > 1:
+            # Two folders holding the same stem is a filing mistake, and picking
+            # one silently would mean a page quietly runs the wrong SQL.
+            raise RuntimeError(
+                "query name %r is ambiguous, it matches: %s"
+                % (name, ", ".join(sorted(matches)))
+            )
+        with open(matches[0], encoding="utf-8") as handle:
             _QUERY_CACHE[name] = handle.read()
     return _QUERY_CACHE[name]
 

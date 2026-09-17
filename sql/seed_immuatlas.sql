@@ -133,7 +133,7 @@ INSERT INTO user_group (group_id, name, description) VALUES
 INSERT INTO persona
  (persona_id, group_id, name, archetype, age, role_title, organisation, location,
   education, experience, quote, bio, trigger_context, success_criterion,
-  counterfactual, image_path, image_credit, owner_student, display_order)
+  counterfactual, image_path, owner_student, display_order)
 VALUES
 (1, 2, 'Grace Achieng', 'The Accountable Advocate', 41,
  'Health Promotion and Immunisation Officer',
@@ -146,8 +146,7 @@ VALUES
  'She is preparing a briefing for the county health committee next week, arguing for resources for the next measles campaign. She needs two things: where her country actually stands against the threshold needed to stop transmission, and which comparable countries have improved the fastest, so she can point to what is achievable rather than simply asking for money. She has about ten minutes before her next meeting.',
  'Within ten minutes, Grace leaves with one country-level coverage-gain figure, the method used to calculate it, the denominator it rests on, and a citation, ready to defend in a committee room.',
  'Her county figures would stay uncontextualised. She would know her own coverage but not whether it is good, and she would have no evidence of what other countries have achieved. The alternative is quoting a secondary figure from another organisation report that she cannot verify, and risking being challenged again.',
- 'img/grace-photo.png',
- 'EDIT: add photo credit and licence before submission',
+ 'img/grace-photo.webp',
  's4160446', 1);
 
 -- Goals, needs and pain points as they appear on the signed-off persona sheet.
@@ -214,7 +213,7 @@ INSERT INTO persona_note (persona_id, category, note, source_id, display_order) 
 INSERT INTO persona
  (persona_id, group_id, name, archetype, age, role_title, organisation, location,
   education, experience, quote, bio, trigger_context, success_criterion,
-  counterfactual, image_path, image_credit, owner_student, display_order)
+  counterfactual, image_path, owner_student, display_order)
 VALUES
 (2, 1, 'Daniel Nguyen', 'The Curious Checker', 46,
  'Operations Coordinator', 'Household - general public', 'Melbourne, Australia',
@@ -225,8 +224,7 @@ VALUES
  'A news headline or a conversation with a friend raises a question about whether a disease is coming back, or whether vaccination rates are falling in his own country. He wants to check it himself rather than take either side''s word for it.',
  'Within a few minutes, Daniel finds a plain-language answer backed by a real figure, understands roughly what the number means, and has a link he trusts enough to share.',
  'He falls back on the first search result or a social media post, with no way to judge whether it is accurate, dated or cherry-picked.',
- 'img/daniel-photo.png',
- 'Add photo credit and licence before submission',
+ 'img/daniel-photo.webp',
  's4138996', 2);
 
 -- Goals, needs and pain points from the signed-off persona sheet. Group 1's
