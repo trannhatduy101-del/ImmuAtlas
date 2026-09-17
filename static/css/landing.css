@@ -640,7 +640,7 @@ RESPONSIVE - INDEX ONLY
 .lp-twin-up .lp-twin-verdict { color: var(--accent-strong); background: var(--accent-wash); }
 .lp-twin-flat .lp-twin-verdict { color: #9a3412; background: var(--bg-flag); }
 
-.lp-trend-takeaway { font-size: 1.05rem; color: var(--ink); max-width: 62ch; margin: 0 0 1.6rem; }
+.lp-trend-takeaway { font-size: 1.05rem; color: var(--ink); margin: 0 0 1.6rem; }
 .lp-trend-takeaway strong { color: var(--accent-strong); }
 
 .lp-trend-chart { margin: 0; }

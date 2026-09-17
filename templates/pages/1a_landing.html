@@ -164,7 +164,7 @@
             <span class="lp-twin-arrow" aria-hidden="true">&rarr;</span>
             <span class="lp-twin-to">{{ fmt_pct(chart.last.avg_coverage, 0) }}</span>
           </span>
-          <span class="lp-twin-verdict">&uarr; up {{ cov_up }} points</span>
+          <span class="lp-twin-verdict">&uarr; up {{ cov_up }} percentage points</span>
         </div>
         {% if chart.first.total_cases and chart.last.total_cases %}
           {% set cases_down = ((chart.first.total_cases - chart.last.total_cases) / chart.first.total_cases * 100) | round | int %}
@@ -181,7 +181,7 @@
       </div>
 
       <p class="lp-trend-takeaway">
-        Twenty-five years of effort lifted coverage by <strong>{{ cov_up }} points</strong> &mdash;
+        Twenty-five years of effort lifted coverage by <strong>{{ cov_up }} percentage points</strong> &mdash;
         yet preventable cases are <strong>still counted in the millions</strong> every year. That gap
         is the whole reason this site holds both numbers side by side.
       </p>
@@ -232,7 +232,7 @@
           <summary>How to read this chart</summary>
           <p>
             The line uses a {{ chart.y_min }}&ndash;{{ chart.y_max }}% scale, not 0&ndash;100 &mdash; on a
-            full scale a {{ cov_up }}-point rise would look almost flat, so the axis is zoomed to make the
+            full scale a {{ cov_up }}-percentage-point rise would look almost flat, so the axis is zoomed to make the
             movement visible. Part of the rise is also wider reporting: {{ fmt_int(chart.first.n_reporting) }}
             reported figures went into the {{ chart.first.year }} average, {{ fmt_int(chart.last.n_reporting) }}
             into {{ chart.last.year }}&rsquo;s.
@@ -373,11 +373,13 @@
         <article class="impact-card impact-card--ring">
           <div class="impact-card-media">
             {{ ring(impact_regions.gap_ring, 'is-gap') }}
-            <span class="impact-ring-num">{{ '%.0f'|format(impact_regions.gap) }}<small>pp</small></span>
+            {# No unit inside the ring: it is spelled out in full on the impact-card-fig
+             line immediately below, and "percentage points" will not fit in a circle. #}
+            <span class="impact-ring-num">{{ '%.0f'|format(impact_regions.gap) }}</span>
           </div>
           <div class="impact-card-body">
             <span class="impact-card-eyebrow">Regional gap</span>
-            <span class="impact-card-fig">{{ '%.1f'|format(impact_regions.gap) }} points</span>
+            <span class="impact-card-fig">{{ '%.1f'|format(impact_regions.gap) }} percentage points</span>
             <span class="impact-card-label">between the leading and the lagging region</span>
             <p>The same reason a global average can climb while whole regions fall behind.</p>
           </div>

@@ -27,17 +27,25 @@ SORT_KEYS = {
     "coverage_desc": "coverage_reported IS NULL, coverage_reported DESC, country_name ASC",
     "coverage_asc":  "coverage_reported IS NULL, coverage_reported ASC,  country_name ASC",
     "gap":           "gap_to_threshold IS NULL, gap_to_threshold ASC,    country_name ASC",
+    "gap_desc":      "gap_to_threshold IS NULL, gap_to_threshold DESC,   country_name ASC",
     "cohort":        "target_cohort IS NULL, target_cohort DESC,         country_name ASC",
     "country":       "country_name ASC",
     "region":        "region_name ASC, country_name ASC",
 }
+# One shape for every option: "what is being sorted: which direction". It reads
+# the same way in the dropdown and inside the "sorted by ..." sentence under the
+# table, which lowercases whatever is chosen. No "first" -- ordering is what a
+# sort control does, so the word carried no information on 22 of these.
 SORT_LABELS = [
-    ("coverage_desc", "Coverage, highest first"),
-    ("coverage_asc",  "Coverage, lowest first"),
-    ("gap",           "Furthest below the threshold first"),
-    ("cohort",        "Largest birth cohort first"),
-    ("country",       "Country name"),
-    ("region",        "Region, then country"),
+    ("coverage_desc", "Coverage: high to low"),
+    ("coverage_asc",  "Coverage: low to high"),
+    ("gap",           "Gap to the target: furthest below"),
+    ("gap_desc",      "Gap to the target: furthest above"),
+    # "birth cohort" is the epidemiology term; the general-public persona reads
+    # "target group size". The note says it is not a column on this screen.
+    ("cohort",        "Target group size: large to small (download only)"),
+    ("country",       "Country name: alphabetical"),
+    ("region",        "Region, then country: alphabetical"),
 ]
 DEFAULT_SORT = "coverage_desc"
 
@@ -48,17 +56,23 @@ REGION_SORT_KEYS = {
     "coverage_desc": "avg_weighted IS NULL, avg_weighted DESC, region_name ASC",
     "coverage_asc":  "avg_weighted IS NULL, avg_weighted ASC,  region_name ASC",
     "countries":     "n_countries DESC, region_name ASC",
+    "countries_asc": "n_countries ASC,  region_name ASC",
     "met":           "n_met_threshold DESC, region_name ASC",
+    "met_asc":       "n_met_threshold ASC,  region_name ASC",
     "reporting":     "n_reporting DESC, region_name ASC",
+    "reporting_asc": "n_reporting ASC,  region_name ASC",
     "region":        "region_name ASC",
 }
 REGION_SORT_LABELS = [
-    ("coverage_desc", "Coverage, highest first"),
-    ("coverage_asc",  "Coverage, lowest first"),
-    ("countries",     "Most countries first"),
-    ("met",           "Most countries meeting the target first"),
-    ("reporting",     "Most countries reporting first"),
-    ("region",        "Region name"),
+    ("coverage_desc", "Coverage: high to low"),
+    ("coverage_asc",  "Coverage: low to high"),
+    ("countries",     "Number of countries: most to fewest"),
+    ("countries_asc", "Number of countries: fewest to most"),
+    ("met",           "Countries meeting the target: most to fewest"),
+    ("met_asc",       "Countries meeting the target: fewest to most"),
+    ("reporting",     "Countries reporting: most to fewest"),
+    ("reporting_asc", "Countries reporting: fewest to most"),
+    ("region",        "Region name: alphabetical"),
 ]
 DEFAULT_REGION_SORT = "coverage_desc"
 
@@ -74,7 +88,7 @@ COLUMNS = [
     ("Country", "country_name", str),
     ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
     ("Coverage %", "coverage_reported", db.fmt_num),
-    ("Gap to threshold pp", "gap_to_threshold", db.fmt_num),
+    ("Gap to threshold (percentage points)", "gap_to_threshold", db.fmt_num),
     ("Target birth cohort", "target_cohort", db.fmt_int),
     ("Doses per 100 population", "doses_per_100_population", db.fmt_num),
     ("Herd immunity status", "herd_immunity_status", str),
