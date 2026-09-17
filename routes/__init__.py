@@ -45,6 +45,3 @@ ALL_PAGES = [
     ("improvement.index",   "Biggest improvement",     "3A", "Sub-Task A", True),
     ("above_average.index", "Above the global rate",   "3B", "Sub-Task B", True),
 ]
-
-# Kept under the old name so existing imports keep working.
-NAV = ALL_PAGES

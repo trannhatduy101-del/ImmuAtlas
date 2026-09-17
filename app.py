@@ -100,14 +100,14 @@ def create_app():
     def inject_shell():
         """Everything base.html needs, in one place.
 
-        Deriving task / page_title / owner from NAV means the nav bar and the
+        Deriving task / page_title / owner from ALL_PAGES means the nav bar and
         page heading can never disagree, and adding a page is a one-line change
         in routes/__init__.py rather than an edit in three files.
         """
         from flask import request
-        from routes import NAV, PRIMARY_NAV, ALL_PAGES
+        from routes import PRIMARY_NAV, ALL_PAGES
 
-        current = next((n for n in NAV if n[0] == request.endpoint), None)
+        current = next((n for n in ALL_PAGES if n[0] == request.endpoint), None)
 
         # The footer citation comes from research_source, not from a constant.
         # config.SOURCE_NAME is only the fallback for the state where there is
@@ -125,7 +125,6 @@ def create_app():
             team = []
 
         return {
-            "nav": NAV,
             "primary_nav": PRIMARY_NAV,
             "all_pages": ALL_PAGES,
             "sources": sources,

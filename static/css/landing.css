@@ -19,8 +19,6 @@
 :root {
   --primary-dark:   var(--accent-strong);
   --primary-hover:  var(--accent-lift);
-  --orange-primary: var(--outcome);
-  --orange-hover:   var(--outcome);
 }
 
 /* Keep the ImmuAtlas header/footer, but let the hero and the full-bleed
@@ -161,12 +159,6 @@ EXPLORE HERO SECTION
       min-height: auto;
       padding: 80px 18px 64px;
     }
-
-    .explore-image {
-      width: 92vw;
-      margin-top: 44px;
-      animation-duration: 4.5s;
-    }
   }
 
   /* Mobile */
@@ -187,42 +179,6 @@ EXPLORE HERO SECTION
 
     .explore-btn {
       width: 100%;
-    }
-
-    .explore-image {
-      width: 100%;
-      margin-top: 32px;
-      border-radius: 14px;
-      animation-name: floatImageMobile;
-      animation-duration: 5s;
-    }
-  }
-
-  @keyframes floatImage {
-    0% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-14px);
-    }
-
-    100% {
-      transform: translateY(0);
-    }
-  }
-
-  @keyframes floatImageMobile {
-    0% {
-      transform: translateY(0);
-    }
-
-    50% {
-      transform: translateY(-8px);
-    }
-
-    100% {
-      transform: translateY(0);
     }
   }
 
@@ -353,48 +309,6 @@ RESPONSIVE - INDEX ONLY
 
     .snapshot-grid {
         grid-template-columns: 1fr;
-    }
-
-    .snap-card-1,
-    .snap-card-2,
-    .snap-card-3,
-    .snap-card-4 {
-        grid-column: auto;
-        grid-row: auto;
-        height: 250px;
-        margin-top: 0;
-    }
-
-    .snapshot-card-text {
-        left: 42%;
-        max-width: 260px;
-    }
-
-    .facts-section {
-        padding: 60px 28px 70px;
-    }
-
-    .fact-row,
-    .fact-row--reversed {
-        flex-direction: column;
-        gap: 36px;
-    }
-
-    .fact-img-wrap {
-        width: 100%;
-        max-width: 100%;
-    }
-
-    .fact-img-wrap img {
-        height: 240px;
-    }
-
-    .updates-section {
-        padding: 60px 28px 70px;
-    }
-
-    .updates-grid {
-        grid-template-columns: repeat(2, 1fr);
     }
 }
 
