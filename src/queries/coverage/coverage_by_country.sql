@@ -16,21 +16,21 @@
 -- country and region, including the combination that matches nothing.
 SELECT
     country_id,
-    COALESCE(country_name, country_id)  AS country_name,
+    country_name,
     COALESCE(region_name, 'Not classified')  AS region_name,
     year,
     antigen,
     antigen_name,
     disease_name,
     coverage_reported,
+    -- What the table prints. The brief's own example tops out at 100
+    -- ("Switzerland 100"), so the column is capped there; coverage_reported
+    -- stays beside it, uncapped, for the flag on the row and for the download.
+    -- Capped HERE and not in db.fmt_pct, because 1A, 2B and 3A's banner all
+    -- still print the figure as reported.
+    MIN(coverage_reported, 100)                  AS coverage_display,
     doses_per_100_population,
-    target_cohort,
-    -- How far above the bar, measured against the same :met_threshold the WHERE
-    -- clause filters on, so the number and the filter can never disagree. A
-    -- status column sat here too; now that the table is only ever the countries
-    -- that met the target, it said "At or above target" on every single row.
-    ROUND(coverage_reported - :met_threshold, 2) AS gap_to_threshold,
-    CASE WHEN country_name IS NULL THEN 1 ELSE 0 END AS unmatched_territory
+    target_cohort
 FROM v_coverage
 WHERE (:antigen IS NULL OR antigen    = :antigen)
   AND (:year    IS NULL OR year       = :year)
@@ -45,8 +45,14 @@ WHERE (:antigen IS NULL OR antigen    = :antigen)
   -- table is only ever those. coverage_reported >= NULL is NULL, so a country
   -- that reported nothing falls out on its own -- "no figure" is not "met".
   AND coverage_reported >= :met_threshold
+  -- Nine territories report vaccination figures but have no row in Country, so
+  -- they have no name and no region -- two of the five columns the brief asks
+  -- for. They are not dropped from the site: the regional table below still
+  -- counts them on its "Not classified" row, and the note under this table says
+  -- where they went.
+  AND country_name IS NOT NULL
   -- The table's search box. Bound, never spliced, so a reader typing % or _ is
   -- searching for those characters rather than writing a pattern of their own.
   -- SQLite's LIKE is case-insensitive for ASCII, so "viet" finds "Viet Nam"
   -- without lowering either side.
-  AND (:q IS NULL OR COALESCE(country_name, country_id) LIKE '%' || :q || '%')
+  AND (:q IS NULL OR country_name LIKE '%' || :q || '%')

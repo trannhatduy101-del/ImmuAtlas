@@ -64,17 +64,6 @@
         {% endif %}
       </select>
     </div>
-    {# Level 3: this box narrows the ranking to a sub-dataset picked out by a
-       second query -- see the EXISTS clause in coverage_improvement.sql. It
-       changes WHICH countries are ranked, so the note under the table explains
-       that the ranks renumber inside the narrowed group. #}
-    <div class="field field-check">
-      <label for="f-below">
-        <input type="checkbox" id="f-below" name="below_only" value="1"
-               {% if below_only %}checked{% endif %}>
-        Only countries below the herd immunity threshold in the start year
-      </label>
-    </div>
     <div class="field field-actions">
       <button type="submit">Rank</button>
       <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
@@ -126,19 +115,11 @@
   <p class="selection-line">
     Showing <strong>{{ page.first }}&ndash;{{ page.last }}</strong> of
     <strong>{{ fmt_int(eligible) }}</strong> countries that reported
-    {{ antigen_name }} in both {{ start_year }} and {{ end_year }}{% if below_only %}
-    and were below the herd immunity threshold in {{ start_year }}{% endif %}, ranked by
+    {{ antigen_name }} in both {{ start_year }} and {{ end_year }}, ranked by
     {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
     Every ranked country is reachable through the pages below, and a download
     contains all {{ fmt_int(eligible) }} of them.
   </p>
-  {% if below_only %}
-    {# The rank is a window function, so it is computed after the filter: it
-       numbers this narrowed group, not the whole pool. Left unsaid, a reader
-       who knows Nauru led overall would think the ranks were broken. #}
-    <p class="filter-note"><strong>#1</strong> is the biggest gain within this
-      narrowed group rather than across every country.</p>
-  {% endif %}
 
   {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
          so the two Sub-Task A result pages read as one product. The biggest
@@ -268,8 +249,15 @@
           <tr>
             <th scope="col" class="num">#</th>
             <th scope="col">Country</th>
-            <th scope="col" class="num">Coverage <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
-            <th scope="col" class="num">Change <span class="th-sub">percentage points</span></th>
+            {# The brief's own example for this task: country, the increase,
+               the start year, the end year. The raw start and end coverage
+               figures left the table with it -- they are the pair that printed
+               above 100%, and the increase does not need them beside it to be
+               read. Both are still in the download. #}
+            <th scope="col" class="num">Vaccination rate increase
+              <span class="th-sub">percentage points</span></th>
+            <th scope="col" class="num">Start year</th>
+            <th scope="col" class="num">End year</th>
             <th scope="col">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
           </tr>
         </thead>
@@ -283,18 +271,11 @@
                 <span class="vx-key-name">{{ r.country_name }}</span>
                 <span class="vx-sub">{{ r.region_name }}</span>
               </th>
-              <td class="num vx-range">
-                <span class="vx-from">{{ fmt_pct(r.coverage_start) }}</span>
-                <span class="arrow" aria-hidden="true">&rarr;</span>
-                <span class="vx-to">{{ fmt_pct(r.coverage_end) }}</span>
-                {% if r.coverage_start > 100 or r.coverage_end > 100 %}
-                  {# Kept, not capped: more doses than the target group. #}
-                  <span class="tag" title="More doses reported than the target group: kept as reported, not capped">over 100%</span>
-                {% endif %}
-              </td>
               <td class="num">
-                <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}</span>
+                <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}%</span>
               </td>
+              <td class="num">{{ start_year }}</td>
+              <td class="num">{{ end_year }}</td>
               {# The different dataset, in ONE column: the direction and size of
                  the move, with the two raw rates beneath it. It was two columns
                  -- "25.30 -> 5.36" beside "fell 19.94" -- which is the same fact
@@ -350,14 +331,16 @@
       <dt>Doses per 100 people</dt>
       <dd>
         Doses divided by the whole population rather than the target group.
-        The figure appears in the <strong>CSV and PDF</strong>, and the table can
-        be sorted by it.
+        The figure appears in the <strong>CSV and PDF</strong>.
       </dd>
 
       <dt>Coverage above 100%</dt>
       <dd>
-        Shown as reported rather than capped. A country can deliver more doses
-        than there are children in its target group.
+        A country can deliver more doses than there are children in its target
+        group, so some reported figures pass 100%. The increase is measured on
+        the figures as reported, never on a capped version, which would
+        understate those countries and reorder the ranking. The start and end
+        figures themselves are in the <strong>CSV and PDF</strong>.
       </dd>
       <dt>Did cases actually fall?</dt>
       <dd>

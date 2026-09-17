@@ -82,19 +82,8 @@ WHERE cs.antigen = :antigen
   -- NULL means "no narrowing", so the default ranking is untouched: the filter
   -- can only ever remove rows the reader asked to remove.
   --
-  -- Note for the page: RANK() is a window function, so it runs AFTER this WHERE.
-  -- With the filter on, rank 1 means "biggest gain among the countries that
-  -- started below the threshold", not "biggest gain overall". Say so on screen
-  -- or the numbers look wrong.
   -- The table's search box. Bound, never spliced, so a reader typing % or _ is
   -- searching for those characters rather than writing a pattern of their own.
   -- SQLite's LIKE is case-insensitive for ASCII, so "viet" finds "Viet Nam"
   -- without lowering either side.
   AND (:q IS NULL OR cs.country_name LIKE '%' || :q || '%')
-  AND (:below_only IS NULL OR EXISTS (
-          SELECT 1
-          FROM v_herd_immunity h
-          WHERE h.country_id = cs.country_id
-            AND h.antigen    = cs.antigen
-            AND h.year       = cs.year
-            AND h.coverage_reported < h.threshold_pct))

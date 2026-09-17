@@ -348,29 +348,23 @@
                  wrapped to four lines in every row and tripled the row height
                  for a value most rows repeat; it stays in the tooltip and in
                  the download. #}
-              <th scope="row" class="vx-cell-key">
-                {{ r.country_name }}
-                {% if r.unmatched_territory %}
-                  <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
-                {% endif %}
-              </th>
+              <th scope="row" class="vx-cell-key">{{ r.country_name }}</th>
               <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
               <td class="num">{{ r.year }}</td>
               <td>{{ fix_region(r.region_name) }}</td>
               {# Always a real figure at or above the threshold: the query
-                 returns nothing else, which is what the brief asks for. #}
+                 returns nothing else, which is what the brief asks for. The
+                 number is the capped one, so the column tops out at 100 like
+                 the brief's own example -- and every row that was capped says
+                 so, because an anomaly has to be visible to count as handled. #}
               <td class="num">
-                {% if r.coverage_reported is not none %}
-                  <span class="cov-cell">
-                    <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
-                    {% if r.coverage_reported > 100 %}
-                      {# Kept, not capped: more doses than the target group. Left
-                         unmarked it reads as a broken number. #}
-                      <span class="tag" title="More doses reported than the target group: kept as reported, not capped">over 100%</span>
-                    {% endif %}
-                    <span class="cov-bar is-met"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
-                  </span>
-                {% else %}&mdash;{% endif %}
+                <span class="cov-cell">
+                  <span class="cov-num">{{ fmt_pct(r.coverage_display) }}</span>
+                  {% if r.coverage_reported > 100 %}
+                    <span class="tag" title="More doses reported than the target group. The reported figure is kept in the download.">capped from {{ fmt_pct(r.coverage_reported) }}</span>
+                  {% endif %}
+                  <span class="cov-bar is-met"><span style="width: {{ r.coverage_display }}%"></span></span>
+                </span>
               </td>
             </tr>
           {% endfor %}
@@ -383,6 +377,11 @@
       </span>
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>
+    {# Said out loud, because a row removed without a word is a row hidden. #}
+    <p class="filter-note">Nine territories report figures but have no country
+      record, so they have no name or region to list here. They are counted on
+      the <a href="#region-table">regional table's</a> &ldquo;Not
+      classified&rdquo; row.</p>
     <div class="vx-table-foot vx-table-foot--jump">
       <a href="#region-table">&uarr; By region</a>
     </div>
@@ -437,9 +436,11 @@
       <dt>Exclusions</dt>
       <dd>
         Countries that reported no figure are left out of the averages rather
-        than counted as zero. Figures above 100% are shown as reported, since a
-        country can deliver more doses than it has children to reach. Countries
-        with no region or income group are still listed, and labelled.
+        than counted as zero. A country can deliver more doses than it has
+        children to reach, so some report above 100%: the country table shows
+        those as 100% and says what was reported, and the download carries the
+        reported figure unchanged. Territories with no country record are
+        counted on the regional table and named there.
       </dd>
     </dl>
   </div>

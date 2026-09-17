@@ -27,11 +27,15 @@ bp = Blueprint("coverage", __name__)
 # Every key here orders a column the table actually shows. Sorting by something
 # off screen produces an order the reader cannot account for, so it reads as no
 # order at all: that is why target_cohort left, and why gap_to_threshold left
-# too -- it is coverage minus a constant, so it was a second name for a sort
-# already in the list.
+# too -- it was coverage minus a constant, a second name for a sort already in
+# the list.
 SORT_KEYS = {
-    "coverage_desc": "coverage_reported IS NULL, coverage_reported DESC, country_name ASC",
-    "coverage_asc":  "coverage_reported IS NULL, coverage_reported ASC,  country_name ASC",
+    # coverage_display, not coverage_reported: the table prints the capped
+    # figure, so ordering on the raw one would put 169.3% above 154.8% while
+    # both cells read "100.0%" -- a control announcing an order the table is
+    # not in, which is the exact bug this page has already had once.
+    "coverage_desc": "coverage_display IS NULL, coverage_display DESC, country_name ASC",
+    "coverage_asc":  "coverage_display IS NULL, coverage_display ASC,  country_name ASC",
     "country":       "country_name ASC",
     "country_desc":  "country_name DESC",
     "region":        "region_name ASC, country_name ASC",
@@ -122,8 +126,13 @@ COLUMNS = [
     # str, not fmt_int: a year is a label, and fmt_int writes it "2,011".
     ("Year", "year", str),
     ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
-    ("Percentage of target %", "coverage_reported", db.fmt_num),
-    ("Gap to threshold (percentage points)", "gap_to_threshold", db.fmt_num),
+    # The figure on screen, capped at 100 like the brief's example, and then
+    # the same figure as the country actually reported it. Both, because a file
+    # that only carried the capped number would have quietly lost 1,312 real
+    # measurements, and one that only carried the raw number would not match
+    # the page it came from.
+    ("Percentage of target %", "coverage_display", db.fmt_num),
+    ("Reported % (uncapped)", "coverage_reported", db.fmt_num),
     ("Target birth cohort", "target_cohort", db.fmt_int),
     ("Doses per 100 population", "doses_per_100_population", db.fmt_num),
 ]
