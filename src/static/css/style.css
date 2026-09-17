@@ -730,7 +730,12 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  /* Wraps rather than overflows. On a phone the title, the sort and search
+     controls and the two download links need 444px in a 314px bar, and without
+     this the CSV and PDF links were pushed off the right edge with nothing to
+     scroll them back into view. */
+  flex-wrap: wrap;
+  gap: 12px 16px;
   padding: 14px 20px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--bg-deep) 100%);
 }
@@ -774,6 +779,18 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    still on screen -- a bare "3" beside a region says nothing about whether that
    is most of it or almost none of it. */
 .vx-of { color: var(--ink-muted); font-weight: 400; font-size: .85em; }
+/* Shared rank. A bare repeated number looks like a bug; the mark says the tie
+   is the answer, not a mistake. */
+.vx-tie { color: var(--ink-muted); font-weight: 400; margin-left: .15rem; }
+/* Search box, sitting beside Sort in a table's header bar. */
+.table-controls-search input {
+  font: inherit; font-size: .85rem;
+  padding: .28rem .5rem; width: 10rem; max-width: 40vw;
+  border: 1px solid rgba(255, 255, 255, .45); border-radius: var(--radius);
+  background: rgba(255, 255, 255, .12); color: #fff;
+}
+.table-controls-search input::placeholder { color: rgba(255, 255, 255, .62); }
+.table-controls-search input:focus-visible { outline: 2px solid #fff; outline-offset: 1px; }
 /* The one row a result table shows when nothing matched. Centred and muted so
    it reads as a sentence about the result, not as a data row. */
 .vx-empty-row { text-align: center; color: var(--ink-muted); padding: 1.1rem 1rem; }

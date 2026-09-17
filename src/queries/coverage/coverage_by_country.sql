@@ -47,3 +47,8 @@ WHERE (:antigen IS NULL OR antigen    = :antigen)
   -- cited in the method note; nothing here is filtered or counted with them. coverage_reported >= NULL is NULL, so a country that
   -- reported nothing falls out on its own: "no figure" is not "met".
   AND (:met_only IS NULL OR coverage_reported >= :met_threshold)
+  -- The table's search box. Bound, never spliced, so a reader typing % or _ is
+  -- searching for those characters rather than writing a pattern of their own.
+  -- SQLite's LIKE is case-insensitive for ASCII, so "viet" finds "Viet Nam"
+  -- without lowering either side.
+  AND (:q IS NULL OR COALESCE(country_name, country_id) LIKE '%' || :q || '%')

@@ -67,6 +67,9 @@ LEFT JOIN v_coverage vc
       AND (:year    IS NULL OR vc.year       = :year)
       AND (:country IS NULL OR vc.country_id = :country)
 WHERE (:region IS NULL OR r.RegionID = :region)
+  -- The table's search box, matched against the region name. Bound rather than
+  -- spliced, so % and _ are searched for rather than treated as wildcards.
+  AND (:q IS NULL OR r.region LIKE '%' || :q || '%')
 GROUP BY r.RegionID, r.region,
          CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END,
          CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END
@@ -98,6 +101,8 @@ WHERE vc.region_id IS NULL
   AND (:antigen IS NULL OR vc.antigen    = :antigen)
   AND (:year    IS NULL OR vc.year       = :year)
   AND (:country IS NULL OR vc.country_id = :country)
+  -- Same search, against this branch's fixed label.
+  AND (:q IS NULL OR 'Not classified' LIKE '%' || :q || '%')
 GROUP BY CASE WHEN :detail IS NULL THEN NULL ELSE vc.antigen END,
          CASE WHEN :detail IS NULL THEN NULL ELSE vc.year    END
 HAVING COUNT(*) > 0

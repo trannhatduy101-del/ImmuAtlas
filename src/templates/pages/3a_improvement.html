@@ -258,7 +258,8 @@
       {{ table_controls('improvement.index', table_args, 'sort', sort_labels,
                         sort_active, anchor='#rank-table', page_key='page',
                         size_key='n', sizes=count_options, size_active=count,
-                        size_label='Countries') }}
+                        size_label='Countries',
+                        search_key='q', search_value=query_text) }}
       {{ export_links('improvement.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
@@ -277,7 +278,7 @@
             {# Rank comes from SQL and is always by coverage gain, so it stays
                with a country when the reader re-sorts or pages. #}
             <tr {% if r.improvement_rank == 1 %}class="is-current"{% endif %}>
-              <td class="num vx-rank">{{ fmt_int(r.improvement_rank) }}</td>
+              <td class="num vx-rank">{{ fmt_int(r.improvement_rank) }}{% if r.improvement_rank in tied_ranks %}<span class="vx-tie" title="Shared with another country: both gained exactly the same">=</span>{% endif %}</td>
               <th scope="row" class="vx-cell-key">
                 <span class="vx-key-name">{{ r.country_name }}</span>
                 <span class="vx-sub">{{ r.region_name }}</span>
@@ -286,6 +287,10 @@
                 <span class="vx-from">{{ fmt_pct(r.coverage_start) }}</span>
                 <span class="arrow" aria-hidden="true">&rarr;</span>
                 <span class="vx-to">{{ fmt_pct(r.coverage_end) }}</span>
+                {% if r.coverage_start > 100 or r.coverage_end > 100 %}
+                  {# Kept, not capped: more doses than the target group. #}
+                  <span class="tag" title="More doses reported than the target group: kept as reported, not capped">over 100%</span>
+                {% endif %}
               </td>
               <td class="num">
                 <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}</span>

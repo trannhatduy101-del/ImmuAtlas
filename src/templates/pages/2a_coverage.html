@@ -261,7 +261,8 @@
          moves the other. #}
       {{ table_controls('coverage.index', table_args, 'rsort',
                         region_sort_labels, rsort_active, anchor='#region-table',
-                        page_key='rpage') }}
+                        page_key='rpage',
+                        search_key='rq', search_value=region_query_text) }}
       {{ export_links('coverage.index', table_args, pdf_ok, {'table': 'region'}) }}
     </div>
     <div class="vx-table-wrap">
@@ -281,7 +282,14 @@
         <tbody>
           {% for item in region_view %}
             <tr>
-              <th scope="row" class="vx-cell-key">{{ item.name }}</th>
+              <th scope="row" class="vx-cell-key">{{ item.name }}
+                {% if item.row.region_id is none %}
+                  {# Nine territories with no row in the Country table. They are
+                     grouped so they are not lost, but they are not a region and
+                     must not be read as one. #}
+                  <span class="tag" title="Nine territories present in the vaccination data with no region of their own">not a region</span>
+                {% endif %}
+              </th>
               <td>{{ item.row.antigen }}{% if disease_of.get(item.row.antigen) %} &middot; {{ disease_of[item.row.antigen] }}{% endif %}</td>
               <td class="num">{{ item.row.year }}</td>
               <td class="num">{{ fmt_int(item.row.n_met_threshold) }}
@@ -312,7 +320,8 @@
         <span class="vx-table-sub">The checkbox above adds the countries that did not.</span></span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
-                        size_key='per_page', sizes=page.sizes, size_active=page.size) }}
+                        size_key='per_page', sizes=page.sizes, size_active=page.size,
+                        search_key='q', search_value=query_text) }}
       {{ export_links('coverage.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
@@ -376,6 +385,11 @@
                 {% if r.coverage_reported is not none %}
                   <span class="cov-cell">
                     <span class="cov-num">{{ fmt_pct(r.coverage_reported) }}</span>
+                    {% if r.coverage_reported > 100 %}
+                      {# Kept, not capped: more doses than the target group. Left
+                         unmarked it reads as a broken number. #}
+                      <span class="tag" title="More doses reported than the target group: kept as reported, not capped">over 100%</span>
+                    {% endif %}
                     <span class="cov-bar {{ 'is-met' if cmet else 'is-below' }}"><span style="width: {{ [r.coverage_reported, 100]|min }}%"></span></span>
                   </span>
                 {% else %}&mdash;{% endif %}

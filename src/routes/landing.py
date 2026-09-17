@@ -141,7 +141,8 @@ def index():
         # year instead.
         regions = db.query(region_sql, {"antigen": None, "year": None,
                                         "country": None, "region": None,
-                                        "met_threshold": None, "detail": None})
+                                        "met_threshold": None, "detail": None,
+                                        "q": None})
     except db.DatabaseMissing as exc:
         # An honest empty state, never a blank page and never a stale number.
         return render_template("pages/1a_landing.html", db_missing=str(exc)), 503

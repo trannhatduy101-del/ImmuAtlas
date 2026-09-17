@@ -27,10 +27,11 @@
    table instead of the top of the page. #}
 {% macro table_controls(endpoint, args, sort_key, sort_options, sort_active,
                         anchor='', page_key=None, size_key=None,
-                        sizes=None, size_active=None, size_label='Rows') %}
+                        sizes=None, size_active=None, size_label='Rows',
+                        search_key=None, search_value=None) %}
   <form class="table-controls" method="get"
         action="{{ url_for(endpoint) }}{{ anchor }}">
-    {{ hidden_args(args, omit=[sort_key, page_key, size_key] | reject('none') | list) }}
+    {{ hidden_args(args, omit=[sort_key, page_key, size_key, search_key] | reject('none') | list) }}
     <label class="table-controls-field">
       <span>Sort</span>
       <select name="{{ sort_key }}">
@@ -50,6 +51,18 @@
             <option value="{{ n }}" {% if n == size_active %}selected{% endif %}>{{ n }}</option>
           {% endfor %}
         </select>
+      </label>
+    {% endif %}
+    {% if search_key %}
+      {# Its own parameter name, like sort and page, so searching one table on a
+         page never narrows the other. Submitting lands on page 1 because
+         page_key is omitted from the replayed values above: page 7 of the old
+         result means nothing once the result changes. #}
+      <label class="table-controls-field table-controls-search">
+        <span>Search</span>
+        <input type="search" name="{{ search_key }}" value="{{ search_value or '' }}"
+               placeholder="name contains&hellip;" maxlength="60"
+               autocomplete="off" spellcheck="false">
       </label>
     {% endif %}
     <button type="submit">Apply</button>

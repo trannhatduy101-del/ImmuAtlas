@@ -43,23 +43,25 @@ SORT_KEYS = {
     "pop_rate_asc": ("doses_per_100_change IS NULL, doses_per_100_change ASC, "
                      "country_name ASC"),
     "country":    "country_name ASC",
+    "country_desc": "country_name DESC",
 }
 # Same shape as the 2A labels: "what is being sorted: which direction", and no
 # "first". The three case options are worded so they cannot be confused: the two
 # "Change in case rate" ones order by how far the rate MOVED, while "Case rate
 # in the end year" orders by the rate the table actually shows.
 SORT_LABELS = [
-    ("gain_desc",  "Coverage gain: biggest to smallest"),
-    ("gain_asc",   "Coverage gain: smallest to biggest"),
-    ("end_desc",   "Coverage in the end year: high to low"),
-    ("end_asc",    "Coverage in the end year: low to high"),
-    ("start_asc",  "Coverage in the start year: low to high"),
-    ("cases_fell", "Change in case rate: biggest fall"),
-    ("cases_rose", "Change in case rate: biggest rise"),
-    ("cases_now",  "Case rate in the end year: high to low"),
-    ("pop_rate",   "Doses per 100 people: biggest rise"),
-    ("pop_rate_asc", "Doses per 100 people: smallest rise"),
-    ("country",    "Country name: alphabetical"),
+    ("gain_desc",  "Gain: high → low"),
+    ("gain_asc",   "Gain: low → high"),
+    ("end_desc",   "End coverage: high → low"),
+    ("end_asc",    "End coverage: low → high"),
+    ("start_asc",  "Start coverage: low → high"),
+    ("cases_fell", "Case change: biggest fall"),
+    ("cases_rose", "Case change: biggest rise"),
+    ("cases_now",  "End case rate: high → low"),
+    ("pop_rate",   "Doses/100: high → low"),
+    ("pop_rate_asc", "Doses/100: low → high"),
+    ("country",    "Country: A – Z"),
+    ("country_desc", "Country: Z – A"),
 ]
 DEFAULT_SORT = "gain_desc"
 
@@ -95,7 +97,7 @@ COLUMNS = [
 ]
 
 
-def _rows_for(antigen, start_year, end_year, order_by, below_only=None):
+def _rows_for(antigen, start_year, end_year, order_by, below_only=None, q=None):
     """Run the ranked improvement query. `order_by` is a trusted SORT_KEYS
     fragment; every value the user supplied is a bound parameter.
 
@@ -109,11 +111,11 @@ def _rows_for(antigen, start_year, end_year, order_by, below_only=None):
     base = db.load_query("coverage_improvement")
     sql = "SELECT * FROM (" + base + ") ORDER BY " + order_by
     params = {"antigen": antigen, "start_year": start_year,
-              "end_year": end_year, "below_only": below_only}
+              "end_year": end_year, "below_only": below_only, "q": q}
     return db.query(sql, params)
 
 
-def _summary_for(antigen, start_year, end_year, below_only=None):
+def _summary_for(antigen, start_year, end_year, below_only=None, q=None):
     """Headline figures for the KPI row, aggregated in SQL over the eligible
     pool (never in Python): average and largest coverage gain, and how many
     countries also saw their reported case rate fall."""
@@ -126,7 +128,8 @@ def _summary_for(antigen, start_year, end_year, below_only=None):
     # Same below_only as the table: a headline computed over a different pool
     # from the rows underneath it is worse than no headline.
     return db.query_one(sql, {"antigen": antigen, "start_year": start_year,
-                              "end_year": end_year, "below_only": below_only})
+                              "end_year": end_year, "below_only": below_only,
+                              "q": q})
 
 
 def _gain_bars(rows):
@@ -262,6 +265,11 @@ def index():
     if bad:
         rejected.append("below-threshold filter")
 
+    # Search text: free by nature, so trimmed and capped rather than checked
+    # against a whitelist, and bound into the SQL so % and _ are characters to
+    # look for rather than a pattern the reader gets to write.
+    query_text = (request.args.get("q") or "").strip()[:60] or None
+
     sort = request.args.get("sort")
     order_by = db.safe_order_by(sort, SORT_KEYS, DEFAULT_SORT)
     sort_active = sort if sort in SORT_KEYS else DEFAULT_SORT
@@ -293,7 +301,7 @@ def index():
     table_args = {
         "antigen": antigen, "start": start_year, "end": end_year,
         "n": count, "sort": sort_active, "submitted": 1,
-        "below_only": below_only,
+        "below_only": below_only, "q": query_text,
     }
 
     ctx = dict(
@@ -305,11 +313,12 @@ def index():
         count=count, count_options=COUNT_OPTIONS,
         sort_active=sort_active, sort_labels=SORT_LABELS,
         rejected=rejected, range_error=range_error, submitted=submitted,
-        below_only=below_only,
+        below_only=below_only, query_text=query_text,
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0, chart_n=0,
         globe=[], globe_w=worldmap.WIDTH, globe_h=worldmap.HEIGHT,
         globe_credit=worldmap.CREDIT, globe_target=GLOBE_TARGET,
         imp_summary=None, top_gainer=None,
+        tied_ranks=set(),
         page=db.paginate([], None), table_args=table_args,
         pdf_ok=exports.pdf_available(),
         fmt_int=db.fmt_int, fmt_pct=db.fmt_pct, fmt_num=db.fmt_num,
@@ -326,7 +335,8 @@ def index():
         return render_template("pages/3a_improvement.html", **ctx)
 
     # The whole eligible pool, ordered by the reader's chosen sort.
-    rows = _rows_for(antigen, start_year, end_year, order_by, below_only)
+    rows = _rows_for(antigen, start_year, end_year, order_by, below_only,
+                     query_text)
     ctx["rows"] = rows
 
     # An export is the full pool, never the page on screen -- the old version
@@ -347,9 +357,18 @@ def index():
                        sizes=COUNT_OPTIONS, default_size=DEFAULT_COUNT)
     if page["rejected"]:
         rejected.append("page")
+    # Which ranks more than one country shares. RANK() repeats a number on a
+    # tie, and an unexplained repeated "12" reads as a bug rather than as two
+    # countries that gained exactly the same.
+    tally = {}
+    for r in rows:
+        tally[r["improvement_rank"]] = tally.get(r["improvement_rank"], 0) + 1
+    ctx["tied_ranks"] = {rank for rank, n in tally.items() if n > 1}
+
     ctx["page"] = page
     ctx["eligible"] = page["total"]
-    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year, below_only)
+    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year, below_only,
+                                      query_text)
 
     # The single biggest gainer, for the KPI row, regardless of the table sort.
     # It is rank 1 by construction, so it is already in `rows`.
@@ -361,6 +380,9 @@ def index():
     # with A -- a ranked bar chart of nothing in particular. Ordered by SQL
     # (gain_desc) and sliced here; Python never sorts. Same below_only as the
     # table, so the chart and the rows beneath it describe the same pool.
+    # Deliberately unsearched: the chart is the ten biggest improvers of the
+    # ranking, and a search box narrowing the table should not silently redraw
+    # what "the top ten" means.
     top_rows = _rows_for(antigen, start_year, end_year,
                          SORT_KEYS["gain_desc"], below_only)[:CHART_BARS]
     ctx["bars"] = _gain_bars(top_rows)
