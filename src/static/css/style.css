@@ -768,6 +768,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    still on screen -- a bare "3" beside a region says nothing about whether that
    is most of it or almost none of it. */
 .vx-of { color: var(--ink-muted); font-weight: 400; font-size: .85em; }
+/* "All antigens" / "All years" in the region table's Antigen and Year columns.
+   Those two aggregate the whole selection, so when the visitor narrowed to
+   neither there is no single value to print -- and an empty cell would read as
+   missing data rather than as "everything". */
+.vx-all { color: var(--ink-muted); font-style: italic; }
 .vx-table-foot {
   padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
   border-top: 1px solid var(--rule);

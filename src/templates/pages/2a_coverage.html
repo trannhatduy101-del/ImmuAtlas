@@ -219,6 +219,12 @@
         <thead>
           <tr>
             <th scope="col">Region</th>
+            {# Brief 2A, Table 2: Antigen and Year sit in the table, not only in
+               the filter above it. This table aggregates the whole selection,
+               so the value is the one the visitor chose rather than a per-row
+               figure -- and when they chose neither, it says so in words. #}
+            <th scope="col">Antigen</th>
+            <th scope="col" class="num">Year</th>
             <th scope="col" class="num">Avg coverage</th>
             {% if has_t %}<th scope="col" class="num">vs {{ fmt_pct(threshold.threshold_pct, 0) }} target
               <span class="th-sub">percentage points</span></th>
@@ -233,6 +239,9 @@
             {% set met = has_t and v is not none and v >= threshold.threshold_pct %}
             <tr>
               <th scope="row" class="vx-cell-key">{{ item.name }}</th>
+              {% set a_row = antigens | selectattr('antigen','equalto',antigen) | first if antigen else none %}
+              <td{% if a_row %} title="{{ a_row.antigen_name }}"{% endif %}>{% if a_row %}{{ antigen }} &middot; {{ a_row.disease_name }}{% else %}<span class="vx-all">All antigens</span>{% endif %}</td>
+              <td class="num">{% if year %}{{ year }}{% else %}<span class="vx-all">All years</span>{% endif %}</td>
               <td class="num">
                 {% if v is not none %}
                   <span class="cov-cell">
@@ -288,8 +297,15 @@
         <thead>
           <tr>
             <th scope="col">Country</th>
+            {# Brief 2A, Table 1: Antigen | Year | Country | Region | Percentage
+               of target. Country stays first because it is the row's header
+               cell and the column people scan. Antigen and Year come from the
+               row itself, so with "All antigens" each row still names its own. #}
+            <th scope="col">Antigen</th>
+            <th scope="col" class="num">Year</th>
             <th scope="col">Region</th>
-            <th scope="col" class="num">Coverage</th>
+            <th scope="col" class="num">Percentage of target
+              <span class="th-sub">doses &divide; target birth cohort</span></th>
             <th scope="col">Status</th>
           </tr>
         </thead>
@@ -302,6 +318,14 @@
                   <span class="tag" title="Present in the vaccination data but absent from the country table">unmatched</span>
                 {% endif %}
               </th>
+              {# The code plus its disease, the same wording as the filter
+                 dropdown, and the form the brief's own example uses ("MCV2").
+                 The full name -- "Measles-containing vaccine, 1st dose" --
+                 wrapped to four lines in every row and tripled the row height
+                 for a value most rows repeat; it stays in the tooltip and in
+                 the download. #}
+              <td title="{{ r.antigen_name }}">{{ r.antigen }} &middot; {{ r.disease_name }}</td>
+              <td class="num">{{ r.year }}</td>
               <td>{{ fix_region(r.region_name) }}</td>
               <td class="num">
                 {% if r.coverage_reported is not none %}
@@ -339,11 +363,13 @@
   <div class="method-note">
     <h2>How these figures were calculated</h2>
     <dl>
-      <dt>Coverage</dt>
+      <dt>Percentage of target</dt>
       <dd>
         The figure each country reported to WHO. Its denominator is the
         <strong>birth cohort</strong> that country targeted, not its total
-        population: <span class="formula">coverage = doses &divide; target cohort &times; 100</span>.
+        population: <span class="formula">doses &divide; target cohort &times; 100</span>.
+        WHO calls this the coverage rate; the table names it after the
+        denominator so the two are never confused.
       </dd>
 
       <dt>Doses per 100 people</dt>

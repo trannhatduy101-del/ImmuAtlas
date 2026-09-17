@@ -37,12 +37,13 @@ SORT_KEYS = {
 # table, which lowercases whatever is chosen. No "first" -- ordering is what a
 # sort control does, so the word carried no information on 22 of these.
 SORT_LABELS = [
-    ("coverage_desc", "Coverage: high to low"),
-    ("coverage_asc",  "Coverage: low to high"),
+    ("coverage_desc", "Percentage of target: high to low"),
+    ("coverage_asc",  "Percentage of target: low to high"),
     ("gap",           "Gap to the target: furthest below"),
     ("gap_desc",      "Gap to the target: furthest above"),
     # "birth cohort" is the epidemiology term; the general-public persona reads
-    # "target group size". The note says it is not a column on this screen.
+    # "target group size". Marked as a download column because it is one: the
+    # table shows the percentage, the file carries the cohort behind it.
     ("cohort",        "Target group size: large to small (download only)"),
     ("country",       "Country name: alphabetical"),
     ("region",        "Region, then country: alphabetical"),
@@ -86,8 +87,14 @@ REGION_DISPLAY_FIX = {"Latin America & Carribean": "Latin America & Caribbean"}
 # each turns None into "no data" rather than an empty cell.
 COLUMNS = [
     ("Country", "country_name", str),
+    # Antigen and Year are columns on screen (brief 2A, Table 1), so they are
+    # columns in the download too -- a file of percentages with no antigen
+    # beside them cannot be read once it leaves the page that produced it.
+    ("Antigen", "antigen_name", str),
+    # str, not fmt_int: a year is a label, and fmt_int writes it "2,011".
+    ("Year", "year", str),
     ("Region", "region_name", lambda v: fix_region(v) if v else db.BLANK),
-    ("Coverage %", "coverage_reported", db.fmt_num),
+    ("Percentage of target %", "coverage_reported", db.fmt_num),
     ("Gap to threshold (percentage points)", "gap_to_threshold", db.fmt_num),
     ("Target birth cohort", "target_cohort", db.fmt_int),
     ("Doses per 100 population", "doses_per_100_population", db.fmt_num),
