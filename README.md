@@ -6,7 +6,6 @@ data. Flask app backed by SQLite; no JavaScript framework, no build step.
 ## Prerequisites
 
 - Python 3.10+
-- Bash, to run `rebuild_db.sh` (Git Bash, WSL, or any Unix shell)
 
 ## Setup
 
@@ -28,21 +27,22 @@ pip install -r requirements.txt
 views and seed data applied on top. Rebuild it any time `sql/` changes.
 
 ```bash
-./rebuild_db.sh
+python rebuild_db.py
 ```
 
-The script applies `sql/schema_immuatlas.sql`, `sql/seed_immuatlas.sql`
-and `sql/data_source_who.sql` in that order — the order matters — and
-uses Python's `sqlite3` module, so no `sqlite3` CLI is needed. It needs
-Bash (Git Bash, WSL, or any Unix shell).
+It applies `sql/schema_immuatlas.sql`, `sql/seed_immuatlas.sql` and
+`sql/data_source_who.sql` in that order — the order matters — using
+Python's own `sqlite3` module, so no `sqlite3` command-line tool is
+needed. The same command works on Windows, macOS and Linux.
 
-If your clone reports `Permission denied`, the executable bit did not
-survive the checkout. Run it through Bash instead — the script itself is
-unchanged:
+The rebuild writes to a temporary file and only moves it into place once
+every step has passed, so a failed rebuild leaves your previous
+`immuatlas.db` untouched rather than replacing it with a half-built one.
 
-```bash
-bash rebuild_db.sh
-```
+It also reports the two foreign key anomalies in the supplied data
+(Ethiopia and Venezuela have no economic classification). These are kept
+as supplied; the views resolve them to `Not classified` rather than
+dropping the countries.
 
 Until the database exists, every page says so and returns 503 rather
 than erroring, so a fresh clone tells you what to do instead of
@@ -68,7 +68,7 @@ queries/        one .sql file per named query, loaded by db.load_query()
 sql/            schema, seed, and provenance scripts
 templates/      Jinja templates (base layout + one file per page)
 static/         CSS, fonts and images
-rebuild_db.sh   rebuilds immuatlas.db from immunisation2.db + sql/
+rebuild_db.py   rebuilds immuatlas.db from immunisation2.db + sql/
 ```
 
 ## Pages

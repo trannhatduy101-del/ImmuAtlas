@@ -1,17 +1,17 @@
 {% extends "base.html" %}
 {% block title %}{{ site_name }} &middot; {{ site_tagline }}{% endblock %}
 
-{# VaxVision section STRUCTURE (hero -> stat grid -> portfolio -> data band ->
-   statement band -> caveat cards) carrying the ORIGINAL ImmuAtlas content:
-   the effort-vs-outcome tension, four honest figures, the 25-year trend with
-   its axis caveat, the sourced vaccine thresholds, and what the data cannot
-   tell you. Imagery is hand-built SVG (offline, no stock photos), matching the
-   ImmuAtlas ethos. Colours come from the teal/coral palette in
-   css/vaxvision-landing.css. ImmuAtlas header/footer (base.html) are kept. #}
+{# Section structure -- hero, stat grid, portfolio, data band, statement band,
+   caveat cards -- carrying ImmuAtlas's own content: the effort-vs-outcome
+   tension, four honest figures, the 25-year trend with its axis caveat, the
+   sourced vaccine thresholds, and what the data cannot tell you. Imagery is
+   hand-built SVG (offline, no stock photos). Layout and the teal/coral palette
+   come from css/landing.css, which carries its attribution at the top. The
+   shared ImmuAtlas header and footer from base.html are kept. #}
 
 {% block body_class %}lp-vax{% endblock %}
 {% block head_extra %}
-  <link rel="stylesheet" href="{{ static_v('css/vaxvision-landing.css') }}">
+  <link rel="stylesheet" href="{{ static_v('css/landing.css') }}">
 {% endblock %}
 
 {# ---- Small inline SVG icons for the four stat cards (decorative). ---- #}
@@ -94,7 +94,7 @@
     <a href="#explore">Explore</a>
   </nav>
 
-  {# ---- Four figures from this data (was VaxVision "Snapshot Data") ---- #}
+  {# ---- Four figures from this data ---- #}
   <section id="snapshot-data" class="snapshot-section">
     <div class="snapshot-header">
       <h2>Four figures from this data</h2>

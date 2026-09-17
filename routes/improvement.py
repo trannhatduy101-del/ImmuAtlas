@@ -70,7 +70,7 @@ COLUMNS = [
 ]
 
 
-def _rows_for(antigen, start_year, end_year, order_by):
+def _rows_for(antigen, start_year, end_year, order_by, below_only=None):
     """Run the ranked improvement query. `order_by` is a trusted SORT_KEYS
     fragment; every value the user supplied is a bound parameter.
 
@@ -84,11 +84,11 @@ def _rows_for(antigen, start_year, end_year, order_by):
     base = db.load_query("coverage_improvement")
     sql = "SELECT * FROM (" + base + ") ORDER BY " + order_by
     params = {"antigen": antigen, "start_year": start_year,
-              "end_year": end_year}
+              "end_year": end_year, "below_only": below_only}
     return db.query(sql, params)
 
 
-def _summary_for(antigen, start_year, end_year):
+def _summary_for(antigen, start_year, end_year, below_only=None):
     """Headline figures for the KPI row, aggregated in SQL over the eligible
     pool (never in Python): average and largest coverage gain, and how many
     countries also saw their reported case rate fall."""
@@ -98,12 +98,14 @@ def _summary_for(antigen, start_year, end_year):
            "SUM(CASE WHEN case_change < 0 THEN 1 ELSE 0 END)          AS n_cases_fell, "
            "SUM(CASE WHEN case_change IS NOT NULL THEN 1 ELSE 0 END)  AS n_with_cases "
            "FROM (" + base + ")")
+    # Same below_only as the table: a headline computed over a different pool
+    # from the rows underneath it is worse than no headline.
     return db.query_one(sql, {"antigen": antigen, "start_year": start_year,
-                              "end_year": end_year})
+                              "end_year": end_year, "below_only": below_only})
 
 
 def _gain_bars(rows):
-    """Diverging vertical-bar geometry (VaxVision-style dashboard):
+    """Diverging vertical-bar geometry:
     one column per country, growing up from a zero line for a gain and down for
     a decline. Each side of the zero line is scaled independently against the
     largest change on that side, so the biggest gain and the biggest decline
@@ -191,6 +193,12 @@ def index():
     if count is None:
         count = DEFAULT_COUNT
 
+    # A single opt-in value. Anything else is rejected rather than coerced, so
+    # a hand-typed ?below_only=maybe cannot quietly narrow someone's ranking.
+    below_only, bad = db.validate(request.args.get("below_only"), {"1"})
+    if bad:
+        rejected.append("below-threshold filter")
+
     sort = request.args.get("sort")
     order_by = db.safe_order_by(sort, SORT_KEYS, DEFAULT_SORT)
     sort_active = sort if sort in SORT_KEYS else DEFAULT_SORT
@@ -222,6 +230,7 @@ def index():
     table_args = {
         "antigen": antigen, "start": start_year, "end": end_year,
         "n": count, "sort": sort_active, "submitted": 1,
+        "below_only": below_only,
     }
 
     ctx = dict(
@@ -233,6 +242,7 @@ def index():
         count=count, count_options=COUNT_OPTIONS,
         sort_active=sort_active, sort_labels=SORT_LABELS,
         rejected=rejected, range_error=range_error, submitted=submitted,
+        below_only=below_only,
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0,
         imp_summary=None, top_gainer=None,
         page=db.paginate([], None), table_args=table_args,
@@ -251,7 +261,7 @@ def index():
         return render_template("pages/3a_improvement.html", **ctx)
 
     # The whole eligible pool, ordered by the reader's chosen sort.
-    rows = _rows_for(antigen, start_year, end_year, order_by)
+    rows = _rows_for(antigen, start_year, end_year, order_by, below_only)
     ctx["rows"] = rows
 
     # An export is the full pool, never the page on screen -- the old version
@@ -274,7 +284,7 @@ def index():
         rejected.append("page")
     ctx["page"] = page
     ctx["eligible"] = page["total"]
-    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year)
+    ctx["imp_summary"] = _summary_for(antigen, start_year, end_year, below_only)
 
     # The single biggest gainer, for the KPI row, regardless of the table sort.
     # It is rank 1 by construction, so it is already in `rows`.

@@ -172,7 +172,7 @@ body {
 
 /* Headings carry the display serif; the small label-style headings (footer
    columns, method-note) stay in the body sans -- they read as labels, not titles. */
-h1, h2, h3, .hero-title, .lp-hero-head { font-family: var(--font-display); }
+h1, h2, h3, .hero-title{ font-family: var(--font-display); }
 .footer-col h2, .method-note h2 { font-family: var(--font-body); }
 
 .wrap {
@@ -270,7 +270,6 @@ summary:focus-visible {
   font-size: .84rem;
 }
 .subnav a.current { color: var(--accent); font-weight: 600; }
-.sub-code { font-weight: 700; color: var(--accent); min-width: 1.6rem; }
 
 /* On hover-capable devices the item becomes a real dropdown, no JavaScript:
    the expandable labels get a left-pointing chevron; hovering OR keyboard-
@@ -346,7 +345,7 @@ summary:focus-visible {
      closes on the same colour and the title reads as a landmark instead of
      text on tinted paper. The cyan bloom in the top-right keeps the navy from
      reading as a flat slab. The landing page replaces this band entirely
-     (vaxvision-landing.css), so this is the other five pages. */
+     (css/landing.css), so this is the other five pages. */
   background:
     radial-gradient(120% 90% at 88% -20%, rgba(6, 182, 212, .22) 0%, transparent 55%),
     var(--bg-deep);
@@ -368,8 +367,6 @@ summary:focus-visible {
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 #figures { scroll-margin-top: 1.5rem; }
-.btn-discover svg { transition: transform .15s var(--ease-out); }
-.btn-discover:hover svg { transform: translateY(2px); }
 .hero-title {
   margin: 0 0 .5rem;
   /* Fluid display size gives the page a clear top-of-hierarchy without a web
@@ -388,15 +385,6 @@ html { scroll-behavior: smooth; }
   font-size: 1.05rem;
   color: var(--ink-invert-muted);
   max-width: 62ch;
-}
-.hero-quote {
-  margin: 0 0 .7rem;
-  font-size: clamp(1.6rem, 1.1rem + 2vw, 2.35rem);
-  line-height: 1.25;
-  font-weight: 600;
-  letter-spacing: -.02em;
-  max-width: 26ch;
-  overflow-wrap: anywhere;
 }
 
 main { padding: 2.2rem var(--step) 3.5rem; }
@@ -459,13 +447,6 @@ h3 {
 .footer-links li, .footer-team li { margin-bottom: .45rem; font-size: .89rem; }
 .site-footer a { color: var(--ink-invert); text-decoration: none; }
 .site-footer a:hover { text-decoration: underline; }
-.footer-task {
-  display: inline-block;
-  min-width: 1.7rem;
-  font-size: .72rem;
-  font-weight: 700;
-  color: var(--ink-invert-muted);
-}
 .wip, .todo {
   display: inline-block;
   font-size: .68rem;
@@ -491,17 +472,6 @@ h3 {
 }
 .footer-legal p { margin: 0 0 .4rem; }
 .footer-legal cite { font-style: italic; }
-
-/* ---------------------------------------------------------------------------
-   1A landing page
-   --------------------------------------------------------------------------- */
-
-.lede {
-  font-size: 1.08rem;
-  color: var(--ink-muted);
-  max-width: 46rem;
-  margin-bottom: 2rem;
-}
 
 /* A filled dark-blue heading band (same ocean as the footer/outcome banner),
    so a section title reads as a landmark against the light-blue page instead
@@ -574,22 +544,6 @@ h3 {
   border-top: 1px solid var(--rule);
   padding-top: .7rem;
 }
-.fact-figure {
-  display: block;
-  font-size: clamp(1.75rem, 1.45rem + 1.3vw, 2.15rem);
-  font-weight: 700;
-  line-height: 1.15;
-  color: var(--accent);
-  font-variant-numeric: tabular-nums;
-}
-.fact-label {
-  display: block;
-  font-size: .84rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--ink-muted);
-  margin-bottom: .5rem;
-}
 .fact p { margin: 0; font-size: .92rem; }
 
 /* Trend chart ------------------------------------------------------------- */
@@ -612,21 +566,6 @@ h3 {
 .trend-dot { fill: var(--accent); }
 
 .chart figcaption { font-size: .9rem; color: var(--ink-muted); max-width: 46rem; }
-.chart-axis { font-style: italic; }
-
-.data-details { margin: 1rem 0 0; }
-.data-details summary {
-  cursor: pointer;
-  padding: .4rem 0;
-  font-size: .92rem;
-  color: var(--accent);
-}
-
-/* Tables ------------------------------------------------------------------ */
-
-/* Wide tables scroll inside their own box; the page itself never scrolls
-   sideways, which is what breaks a table layout on a phone. */
-.table-scroll { overflow-x: auto; }
 
 table { border-collapse: collapse; width: 100%; font-size: .92rem; }
 caption {
@@ -639,49 +578,8 @@ th, td { padding: .4rem .7rem; border-bottom: 1px solid var(--rule); text-align:
 thead th { border-bottom: 2px solid var(--rule); }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* Clean results table (2A/3A): a rounded card, sticky uppercase header, zebra
-   rows and a hover highlight. Opt-in via `.table-scroll.clean` + `.table--clean`
-   so other tables are untouched. */
-.table-scroll.clean {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius-md);
-  background: var(--bg);
-  box-shadow: var(--shadow-md);
-}
-.table--clean { font-size: .92rem; }
-.table--clean caption {
-  padding: .8rem 1rem;
-  border-bottom: 1px solid var(--rule);
-  color: var(--ink-muted);
-  font-size: .84rem;
-}
-.table--clean thead th {
-  position: sticky; top: 0; z-index: 1;
-  background: var(--bg-sunk);
-  color: var(--ink);
-  font-size: .74rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 700;
-  border-bottom: 1px solid var(--rule);
-  padding: .65rem 1rem;
-}
-.table--clean th, .table--clean td { padding: .6rem 1rem; border-bottom: 1px solid var(--rule); }
-.table--clean tbody tr:last-child th, .table--clean tbody tr:last-child td { border-bottom: 0; }
-.table--clean tbody tr:nth-child(even) { background: rgba(3, 105, 161, .035); }
-.table--clean tbody tr:hover { background: var(--accent-wash); }
-.table--clean tbody th[scope="row"] { font-weight: 600; color: var(--ink); }
-
 /* Filter prompt shown before a selection is submitted. */
 .prompt-state { text-align: center; }
-
-/* Diseases ---------------------------------------------------------------- */
-
-.disease-list {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 1.4rem;
-  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
-}
 .disease {
   background: var(--bg-sunk);
   border: 1px solid var(--rule);
@@ -690,7 +588,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .disease h3 { margin: 0 0 .3rem; font-size: 1.05rem; }
 .threshold { margin: 0 0 .5rem; font-size: 1.1rem; }
-.threshold-note, .disease-count { font-size: .86rem; color: var(--ink-muted); }
 .citation {
   font-size: .8rem;
   color: var(--ink-muted);
@@ -713,26 +610,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .caveats li { margin-bottom: .6rem; font-size: .93rem; }
 .caveats li:last-child { margin-bottom: 0; }
 
-/* Entry cards ------------------------------------------------------------- */
-
-.entry-cards {
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
-  margin-top: 1rem;
-}
-.entry-card {
-  display: block;
-  padding: 1.1rem;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  text-decoration: none;
-  color: inherit;
-}
-.entry-card:hover { border-color: var(--accent); background: var(--bg-sunk); }
-.entry-q { display: block; font-size: 1.05rem; font-weight: 600; margin-bottom: .4rem; }
-.entry-go { display: block; font-size: .87rem; color: var(--accent); }
-
 /* Empty states ------------------------------------------------------------ */
 
 .empty-state {
@@ -746,7 +623,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
      every page that shows a prompt or an empty result. */
   margin-inline: auto;
 }
-.empty-inline { color: var(--ink-muted); font-style: italic; }
 
 /* ---------------------------------------------------------------------------
    2A vaccination rates
@@ -757,40 +633,10 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Filters ----------------------------------------------------------------- */
 
 .filters { margin: 1.2rem 0 1.6rem; }
-
-/* Filter groups: the main choices sit in a highlighted (accent) box; optional
-   refinements and display controls sit in plain boxes, each labelled so the bar
-   reads as "choose these, then narrow if you want". */
-.filters .filter-group {
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: .8rem 1rem 1rem;
-  margin: 0 0 .7rem;
-  background: var(--bg);
-}
-.filters .filter-group:last-of-type { margin-bottom: 0; }
-.filters .filter-group--key { border-color: var(--accent); background: var(--accent-wash); }
 .filters legend {
   display: inline-flex; align-items: center; gap: .5rem;
   padding: 0 .3rem; margin-left: -.3rem;
   font-size: var(--text-sm); font-weight: 600;
-}
-.filter-group--key legend { color: var(--accent); }
-.filter-tag {
-  font-size: .64rem; text-transform: uppercase; letter-spacing: .05em;
-  font-weight: 700; padding: .1rem .35rem; border-radius: 2px;
-}
-.filter-tag.key { color: var(--accent-ink); background: var(--accent); }
-.filter-tag.opt {
-  color: var(--ink-muted); background: var(--bg-sunk); border: 1px solid var(--rule);
-}
-/* Main inputs get an accent edge so the eye lands on them first. */
-.filter-group--key .field select { border-color: var(--accent); }
-.filter-row {
-  display: flex;
-  flex-wrap: wrap;
-  gap: .9rem;
-  align-items: flex-end;
 }
 .field { display: flex; flex-direction: column; gap: .25rem; }
 .field label {
@@ -803,7 +649,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* Red asterisk marking a required filter. Colour is backed by the word
    "required" in the note and the native `required` attribute, so it is not the
    only signal. */
-.req { color: var(--outcome); font-weight: 700; margin-left: .1rem; }
+/* Not --outcome: that coral is 4.47:1 on the page ground, a hair under the
+   4.5:1 floor. This darker shade is the one already used by .vx-pill--down. */
+.req { color: #9a3412; font-weight: 700; margin-left: .1rem; }
 .field select {
   font: inherit;
   font-size: .92rem;
@@ -850,11 +698,32 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .filter-bar .field select { width: 100%; max-width: none; }
 /* Sits under a control to explain why its options changed. */
 .field-hint { display: block; margin-top: .25rem; font-size: .76rem; color: var(--ink-muted); }
+
+/* A checkbox filter reads as a sentence, so it gets the label's full width
+   rather than the stacked label-over-control the other fields use. */
+.filter-bar .field-check { flex: 1 1 100%; }
+.field-check label {
+  display: inline-flex; align-items: center; gap: .5rem;
+  font-size: .88rem; color: var(--ink); cursor: pointer;
+}
+.field-check input { width: 1rem; height: 1rem; accent-color: var(--accent); }
+
+/* Jump links between the two result tables. Usability testing found the only
+   way from one to the other was to scroll. */
+.table-jump {
+  display: flex; align-items: center; flex-wrap: wrap; gap: .6rem;
+  margin: var(--space-6) 0 0; font-size: .85rem;
+}
+.table-jump span { color: var(--ink-muted); }
+.table-jump a { color: var(--accent); }
+.vx-table-foot--jump { text-align: right; font-size: .82rem; }
+.vx-table-foot--jump a { color: var(--accent); text-decoration: none; font-weight: 600; }
+.vx-table-foot--jump a:hover { text-decoration: underline; }
 .filter-bar .field-actions { flex: 0 0 auto; align-self: flex-end; }
 @media (max-width: 40rem) { .filter-bar .field { flex: 1 1 100%; } }
 
-/* VaxVision-style results table: rounded card with a gradient header carrying
-   the title and a download pill, an uppercase muted head, and roomy rows. */
+/* Results table: rounded card with a gradient header carrying the title and a
+   download pill, an uppercase muted head, and roomy rows. */
 .vx-table-block {
   margin: 1rem 0 1.4rem;
   background: var(--bg-card);
@@ -916,48 +785,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   border-radius: var(--radius);
   padding: .6rem .9rem;
   font-size: .95rem;
-}
-
-/* Region bars ------------------------------------------------------------- */
-
-.region-bars { list-style: none; margin: 1rem 0 0; padding: 0; }
-.region-bar { margin-bottom: 1.1rem; }
-.region-bar-head {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 1rem;
-  margin-bottom: .25rem;
-}
-.region-bar-name { font-weight: 600; }
-.region-bar-value { font-variant-numeric: tabular-nums; font-weight: 700; }
-
-.bar-track {
-  position: relative;
-  height: 1.35rem;
-  background: var(--bg-sunk);
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  overflow: hidden;
-}
-.bar-fill { height: 100%; background: var(--accent); }
-
-/* The threshold marker is an addition to a bar that is already labelled with
-   its own figure, so the comparison never depends on seeing the line. */
-.bar-threshold {
-  position: absolute;
-  top: -2px;
-  bottom: -2px;
-  width: 3px;
-  background: var(--flag-rule);
-}
-.region-bar-note { margin: .25rem 0 0; font-size: .83rem; color: var(--ink-muted); }
-.threshold-key {
-  font-size: .87rem;
-  color: var(--ink-muted);
-  max-width: 46rem;
-  border-top: 1px solid var(--rule);
-  padding-top: .7rem;
 }
 
 .tag {
@@ -1026,18 +853,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   max-width: 48rem;
   font-size: .93rem;
 }
-
-.footer-lead {
-  font-size: .78rem;
-  text-transform: uppercase;
-  letter-spacing: .06em;
-  font-weight: 600;
-  margin-bottom: .3rem;
-}
-.footer-sources { margin: 0 0 .9rem; padding-left: 1.1rem; }
-.footer-sources li { margin-bottom: .4rem; }
-.footer-sources cite { font-style: italic; }
-.footer-sources a { word-break: break-word; }
 .unverified {
   display: inline-block;
   font-size: .72rem;
@@ -1056,83 +871,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    heading does the separating, so the page does not become a wall of cards. */
 
 .band + .band { margin-top: 2.8rem; }
-
-.sub-head {
-  font-size: 1.02rem;
-  margin: 1.8rem 0 .5rem;
-}
-
-/* ===========================================================================
-   1A landing — hero, the four figures, the trend band and the vaccine cards.
-
-   There is no JavaScript on this site, so nothing here waits for a script:
-   every rule renders its final state on first paint. Motion is limited to
-   hover transitions, all of them gated behind prefers-reduced-motion.
-   Class-prefixed `lp-` so nothing here can reach the other five pages.
-   =========================================================================== */
-
-/* Hero — the effort-vs-outcome tension, stated on the page ----------------- */
-.lp-hero-head {
-  margin: 0 0 .6rem;
-  font-size: clamp(2rem, 1.3rem + 3vw, 3.1rem);
-  line-height: 1.08;
-  letter-spacing: -.025em;
-  max-width: 20ch;
-  overflow-wrap: anywhere;
-}
-.lp-hero-lead {
-  margin: 0 0 1.5rem;
-  font-size: 1.05rem;
-  color: var(--ink-muted);
-  max-width: 60ch;
-}
-.lp-tension {
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 1rem 1.4rem;
-  max-width: 46rem;
-}
-.lp-tension-item { min-width: 0; }
-.lp-tension-label {
-  margin: 0;
-  font-size: .78rem;
-  text-transform: uppercase;
-  letter-spacing: .05em;
-  color: var(--ink-muted);
-}
-.lp-fig {
-  margin: .1rem 0 .25rem;
-  font-size: clamp(2rem, 1.4rem + 2.6vw, 2.9rem);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: -.02em;
-  font-variant-numeric: tabular-nums;
-}
-.lp-tension-effort .lp-fig { color: var(--accent); }
-.lp-tension-outcome .lp-fig { color: var(--flag-rule); }
-.lp-tension-note { margin: 0; font-size: .85rem; color: var(--ink-muted); }
-.lp-tension-sep {
-  align-self: center;
-  font-size: .74rem;
-  text-transform: uppercase;
-  letter-spacing: .12em;
-  color: var(--ink-muted);
-  padding: .5rem .8rem;
-  border-left: 1px solid var(--rule);
-  border-right: 1px solid var(--rule);
-}
-@media (max-width: 40rem) {
-  .lp-tension { grid-template-columns: 1fr; gap: .6rem; }
-  .lp-tension-sep {
-    justify-self: start;
-    border: 0;
-    border-top: 1px solid var(--rule);
-    padding: .5rem 0 0;
-    width: 2.6rem;
-    text-align: left;
-  }
-}
 
 /* Trend chart: year + coverage on hover, no JavaScript --------------------
    Every year is a <g class="trend-point"> holding an invisible hit circle, the
@@ -1174,58 +912,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 @media (prefers-reduced-motion: reduce) {
   .trend-dot, .trend-tip { transition: none; }
 }
-
-/* Four figures — small summary cards ---------------------------------------
-   The brief fixes this at four; kept 2 x 2 so effort sits beside outcome. */
-.lp-figure-cards {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(2, 1fr);
-}
-@media (max-width: 40rem) { .lp-figure-cards { grid-template-columns: 1fr; } }
-.lp-figure-card {
-  /* A coloured top edge groups the four as one set and makes the big number
-     the first thing the eye reaches, without a templated left-stripe. */
-  border: 1px solid var(--rule);
-  border-top: 3px solid var(--accent);
-  border-radius: 0;   /* squared so the 3px accent top edge sits flush */
-  padding: 1.1rem 1.2rem;
-  background: var(--bg);
-  transition: border-color .15s var(--ease-out),
-              box-shadow .15s var(--ease-out),
-              transform .15s var(--ease-out);
-}
-.lp-figure-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 6px 18px rgba(36, 48, 107, .12);
-  transform: translateY(-2px);
-}
-/* Bigger, heavier figures read at a glance; the last card (reported cases) is
-   the one "outcome" number, coloured coral so it reads apart from the effort
-   figures above it. Colour is backed by the label text, never the only signal. */
-.lp-figure-card .fact-figure {
-  font-size: clamp(2rem, 1.5rem + 1.8vw, 2.7rem);
-  font-weight: 800;
-  letter-spacing: -.02em;
-  margin-bottom: .1rem;
-}
-.lp-figure-card .fact-label { font-size: .8rem; }
-.lp-figure-card:last-child { border-top-color: var(--outcome); }
-.lp-figure-card:last-child .fact-figure { color: var(--outcome); }
-.lp-figure-card p { margin: .3rem 0 0; font-size: .94rem; color: var(--ink-muted); }
-
-/* Vaccine information — interactive picture cards --------------------------- */
-.lp-vax-list {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
-}
 .lp-vax {
   border: 1px solid var(--rule);
   border-radius: var(--radius);
@@ -1234,54 +920,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .lp-vax:hover,
 .lp-vax[open] { border-color: var(--accent); box-shadow: 0 4px 16px rgba(22, 25, 29, .10); }
-
-/* The whole face is the click/keyboard target; kill the default marker. */
-.lp-vax-face {
-  list-style: none;
-  cursor: pointer;
-  display: grid;
-  grid-template-columns: 3.4rem 1fr auto;
-  align-items: center;
-  gap: .9rem;
-  padding: .85rem 1rem;
-}
-.lp-vax-face::-webkit-details-marker { display: none; }
-.lp-vax-face:focus-visible { outline: 3px solid var(--focus); outline-offset: -3px; }
-.lp-vax-pic { width: 3.4rem; height: 3.4rem; }
-.lp-vax-svg { width: 100%; height: 100%; display: block; }
-.lp-vax-name { display: block; font-weight: 700; font-size: 1.05rem; line-height: 1.15; }
-.lp-vax-antigen { display: block; font-size: .77rem; color: var(--ink-muted); margin-top: .1rem; }
-.lp-vax-thr { display: block; font-size: .85rem; margin-top: .2rem; }
-.lp-vax-thr strong { color: var(--accent); }
-.lp-vax-chev { color: var(--ink-muted); display: grid; place-items: center;
-               transition: transform .18s var(--ease-out); }
-.lp-vax[open] .lp-vax-chev { transform: rotate(180deg); }
-
-.lp-vax-body { padding: 0 1rem 1rem; }
-.lp-vax[open] .lp-vax-body { animation: lp-vax-open .24s var(--ease-out); }
 @keyframes lp-vax-open {
   from { opacity: 0; transform: translateY(-4px); }
   to   { opacity: 1; transform: none; }
 }
-.lp-vax-blurb { margin: .1rem 0 .6rem; font-size: .93rem; }
-.lp-vax-note { margin: 0 0 .6rem; font-size: .85rem; color: var(--ink-muted); }
-.lp-vax .disease-count { margin: 0 0 .6rem; font-size: .86rem; color: var(--ink-muted); }
 .lp-vax .citation { border-top: 1px solid var(--rule); padding-top: .5rem; }
-.lp-vax-who {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  margin-top: .5rem;
-  font-weight: 600;
-  font-size: .9rem;
-  color: var(--accent-ink);
-  background: var(--accent);
-  padding: .42rem .85rem;
-  border-radius: var(--radius);
-  text-decoration: none;
-}
-.lp-vax-who:hover { background: var(--accent-strong); }
-.lp-ext { font-size: .95em; line-height: 1; }
 
 /* The vial illustration. Colours come from tokens so the art stays on-palette. */
 .v-cap, .v-neck { fill: var(--ink-muted); }
@@ -1292,10 +935,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .v-glyph-ring { fill: none; stroke: var(--flag-rule); stroke-width: 2; }
 
 @media (prefers-reduced-motion: reduce) {
-  .lp-figure-card { transition: none; }
-  .lp-figure-card:hover { transform: none; }
-  .lp-vax, .lp-vax-chev { transition: none; }
-  .lp-vax[open] .lp-vax-body { animation: none; }
+  .lp-vax{ transition: none; }
 }
 
 /* ===========================================================================
@@ -1304,7 +944,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    between them; every figure is also printed beside the bar and in the table,
    so the chart is a reading aid, never the only way to get a number.
    =========================================================================== */
-/* Ranked improvement chart (VaxVision-style dashboard): one bar per country on
+/* Ranked improvement chart: one bar per country on
    the coverage scale. The pale segment is the start-year level; the solid
    segment is the change to the end year, so the length of the solid bar reads
    directly as "how much this country improved" — a decline is drawn in coral
@@ -1319,15 +959,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 1.2rem 1.3rem 1.4rem;
 }
 .imp-viz-cap { margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted); max-width: 72ch; }
-.imp-viz-legend {
-  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem;
-  margin: 0 0 1.1rem; font-size: .78rem; color: var(--ink-muted);
-}
-.imp-viz-key { display: inline-flex; align-items: center; gap: .4rem; }
-.imp-viz-key::before { content: ""; width: .9rem; height: .6rem; border-radius: 2px; }
-.imp-viz-key--base::before { background: var(--accent-wash); border: 1px solid var(--rule); }
-.imp-viz-key--gain::before { background: var(--accent); }
-.imp-viz-key--loss::before { background: var(--outcome); }
 
 .imp-ranks { list-style: none; margin: 0; padding: 0; display: grid; gap: .4rem; }
 .imp-rank {
@@ -1343,18 +974,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .imp-rank-main { min-width: 0; }
 .imp-rank-head { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
 .imp-rank-country { font-weight: 700; }
-.imp-rank-region { font-size: .76rem; color: var(--ink-muted); }
-
-/* Scale ruler above the bars, so a bar's end can be read off the axis. Uses the
-   same grid columns as a rank row, so the ticks line up over the track. */
-.imp-viz-scale { display: grid; grid-template-columns: 1.7rem 1fr; gap: .75rem; margin: 0 0 .2rem; }
-.imp-viz-ruler { position: relative; height: 1rem; }
-.imp-viz-tick {
-  position: absolute; top: 0; transform: translateX(-50%);
-  font-size: .68rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.imp-viz-tick:first-child { transform: none; }
-.imp-viz-tick:last-child { transform: translateX(-100%); }
 
 .imp-rank-track {
   position: relative; height: 1.2rem; margin: .4rem 0 .35rem;
@@ -1365,7 +984,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background-image: linear-gradient(90deg, var(--rule) 0 1px, transparent 1px 100%);
   background-size: 25% 100%;
 }
-.imp-rank-base { position: absolute; left: 0; top: 0; bottom: 0; background: var(--accent-wash); }
 .imp-rank-seg  { position: absolute; top: 0; bottom: 0; }
 .imp-rank-seg.up   { background: var(--accent); }
 .imp-rank-seg.down { background: var(--outcome); }
@@ -1392,96 +1010,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .imp-tag.rose { color: var(--warn-ink);  border-color: var(--flag-rule); background: var(--bg-flag); }
 .imp-tag.none,
 .imp-tag.flat { color: var(--none-ink);  border-color: var(--rule);      background: var(--bg-sunk); }
-
-.imp-export { margin: .9rem 0 0; }
-.imp-export a { color: var(--accent); font-weight: 600; }
-
-/* ===========================================================================
-   Landing CTA buttons + the "Explore the data" feature grid (VaxVision-style
-   structure): hero drives into the dashboards, and a card grid surfaces all
-   four data views near the top instead of hiding them at the bottom.
-   =========================================================================== */
-.lp-hero-cta { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.4rem; }
-.btn {
-  display: inline-flex;
-  align-items: center;
-  gap: .4rem;
-  font-family: var(--font-body);
-  font-weight: 600;
-  font-size: var(--text-base);
-  padding: .62rem 1.2rem;
-  border-radius: var(--radius);
-  border: 1px solid transparent;
-  text-decoration: none;
-  cursor: pointer;
-  transition: background .15s var(--ease-out), border-color .15s var(--ease-out);
-}
-.btn-primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-.btn-primary:hover { background: var(--accent-strong); border-color: var(--accent-strong); }
-.btn-ghost { background: transparent; color: var(--accent); border-color: var(--accent); }
-.btn-ghost:hover { background: var(--accent-wash); }
-
-.lp-explore {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 1rem;
-  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
-}
-.lp-explore-card {
-  display: grid;
-  grid-template-columns: auto 1fr auto;
-  align-items: center;
-  gap: .7rem;
-  padding: 1rem 1.1rem;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  background: var(--bg);
-  text-decoration: none;
-  color: inherit;
-  transition: border-color .15s var(--ease-out),
-              box-shadow .15s var(--ease-out),
-              transform .15s var(--ease-out);
-}
-.lp-explore-card:hover {
-  border-color: var(--accent);
-  box-shadow: 0 4px 14px rgba(22, 25, 29, .08);
-  transform: translateY(-2px);
-}
-.lp-explore-code {
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 1.05rem;
-  color: var(--accent-ink);
-  background: var(--accent);
-  width: 2.3rem;
-  height: 2.3rem;
-  display: grid;
-  place-items: center;
-  border-radius: var(--radius);
-}
-.lp-explore-mid { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
-.lp-explore-label { font-weight: 600; }
-.lp-explore-wip {
-  align-self: start;
-  color: var(--warn-ink);
-  background: var(--bg-flag);
-  border: 1px solid var(--flag-rule);
-  text-transform: uppercase;
-  letter-spacing: .04em;
-  font-size: .62rem;
-  font-weight: 700;
-  padding: .05rem .35rem;
-  border-radius: 2px;
-}
-.lp-explore-go { color: var(--accent); font-size: 1.15rem; }
-.lp-explore-card.is-wip .lp-explore-code { background: var(--ink-muted); }
-
-@media (prefers-reduced-motion: reduce) {
-  .btn, .lp-explore-card { transition: none; }
-  .lp-explore-card:hover { transform: none; }
-}
 
 /* ---------------------------------------------------------------------------
    1B Mission -- ported from Sub-Task B, styled to match the rest of the site.
@@ -1736,9 +1264,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .ov-verdict--muted { color: rgba(255, 255, 255, .85); font-size: .92rem; }
 .ov-note { margin: .9rem 0 0; font-size: .8rem; color: rgba(255, 255, 255, .75); }
 
-/* 3A result chart: a vertical bar chart in VaxVision's dashboard grammar
-   (fixed-width columns, a light card, value labels sat on the bars), recoloured
-   onto the shared ImmuAtlas tokens and type. Diverging around a zero line since
+/* 3A result chart: a vertical bar chart -- fixed-width columns, a light card,
+   value labels sat on the bars -- on the shared ImmuAtlas tokens and type.
+   Diverging around a zero line since
    a coverage change can be a gain (up, accent) or a decline (down, outcome). */
 .vbar-chart {
   margin: 1rem 0 1.6rem; padding: 1.2rem 1.3rem 1.4rem;
@@ -1835,7 +1363,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .pager-btn:hover { background: var(--bg-sunk); }
 .pager-btn.is-disabled { color: var(--ink-muted); opacity: .5; pointer-events: none; }
-.pager-info { font-size: .82rem; color: var(--ink-muted); font-variant-numeric: tabular-nums; }
 
 /* Numbered pages. min-width keeps "1" and "27" the same width so the row does
    not shift as the reader pages through. */
@@ -1940,4 +1467,4 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-range { white-space: nowrap; }
 .vx-range .vx-from { color: var(--ink-muted); }
 .vx-range .vx-to { font-weight: 700; }
-.vx-range .arrow { margin: 0 .25rem; color: var(--accent-lift); }
+.vx-range .arrow { margin: 0 .25rem; color: var(--accent); }

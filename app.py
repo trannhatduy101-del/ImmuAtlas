@@ -7,7 +7,7 @@ routes lived here every change would collide, and the git history would not
 show who wrote what. Both of those are graded (the project spec section 3 and 12).
 
 Run:
-    ./rebuild_db.sh
+    python rebuild_db.py
     flask --app app run --debug
 """
 

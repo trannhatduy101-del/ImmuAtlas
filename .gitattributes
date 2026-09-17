@@ -1,12 +1,10 @@
 # Line endings.
 #
-# Without this, a clone on Windows rewrites LF to CRLF on checkout, and
-# rebuild_db.sh then fails on any Unix machine with "bad interpreter". Forcing
-# LF in the repository keeps the script runnable for both of us regardless of
-# whose machine it was committed from.
+# LF in the repository regardless of whose machine committed, so a file does not
+# show up as entirely rewritten just because one of us is on Windows and the
+# other is not.
 * text=auto eol=lf
 
-*.sh   text eol=lf
 *.sql  text eol=lf
 *.py   text eol=lf
 *.html text eol=lf

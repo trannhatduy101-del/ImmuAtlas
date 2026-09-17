@@ -120,7 +120,8 @@
 
   {# ---- What the selection contains ---- #}
   <p class="selection-line">
-    {{ fmt_int(summary.n_countries) }} countries in this selection.
+    {{ fmt_int(summary.n_countries) }}
+    {{ 'country' if summary.n_countries == 1 else 'countries' }} in this selection.
     <strong>{{ fmt_int(summary.n_countries_reporting) }}</strong> reported a
     coverage figure;
     {% set silent = summary.n_countries - summary.n_countries_reporting %}
@@ -142,7 +143,8 @@
     <section class="outcome-verdict">
       <p class="ov-context">
         {{ antigen or 'All antigens' }} &middot; {{ year or 'All years' }} &middot;
-        {{ fmt_int(outcome.n_reporting) }} countries reporting
+        {{ fmt_int(outcome.n_countries_reporting) }}
+        {{ 'country' if outcome.n_countries_reporting == 1 else 'countries' }} reporting
       </p>
       <div class="ov-main">
         <span class="ov-fig">{{ fmt_pct(outcome.avg_coverage) }}</span>
@@ -159,12 +161,21 @@
               <span class="ov-bar-mark" style="left: {{ [threshold.threshold_pct, 100]|min }}%"></span>
             </div>
             <p class="ov-verdict">
-              <strong>{{ fmt_int(outcome.n_met) }} of {{ fmt_int(outcome.n_reporting) }}</strong>
-              countries met the {{ fmt_pct(threshold.threshold_pct, 0) }} threshold
+              {# Country counts, not row counts: with several years or several
+                 antigens in the selection each country contributes more than
+                 one row, and the row figure would overstate this by a factor
+                 of four or more. #}
+              <strong>{{ fmt_int(outcome.n_countries_met) }} of {{ fmt_int(outcome.n_countries_reporting) }}</strong>
+              {{ 'country' if outcome.n_countries_reporting == 1 else 'countries' }}
+              met the {{ fmt_pct(threshold.threshold_pct, 0) }} threshold
               <span class="ov-gap ov-gap--{{ 'up' if gap >= 0 else 'down' }}">
                 {{ '%+.1f'|format(gap) }} pp vs target
               </span>
             </p>
+            {% if year is none %}
+              <p class="ov-note">Across every year, a country counts as having met
+                 the threshold if it did so in at least one of them.</p>
+            {% endif %}
           {% else %}
             <p class="ov-verdict ov-verdict--muted">
               Select a single antigen to see how many countries met its threshold
@@ -178,6 +189,16 @@
   {% endif %}
 
   {# ---- Table 1: by region ---- #}
+  {# Usability testing: "table is too long and navigate between tables are
+     difficult". The two anchors already existed for the sort forms to return
+     to; nothing linked to them, so the only way between the tables was to
+     scroll. #}
+  <nav class="table-jump" aria-label="Result tables">
+    <span>Jump to</span>
+    <a href="#region-table">Region table</a>
+    <a href="#country-table">Country table</a>
+  </nav>
+
   <h2 class="section-head">Result &middot; by region</h2>
   <p class="section-intro">
     Weighted by the birth cohort each national rate applies to, so one large
@@ -240,6 +261,9 @@
     {% if not has_t and not antigen %}
       <div class="vx-table-foot">Select a single antigen to compare each region against its disease threshold.</div>
     {% endif %}
+    <div class="vx-table-foot vx-table-foot--jump">
+      <a href="#country-table">Country table &darr;</a>
+    </div>
   </div>
 
   {# ---- Table 2: by country. Trimmed to the columns that answer the question;
@@ -305,6 +329,9 @@
         &middot; sorted by {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}
       </span>
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
+    </div>
+    <div class="vx-table-foot vx-table-foot--jump">
+      <a href="#region-table">&uarr; Region table</a>
     </div>
   </div>
 

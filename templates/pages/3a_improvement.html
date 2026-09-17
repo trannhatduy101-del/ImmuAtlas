@@ -70,6 +70,17 @@
         <span class="field-hint">After {{ start_year }} only</span>
       {% endif %}
     </div>
+    {# Level 3: this box narrows the ranking to a sub-dataset picked out by a
+       second query -- see the EXISTS clause in coverage_improvement.sql. It
+       changes WHICH countries are ranked, so the note under the table explains
+       that the ranks renumber inside the narrowed group. #}
+    <div class="field field-check">
+      <label for="f-below">
+        <input type="checkbox" id="f-below" name="below_only" value="1"
+               {% if below_only %}checked{% endif %}>
+        Only countries below the herd immunity threshold in the start year
+      </label>
+    </div>
     <div class="field field-actions">
       <button type="submit">Rank</button>
       <a class="reset" href="{{ url_for('improvement.index') }}">Reset</a>
@@ -80,6 +91,7 @@
      nothing once the antigen or period changes. #}
   {{ hidden_args(table_args, omit=['antigen', 'start', 'end', 'page', 'submitted']) }}
   <p class="filter-note">Fields marked <span class="req">*</span> are required &mdash; pick an antigen and both years to rank.
+    How many countries to show at once sits with the ranking table below, as <strong>Countries</strong>.
     Once a start year is set, End year lists only the years after it; the list updates when you press Rank.</p>
 </form>
 
@@ -120,11 +132,20 @@
   <p class="selection-line">
     Showing <strong>{{ page.first }}&ndash;{{ page.last }}</strong> of
     <strong>{{ fmt_int(eligible) }}</strong> countries that reported
-    {{ antigen_name }} in both {{ start_year }} and {{ end_year }}, ranked by
+    {{ antigen_name }} in both {{ start_year }} and {{ end_year }}{% if below_only %}
+    and were below the herd immunity threshold in {{ start_year }}{% endif %}, ranked by
     {{ (sort_labels | selectattr('0','equalto',sort_active) | first)[1] | lower }}.
     Every ranked country is reachable through the pages below, and a download
     contains all {{ fmt_int(eligible) }} of them.
   </p>
+  {% if below_only %}
+    {# The rank is a window function, so it is computed after the filter: it
+       numbers this narrowed group, not the whole pool. Left unsaid, a reader
+       who knows Nauru led overall would think the ranks were broken. #}
+    <p class="filter-note">Ranks are numbered within this narrowed group, so
+      <strong>#1</strong> is the biggest gain among the countries that started
+      below the threshold &mdash; not the biggest gain overall.</p>
+  {% endif %}
 
   {# ---- Verdict banner: one bold headline result, in the SAME treatment as 2A's,
          so the two Sub-Task A result pages read as one product. The biggest
@@ -158,9 +179,15 @@
   {% endif %}
 
   <h2 class="section-head">Result &middot; biggest improvement</h2>
+  <p class="section-intro">
+    Countries ordered by how far their reported coverage rose between the two
+    years you chose. The chart shows the page you are on; the table beneath it
+    carries the case rate for the same disease, so a rise in effort can be read
+    against what happened to the disease.
+  </p>
 
-  {# ---- Vertical bar chart (VaxVision-style dashboard, recoloured onto the
-         shared ImmuAtlas tokens and type): one column per country, its change
+  {# ---- Vertical bar chart on the shared ImmuAtlas tokens and type: one
+         column per country, its change
          in reported coverage. Bars above the line gained, bars below declined;
          each side is scaled against its own largest change. The exact figures
          live in the table + CSV below, so the chart is a reading aid. ---- #}
@@ -197,7 +224,7 @@
     </div>
   </div>
 
-  {# ---- Full ranking table (VaxVision-style block: gradient header with title
+  {# ---- Full ranking table (gradient header with title
          + download), including the different dataset: did cases actually fall? ---- #}
   <div class="vx-table-block" id="rank-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
@@ -205,7 +232,8 @@
       {# "Countries" is the page size here, so `n` is the size key. #}
       {{ table_controls('improvement.index', table_args, 'sort', sort_labels,
                         sort_active, anchor='#rank-table', page_key='page',
-                        size_key='n', sizes=count_options, size_active=count) }}
+                        size_key='n', sizes=count_options, size_active=count,
+                        size_label='Countries') }}
       {{ export_links('improvement.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">

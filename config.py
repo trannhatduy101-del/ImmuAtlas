@@ -7,7 +7,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # Supplied WHO data. Read only, never modified, committed to the repository.
 SOURCE_DB = os.path.join(BASE_DIR, "immunisation2.db")
 
-# Working database. Rebuilt from SOURCE_DB + sql/ by rebuild_db.sh. Git-ignored
+# Working database. Rebuilt from SOURCE_DB + sql/ by rebuild_db.py. Git-ignored
 # because it is binary and git cannot merge it; the state lives in sql/.
 # IMMUATLAS_DB overrides it for tests or a throwaway copy.
 DB_PATH = os.environ.get("IMMUATLAS_DB", os.path.join(BASE_DIR, "immuatlas.db"))

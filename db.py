@@ -18,7 +18,7 @@ section 7 hold everywhere in this file, and they are the whole reason it exists:
      against a fixed whitelist before it reaches the SQL. safe_order_by() is
      that whitelist, and it is the only place a name is ever interpolated.
 
-Rebuild the working database with ./rebuild_db.sh after changing sql/.
+Rebuild the working database with `python rebuild_db.py` after changing sql/.
 """
 
 import os
@@ -53,7 +53,7 @@ def connect(path=None):
     target = path or DB_PATH
     if not os.path.exists(target):
         raise DatabaseMissing(
-            "No database at %s. Run ./rebuild_db.sh to build it." % target
+            "No database at %s. Run: python rebuild_db.py" % target
         )
     conn = sqlite3.connect(target)
     conn.row_factory = sqlite3.Row

@@ -27,7 +27,7 @@
    table instead of the top of the page. #}
 {% macro table_controls(endpoint, args, sort_key, sort_options, sort_active,
                         anchor='', page_key=None, size_key=None,
-                        sizes=None, size_active=None) %}
+                        sizes=None, size_active=None, size_label='Rows') %}
   <form class="table-controls" method="get"
         action="{{ url_for(endpoint) }}{{ anchor }}">
     {{ hidden_args(args, omit=[sort_key, page_key, size_key] | reject('none') | list) }}
@@ -41,7 +41,10 @@
     </label>
     {% if size_key and sizes %}
       <label class="table-controls-field">
-        <span>Rows</span>
+        {# 3A calls this "Countries": the brief asks for a control to choose the
+           number of countries to find, and a reader looking for it should not
+           have to work out that "Rows" is the same thing. #}
+        <span>{{ size_label }}</span>
         <select name="{{ size_key }}">
           {% for n in sizes %}
             <option value="{{ n }}" {% if n == size_active %}selected{% endif %}>{{ n }}</option>

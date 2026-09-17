@@ -70,3 +70,26 @@ WHERE cs.antigen = :antigen
   AND cs.year    = :start_year
   AND cs.coverage_reported IS NOT NULL
   AND ce.coverage_reported IS NOT NULL
+  -- Optional narrowing: keep only the countries that were still BELOW the herd
+  -- immunity threshold in the start year, which turns the page from "who gained
+  -- most" into "of the countries that had furthest to go, who gained most".
+  --
+  -- EXISTS against v_herd_immunity, so the threshold comparison is done by that
+  -- view and its result is what selects the sub-dataset here -- one query's
+  -- output choosing the rows of another, rather than a second copy of the
+  -- threshold logic living in this file.
+  --
+  -- NULL means "no narrowing", so the default ranking is untouched: the filter
+  -- can only ever remove rows the reader asked to remove.
+  --
+  -- Note for the page: RANK() is a window function, so it runs AFTER this WHERE.
+  -- With the filter on, rank 1 means "biggest gain among the countries that
+  -- started below the threshold", not "biggest gain overall". Say so on screen
+  -- or the numbers look wrong.
+  AND (:below_only IS NULL OR EXISTS (
+          SELECT 1
+          FROM v_herd_immunity h
+          WHERE h.country_id = cs.country_id
+            AND h.antigen    = cs.antigen
+            AND h.year       = cs.year
+            AND h.coverage_reported < h.threshold_pct))

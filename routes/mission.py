@@ -45,7 +45,7 @@ def index():
         team_members = db.query(db.load_query("team_members"))
         persona_rows = db.query(db.load_query("persona_list"))
     except db.DatabaseMissing as exc:
-        # A fresh clone has no immuatlas.db until rebuild_db.sh has run. Say so
+        # A fresh clone has no immuatlas.db until rebuild_db.py has run. Say so
         # rather than letting the page 500 with nothing a reader can act on.
         return render_template("pages/1b_mission.html", db_missing=str(exc)), 503
 
