@@ -1765,3 +1765,143 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .vx-range .vx-from { color: var(--ink-muted); }
 .vx-range .vx-to { font-weight: 700; }
 .vx-range .arrow { margin: 0 .25rem; color: var(--accent); }
+
+/* =========================
+   FAQ SECTION
+   ========================= */
+
+.faq-section {
+  margin-top: 3.5rem;
+  margin-bottom: 3.5rem;
+}
+
+.faq-section .section-intro {
+  max-width: 720px;
+  margin: 0 auto 2rem;
+  text-align: center;
+}
+
+.faq-list {
+  max-width: 900px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.faq-item {
+  margin: 0;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: #ffffff;
+  overflow: hidden;
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease,
+    border-color 0.25s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+  border-color: rgba(0, 0, 0, 0.18);
+}
+
+.faq-item summary {
+  min-height: 64px;
+  padding: 1.15rem 1.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+
+  cursor: pointer;
+  list-style: none;
+
+  font-size: 1rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary span:first-child {
+  text-align: left;
+}
+
+.faq-arrow {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  background: #f3f4f6;
+
+  font-size: 1.2rem;
+  line-height: 1;
+
+  transition:
+    transform 0.3s ease,
+    background 0.3s ease;
+}
+
+.faq-item summary:hover .faq-arrow {
+  background: #e5e7eb;
+}
+
+.faq-item[open] .faq-arrow {
+  transform: rotate(180deg);
+  background: #e5e7eb;
+}
+
+.faq-answer {
+  padding: 0 1.4rem 1.3rem;
+}
+
+.faq-answer p {
+  margin: 0;
+  padding: 1rem 1.15rem;
+
+  border-left: 3px solid #d1d5db;
+  border-radius: 0 10px 10px 0;
+
+  background: #f8f9fa;
+
+  font-size: 0.95rem;
+  line-height: 1.7;
+}
+
+/* =========================
+   FAQ RESPONSIVE
+   ========================= */
+
+@media (max-width: 768px) {
+  .faq-section {
+    margin-top: 2.5rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .faq-list {
+    gap: 0.8rem;
+  }
+
+  .faq-item summary {
+    padding: 1rem;
+    min-height: 58px;
+  }
+
+  .faq-answer {
+    padding: 0 1rem 1rem;
+  }
+
+  .faq-answer p {
+    padding: 0.9rem;
+    font-size: 0.9rem;
+  }
+}
