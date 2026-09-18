@@ -167,8 +167,17 @@
           <span class="ov-label">biggest gain in percentage points &mdash; <strong>{{ top_gainer.country_name }}</strong>
             ({{ fmt_pct(top_gainer.coverage_start) }} &rarr; {{ fmt_pct(top_gainer.coverage_end) }})</span>
           <p class="ov-verdict">
-            Average gain across all {{ fmt_int(eligible) }} ranked countries:
+            Average gain across all {{ fmt_int(eligible) }} ranked {{ unit }}:
             <strong>{% if imp_summary.avg_gain is not none %}{{ '%+.1f'|format(imp_summary.avg_gain) }} percentage points{% else %}&mdash;{% endif %}</strong>.
+            {# The brief asks for a rate that depends on the country's
+               population. Coverage does not: its denominator is the target
+               group. This is that second rate, as one average rather than a
+               column, so the table keeps the four fields the brief's example
+               names. Four decimals because the denominator is everyone alive. #}
+            Measured against each country&rsquo;s whole population instead, doses
+            per 100 people moved
+            <strong>{% if imp_summary.avg_doses_per_100 is not none %}{{ '%+.4f'|format(imp_summary.avg_doses_per_100) }}{% else %}&mdash;{% endif %}</strong>
+            on average.
             {% if imp_summary.n_with_cases %}
               <span class="ov-gap ov-gap--{{ 'up' if imp_summary.n_cases_fell * 2 >= imp_summary.n_with_cases else 'down' }}">
                 {{ fmt_int(imp_summary.n_cases_fell) }} of {{ fmt_int(imp_summary.n_with_cases) }} also saw reported cases fall
@@ -382,18 +391,22 @@
       </dd>
       <dt>Who is ranked</dt>
       <dd>
-        A country appears only if it reported a figure in <strong>both</strong>
-        {{ start_year }} and {{ end_year }}; {{ fmt_int(eligible) }} did. Without
-        both years a country could appear to improve simply because its earlier
-        figure is missing. Nine territories report figures but have no country
+        A country is ranked for a vaccine only if it reported a figure for that
+        vaccine in <strong>both</strong> {{ start_year }} and {{ end_year }},
+        which leaves {{ fmt_int(eligible) }} {{ unit }}. Without both years a
+        country could appear to improve simply because its earlier figure is
+        missing. Nine territories report figures but have no country
         record, so they have no name or region and are not ranked here either.
         The rank is always by coverage gain, so it stays with a country whatever
         the table is sorted by.
       </dd>
       <dt>Doses per 100 people</dt>
       <dd>
-        Doses divided by the whole population rather than the target group.
-        The figure appears in the <strong>CSV and PDF</strong>.
+        Doses divided by the whole population rather than the target group,
+        which is the reading of "vaccination rate" that depends on how many
+        people a country has. The average across the ranked set is in the
+        headline above the table, and the figure for each country is in the
+        <strong>CSV and PDF</strong>.
       </dd>
 
       <dt>Coverage above 100%</dt>

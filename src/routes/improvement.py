@@ -112,7 +112,13 @@ def _summary_for(antigen, start_year, end_year, region=None, q=None):
     sql = ("SELECT ROUND(AVG(coverage_change), 1) AS avg_gain, "
            "ROUND(MAX(coverage_change), 1)        AS max_gain, "
            "SUM(CASE WHEN case_change < 0 THEN 1 ELSE 0 END)          AS n_cases_fell, "
-           "SUM(CASE WHEN case_change IS NOT NULL THEN 1 ELSE 0 END)  AS n_with_cases "
+           "SUM(CASE WHEN case_change IS NOT NULL THEN 1 ELSE 0 END)  AS n_with_cases, "
+           # The brief's population-based reading of "vaccination rate". It is
+           # not a column on the table -- the table is the four fields the
+           # brief's example names -- so the headline carries it instead, as
+           # one average over the whole ranked set. Added to the aggregate this
+           # query already runs, not to a second trip to the database.
+           "ROUND(AVG(doses_per_100_change), 4)   AS avg_doses_per_100 "
            "FROM (" + base + ")")
     # Same parameters as the table: a headline computed over a different pool
     # from the rows underneath it is worse than no headline.

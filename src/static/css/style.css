@@ -706,15 +706,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .filter-bar .field { flex: 1 1 9rem; min-width: 8rem; }
 .filter-bar .field select { width: 100%; max-width: none; }
 
-/* A checkbox filter reads as a sentence, so it gets the label's full width
-   rather than the stacked label-over-control the other fields use. */
-.filter-bar .field-check { flex: 1 1 100%; }
-.field-check label {
-  display: inline-flex; align-items: center; gap: .5rem;
-  font-size: .88rem; color: var(--ink); cursor: pointer;
-}
-.field-check input { width: 1rem; height: 1rem; accent-color: var(--accent); }
-
 /* Jump links between the two result tables. Usability testing found the only
    way from one to the other was to scroll. */
 .table-jump {
@@ -928,10 +919,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
     radial-gradient(circle at 74% 80%, rgba(2, 14, 28, .42), rgba(2, 14, 28, 0) 66%);
   box-shadow: inset 0 0 26px rgba(2, 14, 28, .45),
               inset 0 0 0 1px rgba(255, 255, 255, .10);
-}
-.globe-cap {
-  font-size: .85rem; color: var(--ink-muted); line-height: 1.55;
-  max-width: 54ch; text-align: left;
 }
 @media (prefers-reduced-motion: reduce) {
   .globe-map { animation: none; }
@@ -1200,21 +1187,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .imp-rank-badge { font-weight: 800; padding: .06rem .55rem; border-radius: 999px; }
 .imp-rank-badge.up   { color: var(--accent-strong); background: var(--accent-wash); }
 .imp-rank-badge.down { color: #9a3412; background: var(--bg-flag); }
-
-/* Status badges — always carry the word, so colour is never the only signal. */
-.imp-tag {
-  display: inline-block;
-  font-size: .72rem;
-  font-weight: 600;
-  padding: .05rem .4rem;
-  border-radius: 2px;
-  border: 1px solid;
-  white-space: nowrap;
-}
-.imp-tag.fell { color: var(--ok);        border-color: var(--ok);        background: var(--ok-bg); }
-.imp-tag.rose { color: var(--warn-ink);  border-color: var(--flag-rule); background: var(--bg-flag); }
-.imp-tag.none,
-.imp-tag.flat { color: var(--none-ink);  border-color: var(--rule);      background: var(--bg-sunk); }
 
 /* ---------------------------------------------------------------------------
    1B Mission -- ported from Sub-Task B, styled to match the rest of the site.
@@ -1575,8 +1547,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   top: -1.45rem; bottom: auto;
   background: var(--bg-card); padding: 0 .25rem; border-radius: 3px;
 }
-.vbar-chart--scale .vbar-fill.is-nodata { background: var(--rule); }
-.vbar-chart--scale .vbar-fill.is-nodata .vbar-val { color: var(--none-ink); }
 /* Bars grow out of the baseline on load, one after the next. The height each
    bar ends at is its inline style, so the animation interpolates from 0 up to
    whatever that is -- no JavaScript and no second copy of the number.
@@ -1701,7 +1671,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* vs-target pill used in the 2A region + country tables. */
 .vx-pill { display: inline-block; font-size: .78rem; font-weight: 700; padding: .1rem .5rem; border-radius: 999px; white-space: nowrap; }
-.vx-pill--up { color: var(--accent-strong); background: var(--accent-wash); }
 .vx-pill--down { color: #9a3412; background: #fdead9; }
 .vx-pill--none { color: var(--none-ink); background: var(--bg-sunk); border: 1px solid var(--rule); }
 
@@ -1729,7 +1698,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   overflow: hidden;
 }
 .cov-bar > span { display: block; height: 100%; border-radius: 999px; background: var(--accent); }
-.cov-bar.is-met > span   { background: var(--accent); }
 
 /* Coloured delta in the 3A ranking table's Change column, matching the dumbbell
    above it, so a gain reads apart from a decline at a glance. Word/sign carry
@@ -1756,16 +1724,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   font-weight: 400; font-size: .76rem; color: var(--ink-muted); white-space: normal;
 }
 .vx-table--rank .vx-cell-key { white-space: normal; min-width: 9rem; }
-/* The two raw case rates, tucked under the fell/rose badge. They used to be
-   their own column saying the same thing the badge says. */
-.vx-table--rank .imp-tag + .vx-sub {
-  font-variant-numeric: tabular-nums; white-space: nowrap;
-}
-.vx-range { white-space: nowrap; }
-.vx-range .vx-from { color: var(--ink-muted); }
-.vx-range .vx-to { font-weight: 700; }
-.vx-range .arrow { margin: 0 .25rem; color: var(--accent); }
-
 /* =========================
    FAQ SECTION
    ========================= */
