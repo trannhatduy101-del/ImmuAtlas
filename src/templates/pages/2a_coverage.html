@@ -247,7 +247,7 @@
       {# The number is the threshold of the antigen actually selected, not a
          fixed 90: WHO sets 95 for measles, 90 for DTP and 80 for rubella, so a
          hardcoded 90 would be wrong on the default view. #}
-      <span class="vx-table-title">Countries reaching the
+      <span class="vx-table-title" id="region-table-title">Countries reaching the
         {{ fmt_pct(threshold_pct, 0) }} target, by region</span>
       {# `rsort` and `rpage`, not `sort` and `page`: this table and the country
          table each own their query parameters, so sorting or paging one never
@@ -259,7 +259,10 @@
       {{ export_links('coverage.index', table_args, pdf_ok, {'table': 'region'}) }}
     </div>
     <div class="vx-table-wrap">
-      <table class="vx-table">
+      {# The name is already on screen just above. Pointing the table at it
+         gives a screen reader the same name, instead of announcing two
+         unnamed tables with nothing to tell them apart. #}
+      <table class="vx-table" aria-labelledby="region-table-title">
         <thead>
           {# Region | Antigen | Year | Countries met the target. One row per
              region per vaccine per year, so all four columns carry a real
@@ -308,7 +311,7 @@
   <h2 class="section-head">Results &middot; countries that met the target</h2>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
-      <span class="vx-table-title">Countries reaching
+      <span class="vx-table-title" id="country-table-title">Countries reaching
         {{ fmt_pct(threshold_pct, 0) }} vaccine coverage</span>
       {{ table_controls('coverage.index', table_args, 'sort', sort_labels, sort_active,
                         anchor='#country-table', page_key='page',
@@ -317,7 +320,7 @@
       {{ export_links('coverage.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
-      <table class="vx-table">
+      <table class="vx-table" aria-labelledby="country-table-title">
         <thead>
           {# Country | Antigen | Year | Region | Percentage of target, the same
              rhythm as the region table above: the subject of the row first,

@@ -313,8 +313,10 @@
          + download), including the different dataset: did cases actually fall? ---- #}
   <div class="vx-table-block" id="rank-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
-      <span class="vx-table-title">The ranking
-        <span class="vx-table-sub">The case rate beside each country shows whether the disease followed.</span></span>
+      {# The sub-line here used to point at the case rate column. That column
+         left when the table was cut to the brief's fields, so the sentence was
+         describing something the reader could no longer see. #}
+      <span class="vx-table-title" id="rank-table-title">The ranking</span>
       {# The size control counts whatever a row is. With one antigen a row is a
          country, which is the brief's own wording, "choose the number of
          countries to find". With every antigen a row is a country and a
@@ -328,7 +330,9 @@
       {{ export_links('improvement.index', table_args, pdf_ok) }}
     </div>
     <div class="vx-table-wrap">
-      <table class="vx-table vx-table--rank">
+      {# Named by the title already above it, so it is announced as
+         "The ranking" rather than as an unnamed table. #}
+      <table class="vx-table vx-table--rank" aria-labelledby="rank-table-title">
         <thead>
           <tr>
             <th scope="col" class="num">#</th>

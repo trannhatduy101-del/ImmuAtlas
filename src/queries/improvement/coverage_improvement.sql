@@ -46,8 +46,6 @@ SELECT
     cs.coverage_reported                                    AS coverage_start,
     ce.coverage_reported                                    AS coverage_end,
     ROUND(ce.coverage_reported - cs.coverage_reported, 2)   AS coverage_change,
-    cs.national_population                                  AS population_start,
-    ce.national_population                                  AS population_end,
     -- The brief's population-based reading of "vaccination rate". v_coverage
     -- already computes it (doses per 100 of the WHOLE national population), so
     -- it is read here, never recalculated. It is NOT coverage: its denominator

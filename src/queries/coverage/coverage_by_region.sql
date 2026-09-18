@@ -55,8 +55,6 @@ SELECT
         / NULLIF(SUM(CASE WHEN vc.coverage_reported IS NOT NULL
                           THEN vc.target_cohort END), 0)
     , 2)                                          AS avg_weighted,
-    SUM(CASE WHEN vc.coverage_reported IS NOT NULL
-             THEN vc.target_cohort END)           AS cohort_weighted,
     COUNT(DISTINCT CASE WHEN :met_threshold IS NOT NULL
                          AND vc.coverage_reported >= :met_threshold
                         THEN vc.country_id END)   AS n_met_threshold
@@ -91,7 +89,6 @@ SELECT
         / NULLIF(SUM(CASE WHEN vc.coverage_reported IS NOT NULL
                           THEN vc.target_cohort END), 0)
     , 2),
-    SUM(CASE WHEN vc.coverage_reported IS NOT NULL THEN vc.target_cohort END),
     COUNT(DISTINCT CASE WHEN :met_threshold IS NOT NULL
                          AND vc.coverage_reported >= :met_threshold
                         THEN vc.country_id END)
