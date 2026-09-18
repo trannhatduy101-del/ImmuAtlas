@@ -418,13 +418,17 @@
       <dd>
         Doses divided by the whole population rather than the target group:
         <span class="formula">doses &divide; population &times; 100</span>. It
-        answers a different question, so the two figures differ.
+        answers a different question, so the two figures differ. It is not a
+        column on either table; it is in the <strong>CSV and PDF</strong>.
       </dd>
 
       <dt>Regional average</dt>
       <dd>
         Each country counts towards its region in proportion to the children it
-        aimed to reach, so a large country carries more weight.
+        aimed to reach, so a large country carries more weight. This is the
+        figure the chart above the tables is drawn from, and it is in the
+        regional <strong>CSV and PDF</strong>; the regional table itself counts
+        countries rather than averaging them.
       </dd>
 
       <dt>Threshold</dt>
@@ -445,8 +449,11 @@
 
       <dt>Met target</dt>
       <dd>
-        Each country counts once. With no year chosen, a country counts if it
-        met the target in any year of the selection.
+        Each row of the regional table is one vaccine in one year, and the
+        count is the countries that reached the target in <strong>that</strong>
+        year. Choosing no year lists every year separately rather than rolling
+        them into one figure, so a country that cleared the bar in 2011 but not
+        in 2012 is counted in the first row and not in the second.
       </dd>
 
       <dt>Exclusions</dt>
@@ -457,6 +464,17 @@
         those as 100% and says what was reported, and the download carries the
         reported figure unchanged. Territories with no country record are
         counted on the regional table and named there.
+      </dd>
+
+      <dt>What the download adds</dt>
+      <dd>
+        A file is read away from the page that produced it, so it carries the
+        columns the screen leaves out. The country download adds the figure as
+        reported before it was capped at 100%, the target birth cohort, and
+        doses per 100 people. The regional download adds how many countries are
+        in the selection, how many of them reported, and both regional
+        averages. Every one of them comes from the same query the page runs,
+        not from a second trip to the database.
       </dd>
     </dl>
   </div>

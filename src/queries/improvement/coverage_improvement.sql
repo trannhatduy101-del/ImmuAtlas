@@ -80,6 +80,12 @@ WHERE (:antigen IS NULL OR cs.antigen   = :antigen)
   AND (:region  IS NULL OR cs.region_id = :region)
   AND cs.year    = :start_year
   AND cs.coverage_reported IS NOT NULL
+  -- The nine territories with vaccination figures but no row in Country have
+  -- no name and no region. 2A drops them from its country table for exactly
+  -- this reason; without the same clause here they ranked as a country called
+  -- "None", and sorting by name put them first because NULL sorts before
+  -- every letter.
+  AND cs.country_name IS NOT NULL
   AND ce.coverage_reported IS NOT NULL
   -- The table's search box. Bound, never spliced, so a reader typing % or _ is
   -- searching for those characters rather than writing a pattern of their own.

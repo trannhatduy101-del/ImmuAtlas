@@ -33,17 +33,6 @@ bp = Blueprint("improvement", __name__)
 SORT_KEYS = {
     "gain_desc":  "coverage_change IS NULL, coverage_change DESC, country_name ASC",
     "gain_asc":   "coverage_change IS NULL, coverage_change ASC,  country_name ASC",
-    "cases_fell": "case_change IS NULL, case_change ASC,          country_name ASC",
-    "cases_rose": "case_change IS NULL, case_change DESC,         country_name ASC",
-    # Sorts on the case rate the table actually SHOWS at the end year. Every
-    # other case key orders by the change, which answers a different question.
-    "cases_now":  "cases_end IS NULL, cases_end DESC,             country_name ASC",
-    # The brief's population-based reading of the rate. Back on the table, so
-    # back in this list: a column on screen is a column a reader can order by.
-    "pop_rate":   ("doses_per_100_change IS NULL, doses_per_100_change DESC, "
-                   "country_name ASC"),
-    "pop_rate_asc": ("doses_per_100_change IS NULL, doses_per_100_change ASC, "
-                     "country_name ASC"),
     # A column on the table since :antigen became optional.
     "antigen":    "antigen ASC,  coverage_change DESC, country_name ASC",
     "antigen_desc": "antigen DESC, coverage_change DESC, country_name ASC",
@@ -51,17 +40,12 @@ SORT_KEYS = {
     "country_desc": "country_name DESC",
 }
 # Same shape as the 2A labels: "what is being sorted: which direction", and no
-# "first". The three case options are worded so they cannot be confused: the two
-# "Change in case rate" ones order by how far the rate MOVED, while "Case rate
-# in the end year" orders by the rate the table actually shows.
+# "first". Case rate and doses per 100 population left this list with their
+# columns: the table is the brief's four fields now, and a sort on a figure
+# that is only in the download would order rows by something invisible.
 SORT_LABELS = [
     ("gain_desc",  "Gain: high → low"),
     ("gain_asc",   "Gain: low → high"),
-    ("cases_fell", "Case change: biggest fall"),
-    ("cases_rose", "Case change: biggest rise"),
-    ("cases_now",  "End case rate: high → low"),
-    ("pop_rate",   "Doses/100: high → low"),
-    ("pop_rate_asc", "Doses/100: low → high"),
     ("antigen",    "Antigen: A – Z"),
     ("antigen_desc", "Antigen: Z – A"),
     ("country",    "Country: A – Z"),

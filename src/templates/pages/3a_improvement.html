@@ -306,11 +306,15 @@
     <div class="vx-table-header">
       <span class="vx-table-title">The ranking
         <span class="vx-table-sub">The case rate beside each country shows whether the disease followed.</span></span>
-      {# "Countries" is the page size here, so `n` is the size key. #}
+      {# The size control counts whatever a row is. With one antigen a row is a
+         country, which is the brief's own wording, "choose the number of
+         countries to find". With every antigen a row is a country and a
+         vaccine, so calling the control "Countries" would contradict the count
+         printed two lines above it. #}
       {{ table_controls('improvement.index', table_args, 'sort', sort_labels,
                         sort_active, anchor='#rank-table', page_key='page',
                         size_key='n', sizes=count_options, size_active=count,
-                        size_label='Countries',
+                        size_label=('Countries' if antigen else 'Rows'),
                         search_key='q', search_value=query_text) }}
       {{ export_links('improvement.index', table_args, pdf_ok) }}
     </div>
@@ -326,17 +330,14 @@
                figures left the table with it -- they are the pair that printed
                above 100%, and the increase does not need them beside it to be
                read. Both are still in the download. #}
+            {# "change in reported coverage", not "percentage points": the cell
+               prints a % sign to match the brief's example, and a unit in the
+               header that contradicts the sign on the number is worse than no
+               unit at all. The method note gives the full definition. #}
             <th scope="col" class="num">Vaccination rate increase
-              <span class="th-sub">percentage points</span></th>
-            {# The brief's other reading of "vaccination rate": doses measured
-               against the WHOLE population rather than the target group. It is
-               a different denominator, not a second opinion on the same one,
-               so it sits in its own column and says so. #}
-            <th scope="col" class="num">Doses / 100 people
-              <span class="th-sub">change, whole population</span></th>
+              <span class="th-sub">change in reported coverage</span></th>
             <th scope="col" class="num">Start year</th>
             <th scope="col" class="num">End year</th>
-            <th scope="col">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
           </tr>
         </thead>
         <tbody>
@@ -353,36 +354,8 @@
               <td class="num">
                 <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}%</span>
               </td>
-              <td class="num">
-                {% if r.doses_per_100_change is not none %}
-                  {# Four decimals, as in the download. Against a whole national
-                     population the figure is small, and two decimals print
-                     0.00 for most countries. #}
-                  <span class="delta-num {{ 'up' if r.doses_per_100_change >= 0 else 'down' }}">{{ '%+.4f'|format(r.doses_per_100_change) }}</span>
-                {% else %}&mdash;{% endif %}
-              </td>
               <td class="num">{{ start_year }}</td>
               <td class="num">{{ end_year }}</td>
-              {# The different dataset, in ONE column: the direction and size of
-                 the move, with the two raw rates beneath it. It was two columns
-                 -- "25.30 -> 5.36" beside "fell 19.94" -- which is the same fact
-                 written twice. Doses per 100 population left the table for the
-                 same reason: it is computed in the query and carried in the CSV
-                 and PDF, where a four-decimal figure can be read properly. #}
-              <td>
-                {% if r.case_change is none %}
-                  <span class="imp-tag none">no case data</span>
-                {% elif r.case_change < 0 %}
-                  <span class="imp-tag fell">&darr; fell {{ '%.2f'|format(-r.case_change) }}</span>
-                {% elif r.case_change > 0 %}
-                  <span class="imp-tag rose">&uarr; rose {{ '%.2f'|format(r.case_change) }}</span>
-                {% else %}
-                  <span class="imp-tag flat">no change</span>
-                {% endif %}
-                {% if r.cases_start is not none and r.cases_end is not none %}
-                  <span class="vx-sub">{{ '%.2f'|format(r.cases_start) }} &rarr; {{ '%.2f'|format(r.cases_end) }}</span>
-                {% endif %}
-              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -412,8 +385,10 @@
         A country appears only if it reported a figure in <strong>both</strong>
         {{ start_year }} and {{ end_year }}; {{ fmt_int(eligible) }} did. Without
         both years a country could appear to improve simply because its earlier
-        figure is missing. The rank is always by coverage gain, so it stays with
-        a country whatever the table is sorted by.
+        figure is missing. Nine territories report figures but have no country
+        record, so they have no name or region and are not ranked here either.
+        The rank is always by coverage gain, so it stays with a country whatever
+        the table is sorted by.
       </dd>
       <dt>Doses per 100 people</dt>
       <dd>
@@ -431,9 +406,11 @@
       </dd>
       <dt>Did cases actually fall?</dt>
       <dd>
-        The final column draws on a <strong>separate dataset</strong>: reported
-        {{ disease_name or "the matching disease's" }} cases per 100,000 people
-        across the same years.
+        A <strong>separate dataset</strong> is read alongside the ranking:
+        reported {{ disease_name or "the matching disease's" }} cases per
+        100,000 people across the same years. The headline above the table says
+        how many of the ranked countries also saw their case rate fall, and the
+        figure for each country is in the <strong>CSV and PDF</strong>.
         Coverage and case rates can rise together. Reported case numbers also
         reflect how actively a country looks for cases, so they are best read as
         an indication rather than a conclusion.
