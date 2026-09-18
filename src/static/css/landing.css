@@ -624,19 +624,17 @@ body.lp-vax .lp-trend-cap-top { color: rgba(255, 255, 255, .82); }
 body.lp-vax .lp-trend-note summary { color: #8cdbae; }
 body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 
-/* Hero graphic: wireframe globe + syringe, sitting on the dark hero below the
-   call to action. White line work with one accent fill, so it holds up over
-   whatever part of the background photograph `cover` crops to. Static. */
-.lp-hero-art {
-  width: min(300px, 60vw); height: auto;
-  margin: clamp(24px, 5vw, 44px) auto 0; display: block;
+/* Hero graphic: an abstract shield + pulse line -- "protection", drawn on the
+   dark hero over the background photograph. Deliberately not a data chart, and
+   deliberately NOT vaccine vials (Vaccine information below already uses those
+   photos), so no image on the page repeats its subject. Static. */
+.lp-hero-shield {
+  width: min(220px, 46vw); height: auto;
+  margin: clamp(28px, 6vw, 50px) auto 0; display: block;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .22));
 }
-.lp-globe-disc   { fill: rgba(255, 255, 255, .07); stroke: #ffffff; stroke-width: 2.5; }
-.lp-globe-line   { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2; }
-.lp-syringe      { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
-.lp-syringe-dose { fill: #8cdbae; stroke: none; }
-.lp-hero-arc     { fill: none; stroke: #8cdbae; stroke-width: 3; stroke-linecap: round; opacity: .75; }
+.lp-shield-outline { fill: rgba(255, 255, 255, .08); stroke: #ffffff; stroke-width: 3; stroke-linejoin: round; }
+.lp-shield-pulse { fill: none; stroke: #8cdbae; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
 
 /* Trend chart axes (Y = coverage %, X = year). */
 .lp-trend-grid { stroke: var(--rule); stroke-width: 1; }
@@ -650,7 +648,7 @@ body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 /* Impact by region: three image cards stacked vertically, each a ring (percent
    as an arc) + a real headline figure for one region-level finding. A
    different lens from "Four figures" (a single global aggregate) and a
-   different graphic from the hero (globe + syringe) and Vaccine info (vials). */
+   different graphic from the hero (shield) and Vaccine info (vial photos). */
 .lp-impact { padding: clamp(52px, 8vw, 92px) 20px; }
 .lp-impact-inner { max-width: 1000px; margin: 0 auto; }
 .lp-impact-head {
