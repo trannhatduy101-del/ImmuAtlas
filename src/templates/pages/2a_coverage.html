@@ -88,6 +88,11 @@
   </div>
 {% else %}
 
+{# A row of the country table is one country in one vaccine in one year. It is
+   a country only when BOTH of those are pinned; otherwise calling the count
+   "countries" says 11,521 of them when the data holds 217. #}
+{% set unit = 'countries' if antigen and year else 'rows' %}
+
 {% if rejected %}
   <div class="rejected-note" role="status">
     <strong>Filter ignored.</strong>
@@ -381,7 +386,7 @@
     </div>
     <div class="vx-table-foot">
       <span class="vx-foot-count">
-        {{ page_count(page, 'countries') }}
+        {{ page_count(page, unit) }}
       </span>
       {{ pager(page, 'coverage.index', table_args, anchor='#country-table') }}
     </div>

@@ -103,7 +103,7 @@
 {# With one antigen a row is a country. With all of them a country has a row per
    vaccine, so calling the count "countries" would overstate it. #}
 {% set unit = 'countries' if antigen else 'country–vaccine pairs' %}
-{% set vaccine = antigen_name or 'any vaccine' %}
+{% set vaccine = antigen_name or 'each vaccine' %}
 
 {% if rejected %}
   <div class="rejected-note" role="status">
@@ -420,9 +420,10 @@
       <dt>Did cases actually fall?</dt>
       <dd>
         A <strong>separate dataset</strong> is read alongside the ranking:
-        reported {{ disease_name or "the matching disease's" }} cases per
-        100,000 people across the same years. The headline above the table says
-        how many of the ranked countries also saw their case rate fall, and the
+        reported cases per 100,000 people of
+        {{ disease_name or 'the disease each vaccine prevents' }}, across the
+        same years. The headline above the table says
+        how many of the ranked {{ unit }} also saw their case rate fall, and the
         figure for each country is in the <strong>CSV and PDF</strong>.
         Coverage and case rates can rise together. Reported case numbers also
         reflect how actively a country looks for cases, so they are best read as
