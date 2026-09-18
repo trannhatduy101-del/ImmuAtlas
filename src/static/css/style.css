@@ -811,6 +811,11 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   padding: 10px 20px; font-size: .82rem; color: var(--ink-muted);
   border-top: 1px solid var(--rule);
 }
+/* A note dropped straight into the table card, rather than into the header or
+   the foot, inherits no padding at all and so ends up one pixel from the
+   border while everything above and below it clears 20. Same inset as the
+   foot, plus room underneath so it does not sit on the bottom edge. */
+.vx-table-block > .filter-note { padding: 0 20px .6rem; }
 @media (prefers-reduced-motion: reduce) { .vx-download { transition: none; } }
 
 .selection-line {

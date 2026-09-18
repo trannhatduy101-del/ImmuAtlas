@@ -328,6 +328,12 @@
                read. Both are still in the download. #}
             <th scope="col" class="num">Vaccination rate increase
               <span class="th-sub">percentage points</span></th>
+            {# The brief's other reading of "vaccination rate": doses measured
+               against the WHOLE population rather than the target group. It is
+               a different denominator, not a second opinion on the same one,
+               so it sits in its own column and says so. #}
+            <th scope="col" class="num">Doses / 100 people
+              <span class="th-sub">change, whole population</span></th>
             <th scope="col" class="num">Start year</th>
             <th scope="col" class="num">End year</th>
             <th scope="col">Cases / 100k <span class="th-sub">{{ start_year }} &rarr; {{ end_year }}</span></th>
@@ -346,6 +352,14 @@
               <td title="{{ r.antigen_name }}">{{ r.antigen }}</td>
               <td class="num">
                 <span class="delta-num {{ 'up' if r.coverage_change >= 0 else 'down' }}">{{ '%+.1f'|format(r.coverage_change) }}%</span>
+              </td>
+              <td class="num">
+                {% if r.doses_per_100_change is not none %}
+                  {# Four decimals, as in the download. Against a whole national
+                     population the figure is small, and two decimals print
+                     0.00 for most countries. #}
+                  <span class="delta-num {{ 'up' if r.doses_per_100_change >= 0 else 'down' }}">{{ '%+.4f'|format(r.doses_per_100_change) }}</span>
+                {% else %}&mdash;{% endif %}
               </td>
               <td class="num">{{ start_year }}</td>
               <td class="num">{{ end_year }}</td>
