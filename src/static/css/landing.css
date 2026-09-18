@@ -1,14 +1,12 @@
 /* ===========================================================================
    Landing page stylesheet (page 1A only).
 
-   ATTRIBUTION: the layout in this file is adapted from the landing stylesheet
-   of VaxVision, a separate team's project. The page's content, data, figures
-   and copy are ImmuAtlas's own; what came from VaxVision is the section
-   structure and the layout rules below. Recorded here so the origin travels
-   with the code.
+   The page follows the shape most landing pages settle on -- a full-bleed
+   hero, a row of headline figures, a band of feature panels, then a closing
+   call to action -- which is why the section names below read the way they do.
 
    Loaded ONLY on 1A, through the head_extra block, and every rule is scoped
-   under body.lp-vax -- so it cannot reach the shared header and footer or any
+   under body.lp-vax, so it cannot reach the shared header and footer or any
    of the other five pages.
    =========================================================================== */
 

@@ -247,15 +247,15 @@
           </li>
         {% endfor %}
       </ul>
-      <figcaption class="globe-cap">
-        <strong>Reported coverage in {{ end_year }}</strong>, not the change
-        above it. Green is at or above the {{ fmt_pct(globe_target, 0) }} target,
-        orange is below, grey is a country with no figure for
-        {{ vaccine }} in both years. The sphere is a flat map wrapped on a
-        circle, so it distorts towards the edges; the table below carries the
-        figures.
-        <span class="citation">Outlines: {{ globe_credit }}</span>
-      </figcaption>
+      {# Colour is doing the talking on the map, so something has to say what
+         each one means. The long paragraph that used to sit here said it in
+         sixty words; three swatches say it in six. Colours come from the same
+         constant the map is painted from. #}
+      <ul class="vbar-legend globe-key">
+        {% for name, colour, label in globe_key %}
+          <li class="vbar-key globe-key--{{ name }}" style="--key: {{ colour }}">{{ label }}</li>
+        {% endfor %}
+      </ul>
     </figure>
   {% endif %}
 

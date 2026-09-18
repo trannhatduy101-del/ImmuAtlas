@@ -856,15 +856,31 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   position: relative; flex: none;
   width: min(320px, 78vw); aspect-ratio: 1;
   border-radius: 50%; overflow: hidden;
-  /* Sea. Deliberately desaturated: the data scale is green, and a saturated
-     sea made every country that met the target vanish into it. */
-  background: #17261d;
+  /* Sea, the colour a sea actually is. It was a near-black green while the
+     rest of the site was blue; now that the site is green, blue is free and
+     the land scale stands as far from the water as it can get. */
+  background: #0b3d66;
   box-shadow: var(--shadow-md);
 }
 .globe-map {
   position: absolute; top: 0; left: 0;
-  height: 100%; width: 200%;
+  /* 400%, not 200%. The viewBox holds two 720x360 copies, so 1440x360, a 4:1
+     ratio. At 400% of a square globe the element is 4:1 too, so the map lands
+     at its own aspect with nothing clipped and one copy measures exactly 50%
+     of the element -- which is what the keyframe below slides by. At 200% the
+     element was 2:1, slice scaled the content to 1280px inside a 640px box,
+     and half of every copy was clipped away: the loop then covered 180 degrees
+     instead of 360 and the sphere never showed the Atlantic at all. */
+  height: 100%; width: 400%;
   animation: globe-spin 48s linear infinite;
+  /* Open over the mid Atlantic, so the first thing on screen is the Americas
+     on the left and Europe and Africa coming round on the right.
+
+     Measured on the page rather than derived: with the width above the loop
+     walks the view east at 7.5 degrees a second from 90 degrees west at delay
+     zero, so 30 degrees west is 8 seconds in. A negative delay only picks a
+     starting phase, so the loop still closes on itself with no seam. */
+  animation-delay: -8s;
 }
 @keyframes globe-spin { to { transform: translateX(-50%); } }
 /* Stop the world while it is being aimed at. Clicking a continent that is
@@ -909,8 +925,8 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   position: absolute; inset: 0; border-radius: 50%; pointer-events: none;
   background:
     radial-gradient(circle at 30% 24%, rgba(255, 255, 255, .20), rgba(255, 255, 255, 0) 42%),
-    radial-gradient(circle at 74% 80%, rgba(2, 23, 12, .38), rgba(2, 23, 12, 0) 66%);
-  box-shadow: inset 0 0 26px rgba(2, 23, 12, .42),
+    radial-gradient(circle at 74% 80%, rgba(2, 14, 28, .42), rgba(2, 14, 28, 0) 66%);
+  box-shadow: inset 0 0 26px rgba(2, 14, 28, .45),
               inset 0 0 0 1px rgba(255, 255, 255, .10);
 }
 .globe-cap {
@@ -1481,18 +1497,22 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   background: var(--bg-card); border: 1px solid var(--rule); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-md);
 }
-/* Centred on the plot it introduces, and narrower than 72ch so it breaks into
-   even lines instead of one long measure pinned to the left edge of a centred
-   chart. text-align also takes it out of the global justify rule, which is
-   written with :where() and so loses to any class. */
+/* Runs to both edges of the card it sits in. It carried a 60ch cap, which in a
+   card this wide left the text stopping two thirds of the way across with the
+   rest of the line empty. No text-align-last either: a centred last line under
+   a full-width justified block reads as a stray line rather than a close. */
 .vbar-cap {
-  margin: 0 auto .8rem; font-size: .9rem; color: var(--ink-muted);
-  max-width: 60ch; text-align: justify; text-align-last: center;
+  margin: 0 0 .8rem; font-size: .9rem; color: var(--ink-muted);
+  text-align: justify;
 }
 .vbar-legend { display: flex; gap: 1.2rem; margin: 0 0 1rem; font-size: .78rem; color: var(--ink-muted); }
 .vbar-key { display: inline-flex; align-items: center; gap: .4rem; }
 .vbar-key::before { content: ""; width: .9rem; height: .6rem; border-radius: 2px; }
 .vbar-key--up::before { background: var(--accent); }
+/* The globe's key paints its swatch from a custom property, so the colour
+   arrives from the same Python constant the map is painted from. */
+.globe-key { flex-wrap: wrap; gap: .9rem; justify-content: center; margin: 0; }
+.globe-key .vbar-key::before { background: var(--key); }
 .vbar-key--down::before { background: var(--outcome); }
 .vbar-key--top::before { background: var(--accent-strong); outline: 2px solid var(--accent-lift); outline-offset: 1px; }
 .vbar-scroll { overflow-x: auto; padding: 1.6rem 0; }

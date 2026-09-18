@@ -187,12 +187,22 @@ def _gain_bars(rows):
 # of each so a country that just cleared the bar does not look like one at 100%.
 # Grey is "no figure", never a shade of the scale -- a country with nothing to
 # report must not read as a low number.
-GLOBE_NO_DATA = "#d4e5da"
+# Brighter and more saturated than the page palette, because these sit on a
+# deep blue ocean now rather than on a dark green one: a land colour close to
+# the sea makes the coastline do all the work.
+GLOBE_NO_DATA = "#cbd5cf"
 GLOBE_SCALE = [
-    (70.0,  "#9a3412"),   # far below
-    (90.0,  "#e06024"),   # below the target
-    (95.0,  "#409b6c"),   # just over
-    (None,  "#0a643d"),   # comfortably over
+    (70.0,  "#c2410c"),   # far below
+    (90.0,  "#ea7317"),   # below the target
+    (95.0,  "#22a559"),   # just over
+    (None,  "#15803d"),   # comfortably over
+]
+# What the key under the globe shows. Read from the scale above rather than
+# written out again, so the key cannot drift from the map it explains.
+GLOBE_KEY = [
+    ("met", GLOBE_SCALE[3][1], "met the target"),
+    ("below", GLOBE_SCALE[1][1], "below it"),
+    ("none", GLOBE_NO_DATA, "no figure"),
 ]
 GLOBE_TARGET = 90.0
 
@@ -374,7 +384,7 @@ def index():
         rows=[], bars={"zero_pct": 50.0, "bars": []}, eligible=0, chart_n=0,
         globe=[], globe_regions=[], globe_rest=[],
         globe_w=worldmap.WIDTH, globe_h=worldmap.HEIGHT,
-        globe_credit=worldmap.CREDIT, globe_target=GLOBE_TARGET,
+        globe_target=GLOBE_TARGET, globe_key=GLOBE_KEY,
         imp_summary=None, top_gainer=None,
         tied_ranks=set(),
         page=db.paginate([], None), table_args=table_args,

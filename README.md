@@ -181,6 +181,12 @@ The personas on the mission page and the names and student numbers of the
 team are read from the database on every request, never written into a
 template or a Python constant, as the project specification requires.
 
+The globe on page 3A is drawn from country outlines published by Natural
+Earth, specifically the 1:110m Admin 0 Countries set, which is in the public
+domain. The outlines are projected once by `tools/build_worldmap.py` and
+stored as a generated Python module, so the running application never
+fetches anything from the network.
+
 Filtering, sorting, joining and aggregation are all performed in SQL.
 Python validates the incoming request, whitelists the sort column, converts
 figures into the geometry a chart needs, and formats values for display.
