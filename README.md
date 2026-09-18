@@ -125,6 +125,8 @@ src/               the application
 tools/             one off scripts, never imported by the application
   build_worldmap.py downloads the Natural Earth country outlines, which are in
                    the public domain, and projects them for the globe on 3A
+  make_hero_image.py resizes and blurs the hero background photograph on page 1A
+                   and writes it out as WebP
   recolour.py      rotates every colour in the stylesheets from one hue to
                    another in the OKLCH colour space, keeping lightness and
                    chroma unchanged so that the measured contrast ratios
@@ -186,6 +188,16 @@ Earth, specifically the 1:110m Admin 0 Countries set, which is in the public
 domain. The outlines are projected once by `tools/build_worldmap.py` and
 stored as a generated Python module, so the running application never
 fetches anything from the network.
+
+The hero of page 1A uses a single background photograph, prepared by
+`tools/make_hero_image.py`. That script resizes the image and applies a
+Gaussian blur before writing it out, because the photograph carries legible
+text of its own that would otherwise sit behind the hero headline. Blurred, it
+contributes texture and nothing else. A green gradient is laid over it at
+partial opacity so that the image cannot pull the page away from its palette,
+and the same gradient is repeated underneath at full opacity, so that a hero
+whose image has not yet loaded still presents white text on a dark green band
+rather than on white. Every other graphic on the page remains hand-drawn SVG.
 
 Filtering, sorting, joining and aggregation are all performed in SQL.
 Python validates the incoming request, whitelists the sort column, converts

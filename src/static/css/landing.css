@@ -67,9 +67,15 @@ EXPLORE HERO SECTION
     padding: clamp(80px, 10vw, 110px) 20px clamp(56px, 8vw, 90px);
     text-align: center;
     overflow: hidden;
-    /* No stock photo: a deep teal gradient built from the palette, with a faint
-       data-grid pattern layered on top (inline SVG, offline, on-brand). */
+    /* Three layers, top to bottom: the palette gradient at partial opacity,
+       which tints the photograph below it green so it cannot fight the rest of
+       the page; a blurred photograph of immunisation slides, which supplies
+       texture only (tools/make_hero_image.py blurs the text out of it); and the
+       same gradient again at full opacity, so a missing or slow image leaves a
+       green band rather than a white one and the white text never strands. */
     background:
+      linear-gradient(150deg, rgba(6, 53, 32, .95) 0%, rgba(8, 82, 51, .92) 55%, rgba(14, 104, 70, .92) 100%),
+      url("../img/hero-slides.webp") center / cover no-repeat,
       linear-gradient(150deg, var(--bg-deep) 0%, var(--accent-strong) 55%, #3e9769 100%);
   }
   .explore-hero::after {
@@ -90,8 +96,8 @@ EXPLORE HERO SECTION
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(circle at top left, rgba(255,255,255,0.22), transparent 34%),
-      radial-gradient(circle at bottom right, rgba(140, 219, 174,0.24), transparent 36%);
+      radial-gradient(circle at top left, rgba(255,255,255,0.12), transparent 34%),
+      radial-gradient(circle at bottom right, rgba(140, 219, 174,0.13), transparent 36%);
     pointer-events: none;
   }
 
@@ -109,6 +115,7 @@ EXPLORE HERO SECTION
     max-width: 20ch;
     margin: 0;
     color: #ffffff;
+    text-shadow: 0 1px 3px rgba(6, 53, 32, .55);
     font-family: var(--font-display);
     font-size: clamp(2rem, 1.3rem + 3vw, 3.1rem);
     line-height: 1.08;
@@ -118,7 +125,8 @@ EXPLORE HERO SECTION
   .explore-hero p {
     max-width: 60ch;
     margin: 0;
-    color: rgba(255, 255, 255, 0.88);
+    color: rgba(255, 255, 255, 0.95);
+    text-shadow: 0 1px 3px rgba(6, 53, 32, .55);
     font-family: var(--font-body);
     font-size: 1.08rem;
   }
@@ -381,7 +389,7 @@ RESPONSIVE - INDEX ONLY
 .snap-label { font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: #4a5b57; margin-bottom: .5rem; }
 .snap-stat p { font-size: .92rem; line-height: 1.55; color: #4a5b57; margin: 0; }
 
-/* ---- Vaccine information section: teal gradient (no stock photo) ---- */
+/* ---- Vaccine information section: gradient background ---- */
 .vaccine-cards-section {
   background: linear-gradient(150deg, var(--accent-strong) 0%, var(--bg-deep) 100%);
 }
@@ -616,17 +624,19 @@ body.lp-vax .lp-trend-cap-top { color: rgba(255, 255, 255, .82); }
 body.lp-vax .lp-trend-note summary { color: #8cdbae; }
 body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 
-/* Hero graphic: an abstract shield + pulse line -- "protection", drawn on the
-   dark hero. Deliberately not a photo and not a data chart, and deliberately
-   NOT vaccine vials (Vaccine information below already uses those photos), so
-   no image on the page repeats its subject. Static (no animation). */
-.lp-hero-shield {
-  width: min(220px, 46vw); height: auto;
-  margin: clamp(28px, 6vw, 50px) auto 0; display: block;
+/* Hero graphic: wireframe globe + syringe, sitting on the dark hero below the
+   call to action. White line work with one accent fill, so it holds up over
+   whatever part of the background photograph `cover` crops to. Static. */
+.lp-hero-art {
+  width: min(300px, 60vw); height: auto;
+  margin: clamp(24px, 5vw, 44px) auto 0; display: block;
   filter: drop-shadow(0 20px 40px rgba(0, 0, 0, .22));
 }
-.lp-shield-outline { fill: rgba(255, 255, 255, .08); stroke: #ffffff; stroke-width: 3; stroke-linejoin: round; }
-.lp-shield-pulse { fill: none; stroke: #8cdbae; stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.lp-globe-disc   { fill: rgba(255, 255, 255, .07); stroke: #ffffff; stroke-width: 2.5; }
+.lp-globe-line   { fill: none; stroke: rgba(255, 255, 255, .85); stroke-width: 2; }
+.lp-syringe      { fill: none; stroke: #ffffff; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
+.lp-syringe-dose { fill: #8cdbae; stroke: none; }
+.lp-hero-arc     { fill: none; stroke: #8cdbae; stroke-width: 3; stroke-linecap: round; opacity: .75; }
 
 /* Trend chart axes (Y = coverage %, X = year). */
 .lp-trend-grid { stroke: var(--rule); stroke-width: 1; }
@@ -640,7 +650,7 @@ body.lp-vax .lp-trend-note p { color: rgba(255, 255, 255, .78); }
 /* Impact by region: three image cards stacked vertically, each a ring (percent
    as an arc) + a real headline figure for one region-level finding. A
    different lens from "Four figures" (a single global aggregate) and a
-   different graphic from the hero (shield) and Vaccine info (vial photos). */
+   different graphic from the hero (globe + syringe) and Vaccine info (vials). */
 .lp-impact { padding: clamp(52px, 8vw, 92px) 20px; }
 .lp-impact-inner { max-width: 1000px; margin: 0 auto; }
 .lp-impact-head {

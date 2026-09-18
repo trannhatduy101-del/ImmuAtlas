@@ -4,8 +4,9 @@
 {# Section structure -- hero, stat grid, portfolio, data band, statement band,
    caveat cards -- carrying ImmuAtlas's own content: the effort-vs-outcome
    tension, four honest figures, the 25-year trend with its axis caveat, the
-   sourced vaccine thresholds, and what the data cannot tell you. Imagery is
-   hand-built SVG (offline, no stock photos). Layout and the teal/coral palette
+   sourced vaccine thresholds, and what the data cannot tell you. The hero
+   carries a blurred background photograph; every other graphic on the page is
+   hand-built SVG, so the page still works offline. Layout and the palette
    come from css/landing.css, which carries its attribution at the top. The
    shared ImmuAtlas header and footer from base.html are kept. #}
 
@@ -65,13 +66,32 @@
         </p>
         <a href="#snapshot-data" class="explore-btn">Explore the figures</a>
 
-        {# Hero graphic: a shield + pulse motif -- "protection", drawn abstractly
-           so it never reads as a sourced chart. Kept distinct from the vaccine
-           vial photos used in Vaccine information further down, and from the
-           region rings used in Global impact, so no image repeats on the page. #}
-        <svg class="lp-hero-shield" viewBox="0 0 220 220" role="img" aria-hidden="true">
-          <path class="lp-shield-outline" d="M110 14 L192 44 V104 C192 152 156 186 110 206 C64 186 28 152 28 104 V44 Z"/>
-          <polyline class="lp-shield-pulse" points="52,116 82,116 94,86 112,146 126,102 138,116 168,116"/>
+        {# Hero graphic: a wireframe globe with a syringe meeting it, and a thin
+           arc over the top for "covered". The globe is deliberately drawn as
+           meridians and parallels with no coastlines: page 3A carries a real
+           projected world map, and repeating that here would blunt it. The
+           syringe is line work, which keeps it distinct from the filled vials
+           in Vaccine information below. Decorative, static, no JavaScript. #}
+        <svg class="lp-hero-art" viewBox="0 0 310 240" aria-hidden="true" focusable="false">
+          <path class="lp-hero-arc" d="M37.9 54.5 A88 88 0 0 1 182.1 54.5"/>
+
+          <circle class="lp-globe-disc" cx="110" cy="105" r="70"/>
+          {# equator, then the parallels at roughly 40 degrees north and south #}
+          <ellipse class="lp-globe-line" cx="110" cy="105" rx="70" ry="20"/>
+          <ellipse class="lp-globe-line" cx="110" cy="60"  rx="54" ry="13"/>
+          <ellipse class="lp-globe-line" cx="110" cy="150" rx="54" ry="13"/>
+          {# two meridians; the disc outline serves as the third #}
+          <ellipse class="lp-globe-line" cx="110" cy="105" rx="24" ry="70"/>
+          <ellipse class="lp-globe-line" cx="110" cy="105" rx="48" ry="70"/>
+
+          {# Syringe, built along its own axis and then swung into place so the
+             needle points back at the globe. #}
+          <g transform="translate(172 148) rotate(35)">
+            <rect class="lp-syringe-dose" x="31" y="-11" width="34" height="22"/>
+            <path class="lp-syringe" d="M0 0 H24 M24 -7 V7 M70 -11 V-5 M78 -11 V-5
+                                        M89 -15 V15 M89 0 H112 M112 -13 V13"/>
+            <rect class="lp-syringe" x="31" y="-11" width="58" height="22" rx="3"/>
+          </g>
         </svg>
       </div>
     </section>
@@ -322,8 +342,8 @@
   {# ---- Impact by region: a different lens from "Four figures" (which is a
          single global aggregate) -- how coverage splits across the world's
          regions. Each card is a ring (percentage as an arc, not just a number)
-         so no image repeats: the hero is a shield motif, Vaccine info uses vial
-         photos, and this is the only place rings appear. Every figure comes
+         so no image repeats: the hero pairs a wireframe globe with a syringe,
+         Vaccine info uses vial photos, and this is the only place rings appear. Every figure comes
          from coverage_by_region, weighted by birth cohort like 2A. ---- #}
   {% if impact_regions %}
   <section class="lp-impact" id="impact">
