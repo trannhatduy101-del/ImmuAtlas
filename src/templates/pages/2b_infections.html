@@ -121,7 +121,7 @@
   {# ---- All economic phases, side by side, for this disease/year --
          independent of which single phase is selected above. ---- #}
   {% if all_economies_summary %}
-    <h2 class="section-head">Result &middot; every economic phase</h2>
+    <h2 class="section-head">Results &middot; every economic phase</h2>
     <div class="vx-table-block" id="phase-table">
       <div class="vx-table-header">
         <span class="vx-table-title">{{ summary.disease_name }} &middot; {{ selected_year }} &middot; all phases</span>
@@ -172,7 +172,7 @@
   {# ---- Ranked bar chart: the ten highest-rate countries in the group. ---- #}
   {% if chart_results %}
     {% set rmax = chart_results[0].cases_per_100k or 1 %}
-    <h2 class="section-head">Result &middot; highest rates</h2>
+    <h2 class="section-head">Results &middot; highest rates</h2>
     <figure class="imp-viz">
       <figcaption class="imp-viz-cap">
         The ten countries with the highest reported infection rate in this group.
@@ -203,7 +203,7 @@
   {% endif %}
 
   {# ---- Full country table ---- #}
-  <h2 class="section-head">Result &middot; by country</h2>
+  <h2 class="section-head">Results &middot; by country</h2>
   <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
     <div class="vx-table-header">
       <span class="vx-table-title">{{ selected_economy }} &middot; {{ summary.disease_name }} &middot; {{ selected_year }}</span>

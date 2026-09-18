@@ -104,7 +104,7 @@
     {# ---- Ranked bar chart of the countries above the line ---- #}
     {% if chart_results %}
       {% set rmax = chart_results[0].country_rate_per_100k or 1 %}
-      <h2 class="section-head">Result &middot; furthest above</h2>
+      <h2 class="section-head">Results &middot; furthest above</h2>
       <figure class="imp-viz">
         <figcaption class="imp-viz-cap">
           The ten countries furthest above the global rate. The longer the bar,
@@ -133,7 +133,7 @@
     {% endif %}
 
     {# ---- Full table of every country above the global rate ---- #}
-    <h2 class="section-head">Result &middot; all countries above</h2>
+    <h2 class="section-head">Results &middot; all countries above</h2>
     <div class="vx-table-block" id="country-table" style="scroll-margin-top: 1rem;">
       <div class="vx-table-header">
         <span class="vx-table-title">{{ global_rate.disease_name }} &middot; {{ selected_year }} &middot; {{ fmt_int(results | length) }} above the global rate</span>
